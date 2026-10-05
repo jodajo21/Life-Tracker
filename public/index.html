@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Life Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tracker">
+<meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <main id="view"></main>
+  <nav id="tabs">
+    <button data-tab="dash">Dashboard</button>
+    <button data-tab="log">Log</button>
+    <button data-tab="ask">Ask</button>
+    <button data-tab="cards">Cards</button>
+    <button data-tab="tidy">Tidy<span id="badge" hidden></span></button>
+  </nav>
+</div>
+<div id="print-root"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
