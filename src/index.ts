@@ -1,20 +1,11 @@
-export interface Env {
-  DB: D1Database;
-  PHOTOS: R2Bucket;
-  ASSETS: Fetcher;
-  APP_TOKEN: string;
-  ANTHROPIC_API_KEY: string;
-  MODEL?: string;
-  TZ_NAME?: string;
-  ANTHROPIC_BASE_URL?: string; // override for local testing
-}
-
-type Json = Record<string, any>;
+import { Env, Json, HttpError, today, q, run, loadCards } from './db';
+import { awardEntry, awardCardClear, revokeCardClear, todayPayload, roomStats, getSettings, type Reward } from './game';
+import { shieldsAvailable } from './core.mjs';
+export type { Env } from './db';
 const GOALS = ['fitness', 'home'];
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
-class HttpError extends Error { constructor(public status: number, msg: string) { super(msg); } }
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -44,16 +35,6 @@ function authorized(req: Request, env: Env) {
   return diff === 0;
 }
 
-function today(env: Env) {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: env.TZ_NAME || 'America/Chicago' }).format(new Date());
-}
-
-async function q(env: Env, sql: string, ...args: any[]) {
-  return (await env.DB.prepare(sql).bind(...args).all()).results as Json[];
-}
-async function run(env: Env, sql: string, ...args: any[]) {
-  return env.DB.prepare(sql).bind(...args).run();
-}
 
 // ---------------------------------------------------------------- routing
 async function route(req: Request, env: Env, url: URL): Promise<Response> {
@@ -64,19 +45,53 @@ async function route(req: Request, env: Env, url: URL): Promise<Response> {
   if (p === '/api/ping') return json({ ok: true, today: today(env) });
   if (p === '/api/log' && m === 'POST') {
     const b = await body();
-    const res = await logText(env, String(b.text || ''), b.date, b.source || 'text');
+    const res = await idem(env, b.client_id, () => logText(env, String(b.text || ''), b.date, b.source || 'text', b.client_today));
     if (url.searchParams.get('plain')) return new Response(res.message, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
     return json(res);
   }
-  if (p === '/api/chat' && m === 'POST') return json({ reply: await chat(env, (await body()).messages || []) });
+  if (p === '/api/chat' && m === 'POST') return json(await chat(env, (await body()).messages || []));
+  if (p === '/api/today' && m === 'GET') {
+    const t = validDate(url.searchParams.get('date')) || today(env);
+    const data = await todayPayload(env, t);
+    if (url.searchParams.get('plain')) {
+      // For a Shortcuts automation: empty body = nothing open, so no notification is shown.
+      const c = data.domains.home.card;
+      const text = data.open_items > 0 ? `${data.open_items} box${data.open_items === 1 ? '' : 'es'} open on today's card (${c?.label}).` : '';
+      return new Response(text, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    }
+    return json(data);
+  }
+  if (p === '/api/rooms' && m === 'GET') return json(await roomStats(env, today(env)));
+  if (p === '/api/settings' && m === 'GET') return json(await getSettings(env));
+  if (p === '/api/settings' && m === 'POST') {
+    const b = await body();
+    const n = Math.round(Number(b.fitness_weekly_target));
+    if (n >= 1 && n <= 7) await run(env, `INSERT INTO settings (key, value) VALUES ('fitness_weekly_target', ?1) ON CONFLICT(key) DO UPDATE SET value=excluded.value`, String(n));
+    return json(await getSettings(env));
+  }
+  if (p === '/api/shield' && (m === 'POST' || m === 'DELETE')) {
+    const b = m === 'POST' ? await body() : Object.fromEntries(url.searchParams);
+    if (!GOALS.includes(b.domain)) throw new HttpError(400, 'domain required');
+    const start = validDate(b.date) || today(env);
+    if (m === 'DELETE') { await run(env, 'DELETE FROM shields WHERE domain=?1 AND date=?2', b.domain, start); return json({ ok: true }); }
+    const days = Math.max(1, Math.min(3, Math.round(Number(b.days) || 1)));
+    const [cnt] = await q(env, 'SELECT COUNT(DISTINCT date) AS n FROM entries WHERE goal=?1', b.domain);
+    const [used] = await q(env, 'SELECT COUNT(*) AS n FROM shields WHERE domain=?1', b.domain);
+    if (shieldsAvailable(cnt.n, used.n) < days) throw new HttpError(400, 'Not enough shields yet (you earn one for every 7 active days).');
+    for (let i = 0; i < days; i++) await run(env, 'INSERT OR IGNORE INTO shields (domain, date) VALUES (?1, ?2)', b.domain, shiftDate(start, i));
+    return json({ ok: true });
+  }
   if (p === '/api/entries' && m === 'GET') {
     const from = url.searchParams.get('from') || '0000', to = url.searchParams.get('to') || '9999';
     return json(await q(env, `SELECT e.id,e.date,e.goal,e.category_id,c.name AS activity,e.details,e.source,e.raw_text
       FROM entries e JOIN categories c ON c.id=e.category_id WHERE e.date BETWEEN ?1 AND ?2 ORDER BY e.date DESC, e.id DESC`, from, to));
   }
   if ((r = p.match(/^\/api\/entries\/(\d+)$/)) && m === 'DELETE') {
+    const [ci] = await q(env, 'SELECT card_id FROM card_items WHERE entry_id=?1', +r[1]);
     await run(env, 'UPDATE card_items SET done=0, done_at=NULL, entry_id=NULL WHERE entry_id=?1', +r[1]);
+    await run(env, 'DELETE FROM xp_events WHERE entry_id=?1', +r[1]);
     await run(env, 'DELETE FROM entries WHERE id=?1', +r[1]);
+    if (ci) await revokeCardClear(env, ci.card_id);
     return json({ ok: true });
   }
   if (p === '/api/categories' && m === 'GET') {
@@ -124,15 +139,20 @@ async function route(req: Request, env: Env, url: URL): Promise<Response> {
   }
   if ((r = p.match(/^\/api\/cards\/(\d+)\/items$/)) && m === 'POST') {
     const b = await body();
-    await setItems(env, +r[1], b.check || [], b.uncheck || []);
-    return json((await loadCards(env, 'c.id=?1', +r[1]))[0]);
+    const rewards = await setItems(env, +r[1], b.check || [], b.uncheck || []);
+    return json({ ...(await loadCards(env, 'c.id=?1', +r[1]))[0], rewards });
   }
   if (p === '/api/card-stats' && m === 'GET') {
     const from = url.searchParams.get('from') || '0000', to = url.searchParams.get('to') || '9999';
     return json(await q(env, `SELECT cd.code, cd.start_date, ci.name, ch.room, ci.done FROM card_items ci
       JOIN cards cd ON cd.id=ci.card_id LEFT JOIN chores ch ON ch.id=ci.chore_id WHERE cd.start_date BETWEEN ?1 AND ?2`, from, to));
   }
-  if (p === '/api/photo' && m === 'POST') return json(await readCardPhoto(env, await body()));
+  if (p === '/api/photo' && m === 'POST') {
+    const b = await body();
+    const res = await idem(env, b.client_id, () => readCardPhoto(env, b));
+    if (url.searchParams.get('plain')) return new Response(photoMessage(res), { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    return json(res);
+  }
   if (p === '/api/export' && m === 'GET') return json(await dumpAll(env));
   throw new HttpError(404, 'Not found');
 }
@@ -153,14 +173,38 @@ const toolInput = (resp: Json, name: string): Json => {
   return b.input;
 };
 
+// ---------------------------------------------------------------- helpers
+const validDate = (d: unknown): string | null => (typeof d === 'string' && /^\d{4}-\d\d-\d\d$/.test(d) ? d : null);
+function shiftDate(iso: string, n: number) {
+  const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10);
+}
+/** Replays the stored response if the offline queue retries a request that already succeeded. */
+async function idem<T>(env: Env, clientId: unknown, fn: () => Promise<T>): Promise<T> {
+  if (typeof clientId !== 'string' || !clientId) return fn();
+  const [seen] = await q(env, 'SELECT response FROM seen_requests WHERE client_id=?1', clientId);
+  if (seen) return JSON.parse(seen.response);
+  const out = await fn();
+  await run(env, 'INSERT OR REPLACE INTO seen_requests (client_id, response) VALUES (?1, ?2)', clientId, JSON.stringify(out));
+  return out;
+}
+function photoMessage(r: Json) {
+  if (!r.card) return r.notes || "Couldn't tell which card that was.";
+  const left = (r.proposal || []).filter((p: Json) => !p.checked).length;
+  if (!r.auto_applied) return `Card ${r.card.code}: I wasn't sure about a few boxes — open the app to confirm.`;
+  return `Card ${r.card.code}: recorded. ${left ? `${left} left.` : 'All clear!'}${(r.rewards || []).length ? ' +' + r.rewards.reduce((s: number, x: Reward) => s + x.xp, 0) + ' XP' : ''}`;
+}
+
 // ---------------------------------------------------------------- categories
 async function ensureCategory(env: Env, goal: string, name: string): Promise<number> {
+  return (await ensureCategoryX(env, goal, name)).id;
+}
+async function ensureCategoryX(env: Env, goal: string, name: string): Promise<{ id: number; created: boolean }> {
   const rows = await q(env, 'SELECT id, name, aliases FROM categories WHERE goal=?1', goal);
   const low = name.trim().toLowerCase();
   const hit = rows.find((c) => c.name.toLowerCase() === low || JSON.parse(c.aliases).some((a: string) => a.toLowerCase() === low));
-  if (hit) return hit.id;
+  if (hit) return { id: hit.id, created: false };
   const res = await run(env, 'INSERT INTO categories (goal, name) VALUES (?1, ?2)', goal, name.trim());
-  return res.meta.last_row_id as number;
+  return { id: res.meta.last_row_id as number, created: true };
 }
 
 async function mergeCategories(env: Env, keep: number, drop: number) {
@@ -180,10 +224,10 @@ async function mergeCategories(env: Env, keep: number, drop: number) {
 }
 
 // ---------------------------------------------------------------- natural-language logging
-async function logText(env: Env, text: string, date: string | undefined, source: string) {
+async function logText(env: Env, text: string, date: string | undefined, source: string, clientToday?: string) {
   text = text.trim();
   if (!text) throw new HttpError(400, 'text required');
-  const t = today(env);
+  const t = validDate(clientToday) || today(env); // the phone's local date, so queued offline logs resolve "yesterday" correctly
   const cats = await q(env, 'SELECT id, goal, name, aliases FROM categories ORDER BY goal, name');
   const catList = cats.map((c) => `[${c.id}] ${c.goal}: ${c.name}${JSON.parse(c.aliases).length ? ` (aka ${JSON.parse(c.aliases).join(', ')})` : ''}`).join('\n');
 
@@ -217,12 +261,13 @@ Existing categories:\n${catList || '(none yet)'}`,
   const out = toolInput(resp, 'record_entries');
 
   const saved: Json[] = [];
+  const rewards: Reward[] = [];
   const pending: Json[] = [];
   for (const e of out.entries || []) {
     if (!GOALS.includes(e.goal)) continue;
     const conf = Number(e.match_confidence) || 0;
     const match = cats.find((c) => c.id === e.best_match_id && c.goal === e.goal);
-    let catId: number;
+    let catId: number, created = false;
     if (match && conf >= 0.8) {
       catId = match.id;
       const aliases: string[] = JSON.parse(match.aliases);
@@ -232,23 +277,29 @@ Existing categories:\n${catList || '(none yet)'}`,
         match.aliases = JSON.stringify(aliases);
       }
     } else {
-      const before = cats.length;
-      catId = await ensureCategory(env, e.goal, e.activity);
+      const x = await ensureCategoryX(env, e.goal, e.activity);
+      catId = x.id; created = x.created;
       if (match && conf >= 0.5 && catId !== match.id) {
         const exists = await q(env, `SELECT 1 FROM merge_suggestions WHERE status='open' AND a_id=?1 AND b_id=?2`, catId, match.id);
         if (!exists.length) await run(env, 'INSERT INTO merge_suggestions (a_id, b_id, confidence) VALUES (?1,?2,?3)', catId, match.id, conf);
         pending.push({ a: e.activity, b: match.name });
       }
-      if (cats.length === before) cats.push({ id: catId, goal: e.goal, name: e.activity, aliases: '[]' });
+      if (created) cats.push({ id: catId, goal: e.goal, name: e.activity, aliases: '[]' });
     }
+    const when = validDate(e.date) || validDate(date) || t;
     const res = await run(env, 'INSERT INTO entries (goal, date, category_id, details, raw_text, source) VALUES (?1,?2,?3,?4,?5,?6)',
-      e.goal, /^\d{4}-\d\d-\d\d$/.test(e.date) ? e.date : (date || t), catId, JSON.stringify(e.details || {}), text, source);
-    saved.push({ id: res.meta.last_row_id, goal: e.goal, date: e.date, activity: e.activity, details: e.details || {} });
+      e.goal, when, catId, JSON.stringify(e.details || {}), text, source);
+    const entryId = res.meta.last_row_id as number;
+    const rw = await awardEntry(env, { entryId, goal: e.goal, date: when, newCategory: created ? e.activity : undefined });
+    rewards.push(...rw);
+    saved.push({ id: entryId, goal: e.goal, date: when, activity: e.activity, details: e.details || {}, xp: rw.reduce((s, x) => s + x.xp, 0), rewards: rw });
   }
   const describe = (s: Json) => `${s.activity}${describeDetails(s.details)}`;
   let message = saved.length ? `Logged: ${saved.map(describe).join('; ')}.` : out.clarification || "I couldn't find anything to log.";
   if (pending.length) message += ` (Not sure if ${pending[0].a} is the same as ${pending[0].b} — check the Tidy tab.)`;
-  return { saved, message, clarification: out.clarification || null };
+  const xp = rewards.reduce((s, x) => s + x.xp, 0);
+  if (xp) message += ` +${xp} XP${rewards.some((r) => r.kind === 'lucky') ? ' (lucky drop!)' : ''}`;
+  return { counted: saved.length > 0, saved, rewards, xp, message, clarification: out.clarification || null };
 }
 function describeDetails(d: Json) {
   const bits: string[] = [];
@@ -262,38 +313,64 @@ function describeDetails(d: Json) {
 // ---------------------------------------------------------------- conversational analysis
 async function chat(env: Env, messages: { role: string; content: string }[]) {
   const t = today(env);
-  const system = `You are the user's personal coach and analyst inside their life-tracking app. You can query their data with the run_sql tool (read-only SQLite).
-Today is ${t}. Weeks start Monday on printed cards (Sunday is a rest day), weekday numbers in SQL are 0=Sunday..6=Saturday.
-Goals tracked: fitness and home life.
-Tables/views:
+  const status = await todayPayload(env, t);
+  const snapshot = {
+    today: t,
+    fitness: { week_bar: status.domains.fitness.bar.label, momentum: status.domains.fitness.momentum.value, season_level: status.domains.fitness.season.level },
+    home: { card_bar: status.domains.home.bar.label, momentum: status.domains.home.momentum.value, season_level: status.domains.home.season.level },
+    rooms_near_next_tier: status.rooms.filter((r) => r.heat || (r.next > 0 && r.next <= 2)).map((r) => ({ room: r.room, coverage_pct: Math.round(r.coverage * 100), shards_to_next_trophy: r.next })),
+  };
+  const system = `You are the answer engine inside the user's personal habit app. They discover their own patterns by asking you questions; you are not a coach or a nag.
+Today is ${t}. Cards run Mon-Sat (Sunday is a rest day). In SQL, weekday numbers are 0=Sunday..6=Saturday. Domains: fitness and home.
+You can query their data with run_sql (read-only SQLite) and draw charts with show_chart. Tables/views:
 - v_entries(id, date, weekday, goal, activity, details JSON, source, raw_text): every logged workout/chore. Use json_extract(details,'$.weight') etc.
-- v_card_items(id, card_code, start_date, end_date, chore, room, done 0/1, done_at): printed 2-day home cards; each row is one planned checkbox. done=0 on a past card means it was missed.
-- categories(id, goal, name, aliases), chores(id, name, room, per_quarter, active).
-Guidelines: query before answering, look at several angles (weekday, week-of-month, gaps between sessions, streaks, planned vs done) when asked about patterns, and cite concrete numbers/dates. Be warm, brief, and honest about small sample sizes. If data is sparse, say so. Never invent data. Suggest one or two specific, practical tweaks when relevant.`;
-  const tools = [{
-    name: 'run_sql',
-    description: 'Run one read-only SELECT (or WITH...SELECT) against the tracker database. Returns up to 300 rows as JSON.',
-    input_schema: { type: 'object', properties: { sql: { type: 'string' } }, required: ['sql'] },
-  }];
+- v_card_items(id, card_code, start_date, end_date, chore, room, done 0/1, done_at): printed 2-day cards; each row is one planned checkbox. done=0 on a past card = not done.
+- v_xp(date, domain, kind, xp, label); categories(id, goal, name, aliases); chores(id, name, room, per_quarter, active); shards(room, card_id, date).
+Current status snapshot (use it only if relevant, e.g. "how close am I to..."): ${JSON.stringify(snapshot)}
+How to answer: query first, look at the data from a couple of angles, then answer plainly with real numbers and dates. Prefer showing the evidence with show_chart (1-2 charts max) over describing it at length. Be warm and brief. Say so when the sample is small. Never invent data.
+Rules: do not lecture, do not moralize about misses, do not suggest a weekly review or routine, and do not add motivational filler. Only if it flows naturally, finish with one line starting "Tiny move:" giving a single optional, concrete suggestion. If the user asks about near-misses ("how close am I"), use the snapshot.`;
+  const tools = [
+    {
+      name: 'run_sql',
+      description: 'Run one read-only SELECT (or WITH...SELECT) against the tracker database. Returns up to 300 rows as JSON.',
+      input_schema: { type: 'object', properties: { sql: { type: 'string' } }, required: ['sql'] },
+    },
+    {
+      name: 'show_chart',
+      description: 'Display a chart to the user from a read-only query. bars/hbars need columns label,value (bars keep row order, so ORDER BY yourself). heatmap needs columns date (YYYY-MM-DD),value.',
+      input_schema: {
+        type: 'object',
+        properties: { kind: { type: 'string', enum: ['bars', 'hbars', 'heatmap'] }, title: { type: 'string' }, goal: { type: 'string', enum: GOALS }, sql: { type: 'string' } },
+        required: ['kind', 'title', 'sql'],
+      },
+    },
+  ];
   const msgs: Json[] = messages.slice(-20).map((m) => ({ role: m.role, content: m.content }));
   if (!msgs.length || msgs[msgs.length - 1].role !== 'user') throw new HttpError(400, 'last message must be from user');
+  const charts: Json[] = [];
 
   for (let i = 0; i < 8; i++) {
     const resp = await claude(env, { max_tokens: 2000, system, tools, messages: msgs });
     if (resp.stop_reason !== 'tool_use') {
-      return (resp.content || []).filter((c: Json) => c.type === 'text').map((c: Json) => c.text).join('\n').trim();
+      const reply = (resp.content || []).filter((c: Json) => c.type === 'text').map((c: Json) => c.text).join('\n').trim();
+      return { reply, charts };
     }
     msgs.push({ role: 'assistant', content: resp.content });
     const results: Json[] = [];
     for (const c of resp.content.filter((c: Json) => c.type === 'tool_use')) {
       let content: string, is_error = false;
-      try { content = JSON.stringify(await readOnlyQuery(env, c.input.sql)); }
-      catch (e: any) { content = `Error: ${e.message}`; is_error = true; }
+      try {
+        const rows = await readOnlyQuery(env, c.input.sql);
+        if (c.name === 'show_chart') {
+          charts.push({ kind: c.input.kind, title: c.input.title, goal: c.input.goal || 'home', rows: rows.slice(0, 200) });
+          content = `Chart displayed to the user (${rows.length} rows).`;
+        } else content = JSON.stringify(rows);
+      } catch (e: any) { content = `Error: ${e.message}`; is_error = true; }
       results.push({ type: 'tool_result', tool_use_id: c.id, content, is_error });
     }
     msgs.push({ role: 'user', content: results });
   }
-  return "I couldn't finish analyzing that — try a narrower question.";
+  return { reply: "I couldn't finish analyzing that — try a narrower question.", charts };
 }
 
 async function readOnlyQuery(env: Env, sql: string) {
@@ -320,19 +397,12 @@ async function createCardSet(env: Env, b: Json) {
   return { set_id: setId };
 }
 
-async function loadCards(env: Env, where: string, ...args: any[]): Promise<Json[]> {
-  const cards = await q(env, `SELECT c.* FROM cards c WHERE ${where} ORDER BY c.start_date, c.idx`, ...args);
-  if (!cards.length) return [];
-  const items = await q(env, `SELECT ci.*, ch.room FROM card_items ci LEFT JOIN chores ch ON ch.id=ci.chore_id
-    WHERE ci.card_id IN (${cards.map(() => '?').join(',')}) ORDER BY ci.card_id, ci.pos`, ...cards.map((c) => c.id));
-  return cards.map((c) => ({ ...c, items: items.filter((i) => i.card_id === c.id) }));
-}
-
-async function setItems(env: Env, cardId: number, check: number[], uncheck: number[]) {
+async function setItems(env: Env, cardId: number, check: number[], uncheck: number[]): Promise<Reward[]> {
   const [card] = await q(env, 'SELECT * FROM cards WHERE id=?1', cardId);
   if (!card) throw new HttpError(404, 'card not found');
   const t = today(env);
   const date = t < card.start_date ? card.start_date : t > card.end_date ? card.end_date : t;
+  const rewards: Reward[] = [];
   for (const id of check) {
     const [it] = await q(env, `SELECT ci.*, ch.category_id FROM card_items ci LEFT JOIN chores ch ON ch.id=ci.chore_id WHERE ci.id=?1 AND ci.card_id=?2`, id, cardId);
     if (!it || it.done) continue;
@@ -340,13 +410,19 @@ async function setItems(env: Env, cardId: number, check: number[], uncheck: numb
     const e = await run(env, `INSERT INTO entries (goal, date, category_id, details, raw_text, source) VALUES ('home',?1,?2,?3,?4,'card')`,
       date, cat, JSON.stringify({ card: card.code }), `Card ${card.code}: ${it.name}`);
     await run(env, 'UPDATE card_items SET done=1, done_at=?1, entry_id=?2 WHERE id=?3', date, e.meta.last_row_id, id);
+    // seeded by item id: unchecking and re-checking a box can never re-roll a lucky drop
+    rewards.push(...(await awardEntry(env, { entryId: e.meta.last_row_id as number, goal: 'home', date, seed: `card-item-${id}` })));
   }
   for (const id of uncheck) {
     const [it] = await q(env, 'SELECT * FROM card_items WHERE id=?1 AND card_id=?2', id, cardId);
     if (!it || !it.done) continue;
-    if (it.entry_id) await run(env, 'DELETE FROM entries WHERE id=?1', it.entry_id);
+    if (it.entry_id) { await run(env, 'DELETE FROM xp_events WHERE entry_id=?1', it.entry_id); await run(env, 'DELETE FROM entries WHERE id=?1', it.entry_id); }
     await run(env, 'UPDATE card_items SET done=0, done_at=NULL, entry_id=NULL WHERE id=?1', id);
   }
+  const [full] = await loadCards(env, 'c.id=?1', cardId);
+  if (full.items.every((i: Json) => i.done)) rewards.push(...(await awardCardClear(env, full, date)));
+  else await revokeCardClear(env, cardId);
+  return rewards;
 }
 
 async function readCardPhoto(env: Env, b: Json) {
@@ -392,13 +468,14 @@ Known cards:\n${listing}`,
     return { item_id: i.id, name: i.name, was_done: !!i.done, checked: f ? !!f.checked : !!i.done, confidence: f ? f.confidence : 0 };
   });
   const sure = out.card_confidence >= 0.85 && proposal.every((p: Json) => p.confidence >= 0.8);
-  if (sure) await setItems(env, card.id, proposal.filter((p: Json) => p.checked && !p.was_done).map((p: Json) => p.item_id), []);
-  return { card: { id: card.id, code: card.code, label: card.label, start_date: card.start_date }, proposal, auto_applied: sure, notes: out.notes || '' };
+  let rewards: Reward[] = [];
+  if (sure) rewards = await setItems(env, card.id, proposal.filter((p: Json) => p.checked && !p.was_done).map((p: Json) => p.item_id), []);
+  return { card: { id: card.id, code: card.code, label: card.label, start_date: card.start_date }, proposal, auto_applied: sure, rewards, notes: out.notes || '' };
 }
 
 // ---------------------------------------------------------------- backup
 async function dumpAll(env: Env) {
-  const tables = ['categories', 'entries', 'merge_suggestions', 'chores', 'card_sets', 'cards', 'card_items', 'photos'];
+  const tables = ['categories', 'entries', 'merge_suggestions', 'chores', 'card_sets', 'cards', 'card_items', 'photos', 'xp_events', 'shields', 'shards', 'settings'];
   const out: Json = { exported_at: new Date().toISOString() };
   for (const t of tables) out[t] = await q(env, `SELECT * FROM ${t}`);
   return out;

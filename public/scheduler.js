@@ -37,22 +37,29 @@ export function buildQuarter(chores, startDate, opts = {}) {
   const load = Array.from({ length: n }, () => []); // slot -> chore objects
   const has = (slot, chore) => load[slot].some((c) => c.id === chore.id);
 
-  const active = chores.filter((c) => c.per_quarter > 0);
-  const total = active.reduce((s, c) => s + Math.min(c.per_quarter, n), 0);
+  // Weak rooms (from last quarter's completion) get one extra occurrence of their occasional tasks,
+  // as long as there is comfortable room on the cards.
+  const boostRooms = new Set(opts.boostRooms || []);
+  const boosted = [];
+  const active = chores.filter((c) => c.per_quarter > 0).map((c) => ({ ...c, eff: Math.min(c.per_quarter, n) }));
+  let total = active.reduce((s, c) => s + c.eff, 0);
+  for (const c of active) {
+    if (boostRooms.has(c.room) && c.per_quarter <= 12 && total + 1 <= n * max - 12) { c.eff++; total++; boosted.push(c.name); }
+  }
   if (total > n * max) warnings.push(`Too many tasks: ${total} placements but only ${n * max} spots. Lower some frequencies.`);
   if (total < n * min) warnings.push(`Not enough tasks: ${total} placements but cards need at least ${n * min}. Add chores or raise frequencies.`);
 
   // Group by frequency so same-frequency chores get staggered phases.
   const byFreq = new Map();
   for (const c of active) {
-    const k = Math.min(c.per_quarter, n);
+    const k = c.eff;
     if (!byFreq.has(k)) byFreq.set(k, []);
     byFreq.get(k).push(c);
   }
   const freqs = [...byFreq.keys()].sort((a, b) => b - a);
 
   for (const f of freqs) {
-    const group = byFreq.get(f);
+    const group = byFreq.get(f).sort((a, b) => (boosted.includes(b.name) ? 1 : 0) - (boosted.includes(a.name) ? 1 : 0)); // boosted first
     const interval = n / f;
     group.forEach((chore, gi) => {
       const phase = (gi * interval) / group.length;
@@ -85,13 +92,13 @@ export function buildQuarter(chores, startDate, opts = {}) {
     let donor = -1;
     for (let i = 0; i < n; i++) {
       if (load[i].length > min && (donor < 0 || load[i].length > load[donor].length || (load[i].length === load[donor].length && Math.abs(i - lo) < Math.abs(donor - lo)))) {
-        if (load[i].some((c) => !has(lo, c) && c.per_quarter < n)) donor = i;
+        if (load[i].some((c) => !has(lo, c) && c.eff < n)) donor = i;
       }
     }
     if (donor < 0) { warnings.push(`Card ${lo + 1} has fewer than ${min} tasks.`); break; }
     const movable = load[donor]
-      .filter((c) => !has(lo, c) && c.per_quarter < n)
-      .sort((a, b) => a.per_quarter - b.per_quarter); // move the rarest tasks (least spacing damage)
+      .filter((c) => !has(lo, c) && c.eff < n)
+      .sort((a, b) => a.eff - b.eff); // move the rarest tasks (least spacing damage)
     // keep spacing: pick the one whose other occurrences are farthest from `lo`
     movable.sort((a, b) => nearest(load, b, lo, donor) - nearest(load, a, lo, donor));
     const pick = movable[0];
@@ -116,7 +123,7 @@ export function buildQuarter(chores, startDate, opts = {}) {
 
   const roomCoverage = {};
   for (const c of cards) for (const i of c.items) roomCoverage[i.room] = (roomCoverage[i.room] || 0) + 1;
-  return { cards, warnings, roomCoverage, startDate: monday };
+  return { cards, warnings, roomCoverage, startDate: monday, boosted };
 }
 
 function nearest(load, chore, slot, ignoreSlot) {

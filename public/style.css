@@ -68,3 +68,27 @@ dialog { border: 0; border-radius: var(--r); padding: 20px; max-width: 460px; wi
 }
 
 .chore { padding: 10px 0; border-bottom: 1px solid var(--line); display: grid; gap: 6px; } .chore .row input { flex: 1.2; min-width: 0; } .chore .row select { flex: 1; min-width: 0; }
+
+/* ---- Today / game UI ---- */
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 96px; background: #111e; color: #fff; padding: 10px 16px; border-radius: 12px; z-index: 30; max-width: 90%; text-align: center; }
+.toast.reward { border-radius: 16px; } .toast .sub2 { font-size: 13px; opacity: .9; }
+.sync { background: var(--heat0); border-radius: 10px; padding: 6px 12px; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.seg.dom { display: flex; } .seg.dom button { flex: 1; } .seg.dom small { opacity: .7; font-weight: 500; }
+.bar { height: 10px; background: var(--heat0); border-radius: 6px; overflow: hidden; margin: 10px 0 4px; } .bar i { display: block; height: 100%; background: var(--home); border-radius: 6px; transition: width .4s; }
+.panel.fit .bar i { background: var(--fit); } .bar.big { height: 16px; } .barlabel { font-weight: 700; font-size: 17px; }
+.momentum { display: flex; align-items: center; gap: 4px; } .momentum i { width: 12px; height: 12px; border-radius: 50%; background: var(--heat0); display: inline-block; } .momentum i.on { background: var(--home); } .panel.fit .momentum i.on { background: var(--fit); }
+button small { opacity: .7; font-weight: 500; }
+.check.pulse { animation: pulse 1.2s ease-in-out 3; border-radius: 10px; } @keyframes pulse { 50% { background: var(--home-soft); } }
+@media (prefers-reduced-motion: reduce) { .check.pulse { animation: none; background: var(--home-soft); } .bar i { transition: none; } }
+.rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.room { border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--home) calc(var(--cov) * 75%), var(--heat0)); display: grid; gap: 2px; min-height: 76px; border: 2px solid transparent; }
+.room b { font-size: 14px; } .room span { font-size: 12px; } .room small { font-size: 11px; opacity: .8; }
+.room.heat { border-color: var(--home); box-shadow: 0 0 10px color-mix(in srgb, var(--home) 55%, transparent); } .room.idle { opacity: .55; }
+.room, .room b, .room span, .room small { color: var(--ink); }
+.chartcard { margin: 8px 0 14px; padding: 12px; }
+#fab { position: fixed; right: 18px; bottom: calc(86px + env(safe-area-inset-bottom)); width: 62px; height: 62px; border-radius: 50%; border: 0; background: var(--home); color: #fff; font-size: 34px; line-height: 1; box-shadow: 0 6px 18px #0005; z-index: 8; }
+dialog.sheet { margin: auto auto 0; max-width: 560px; width: 100%; border-radius: 22px 22px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
+.bigrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.bigbtn { border: 2px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 18px; padding: 22px 8px; font: 700 16px inherit; display: grid; gap: 6px; justify-items: center; }
+.bigbtn .ico { font-size: 38px; } .bigbtn.live { border-color: var(--fit); background: var(--fit-soft); } .bigbtn.hot { border-color: var(--home); background: var(--home-soft); }
+@media (max-width: 520px) { .hide-sm { display: none; } }
