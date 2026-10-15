@@ -4,7 +4,8 @@
 export const WEEKS = 13;
 export const SEGMENTS = [['Mon', 'Tue'], ['Wed', 'Thu'], ['Fri', 'Sat']];
 export const MIN_PER_CARD = 3;
-export const MAX_PER_CARD = 6;
+export const SOFT_MAX_PER_CARD = 5; // preferred ceiling
+export const MAX_PER_CARD = 6;     // only used when the task list does not fit at 5
 
 export function nextMonday(isoDate) {
   const d = new Date(isoDate + 'T00:00:00');
@@ -30,6 +31,7 @@ export function buildQuarter(chores, startDate, opts = {}) {
   const weeks = opts.weeks ?? WEEKS;
   const min = opts.min ?? MIN_PER_CARD;
   const max = opts.max ?? MAX_PER_CARD;
+  const soft = opts.soft ?? SOFT_MAX_PER_CARD;
   const n = weeks * 3;
   const monday = nextMonday(startDate);
   const warnings = [];
@@ -67,17 +69,21 @@ export function buildQuarter(chores, startDate, opts = {}) {
       for (let k = 0; k < f; k++) {
         const ideal = Math.min(n - 1, Math.floor(phase + k * interval + (f > 1 ? 0 : interval / 2 - 0.5)));
         const reach = Math.max(1, Math.floor(interval / 2));
-        let best = -1, bestScore = Infinity;
-        for (let d = 0; d <= Math.max(reach, n); d++) {
-          for (const slot of d === 0 ? [ideal] : [ideal - d, ideal + d]) {
-            if (slot < 0 || slot >= n || load[slot].length >= max || has(slot, chore)) continue;
-            // Prefer light cards, near the ideal slot, and not adjacent to the previous occurrence.
-            const adjacent = used.some((u) => Math.abs(u - slot) <= 1) && f < n / 2 ? 3 : 0;
-            const score = load[slot].length * 1.0 + d * 0.6 + adjacent;
-            if (score < bestScore) { bestScore = score; best = slot; }
+        const search = (cap) => {
+          let best = -1, bestScore = Infinity;
+          for (let d = 0; d <= Math.max(reach, n); d++) {
+            for (const slot of d === 0 ? [ideal] : [ideal - d, ideal + d]) {
+              if (slot < 0 || slot >= n || load[slot].length >= cap || has(slot, chore)) continue;
+              const adjacent = used.some((u) => Math.abs(u - slot) <= 1) && f < n / 2 ? 3 : 0;
+              const score = load[slot].length * 1.0 + d * 0.6 + adjacent;
+              if (score < bestScore) { bestScore = score; best = slot; }
+            }
+            if (best >= 0 && d >= reach) break;
           }
-          if (best >= 0 && d >= reach) break;
-        }
+          return best;
+        };
+        // Prefer cards with fewer than 5 tasks; only use a 6th when no card has room.
+        let best = search(soft); if (best < 0) best = search(max);
         if (best < 0) { warnings.push(`Could not place "${chore.name}" (card capacity full).`); continue; }
         load[best].push(chore);
         used.push(best);
@@ -123,7 +129,7 @@ export function buildQuarter(chores, startDate, opts = {}) {
 
   const roomCoverage = {};
   for (const c of cards) for (const i of c.items) roomCoverage[i.room] = (roomCoverage[i.room] || 0) + 1;
-  return { cards, warnings, roomCoverage, startDate: monday, boosted };
+  return { cards, warnings, roomCoverage, startDate: monday, boosted, total, overBy: Math.max(0, total - n * soft), sixes: cards.filter((c) => c.items.length > soft).length };
 }
 
 function nearest(load, chore, slot, ignoreSlot) {

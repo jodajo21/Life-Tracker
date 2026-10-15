@@ -1,0 +1,786 @@
+<title>Life Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow column (phone-first), bottom tab bar, floating + for adding. Fitness = orange, Home = green. */
+:root {
+  --bg: #eef1ef; --surface: #ffffff; --ink: #15201c; --muted: #5d6b66; --line: #dbe2de; --heat: #e3e8e5;
+  --fit: #c2410c; --fit-soft: #fde7da; --home: #17695a; --home-soft: #d5ece5; --warn: #b42318;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101614; --surface: #1a2320; --ink: #e7efeb; --muted: #93a39c; --line: #2a3631; --heat: #26322d;
+  --fit: #fb923c; --fit-soft: #3b2315; --home: #4cc2a3; --home-soft: #15332c; --warn: #ff7b72; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #101614; --surface: #1a2320; --ink: #e7efeb; --muted: #93a39c; --line: #2a3631; --heat: #26322d;
+  --fit: #fb923c; --fit-soft: #3b2315; --home: #4cc2a3; --home-soft: #15332c; --warn: #ff7b72; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--body); padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+#app { max-width: 720px; margin: 0 auto; padding-bottom: 150px; }
+h1, h2 { font-family: var(--display); letter-spacing: -.01em; text-wrap: balance; }
+h1 { font-size: 28px; font-weight: 800; margin: 14px 0 12px; } h2 { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
+.sub { color: var(--muted); font-size: 13px; } .grow { flex: 1; min-width: 0; } .row { display: flex; gap: 10px; align-items: center; } .row.wrap { flex-wrap: wrap; }
+.num { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.panel.fit { border-top: 4px solid var(--fit); } .panel.home { border-top: 4px solid var(--home); }
+.seg { display: flex; background: var(--heat); border-radius: 10px; padding: 3px; margin-bottom: 14px; gap: 2px; overflow-x: auto; }
+.seg button { flex: 1; border: 0; background: none; color: var(--muted); padding: 8px 12px; border-radius: 8px; font: 600 14px var(--body); white-space: nowrap; }
+.seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px #0002; }
+button { font-family: var(--body); cursor: pointer; } button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--home); outline-offset: 2px; }
+button.primary, button.sec { border: 0; border-radius: 10px; padding: 11px 16px; font: 600 15px var(--body); }
+button.primary { background: var(--home); color: #fff; } button.sec { background: var(--heat); color: var(--ink); } button:disabled { opacity: .5; cursor: default; }
+button.link { border: 0; background: none; color: var(--muted); padding: 4px 8px; font-size: 13px; } button.danger { color: var(--warn); }
+input, select, textarea { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+textarea { min-height: 96px; resize: vertical; }
+.bar { height: 10px; background: var(--heat); border-radius: 6px; overflow: hidden; margin: 10px 0 4px; } .bar i { display: block; height: 100%; background: var(--home); border-radius: 6px; transition: width .4s; }
+.fit .bar i { background: var(--fit); } .bar.big { height: 16px; } .barlabel { font: 800 18px var(--display); }
+.momentum { display: flex; align-items: center; gap: 4px; } .momentum i { width: 12px; height: 12px; border-radius: 50%; background: var(--heat); display: inline-block; } .momentum i.on { background: var(--home); } .fit .momentum i.on { background: var(--fit); }
+.chart-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 4px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 12px; } .stat b { display: block; font: 800 26px/1.1 var(--display); } .stat span { color: var(--muted); font-size: 12px; }
+svg { display: block; width: 100%; height: auto; } svg text { fill: var(--muted); font: 10px var(--body); }
+.empty { color: var(--muted); padding: 16px 0; text-align: center; font-size: 14px; }
+.entry { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); } .entry:last-child { border: 0; }
+.tag { font-size: 11px; padding: 1px 7px; border-radius: 8px; font-weight: 700; } .tag.fitness { background: var(--fit-soft); color: var(--fit); } .tag.home { background: var(--home-soft); color: var(--home); }
+.check { display: flex; gap: 12px; align-items: center; padding: 13px 4px; border-bottom: 1px solid var(--line); font-size: 17px; } .check:last-child { border: 0; }
+.check input { width: 26px; height: 26px; accent-color: var(--home); flex: none; padding: 0; } .check small { color: var(--muted); display: block; font-size: 12px; } .check.done span { text-decoration: line-through; color: var(--muted); }
+.check.pulse { animation: pulse 1.2s ease-in-out 3; border-radius: 10px; } @keyframes pulse { 50% { background: var(--home-soft); } }
+@media (prefers-reduced-motion: reduce) { .check.pulse { animation: none; background: var(--home-soft); } .bar i { transition: none; } }
+.rooms { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.room { border-radius: 12px; padding: 10px; background: color-mix(in srgb, var(--home) calc(var(--cov) * 70%), var(--heat)); display: grid; gap: 2px; min-height: 76px; border: 2px solid transparent; color: var(--ink); }
+.room b { font-size: 14px; } .room span { font-size: 12px; } .room small { font-size: 11px; opacity: .85; } .room.heat { border-color: var(--home); } .room.idle { opacity: .55; }
+.chat { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; } .bubble { padding: 10px 14px; border-radius: 16px; max-width: 90%; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.user { align-self: flex-end; background: var(--home); color: #fff; } .bubble.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; } .chips button { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 7px 12px; color: var(--ink); font-size: 14px; }
+.chore { padding: 10px 0; border-bottom: 1px solid var(--line); display: grid; gap: 6px; } .chore .row input { flex: 1.2; min-width: 0; } .chore .row select { flex: 1; min-width: 0; }
+.warn { color: var(--warn); font-size: 14px; } .strip { display: flex; gap: 2px; align-items: flex-end; height: 40px; } .strip i { flex: 1; background: var(--home); border-radius: 2px 2px 0 0; }
+.sug { padding: 12px 0; border-bottom: 1px solid var(--line); } .sug:last-child { border: 0; } .spinner { color: var(--muted); font-style: italic; }
+.notice { background: var(--fit-soft); color: var(--ink); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin-bottom: 12px; }
+#tabs { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); z-index: 5; }
+#tabs button { flex: 1; max-width: 140px; border: 0; background: none; color: var(--muted); font: 600 13px var(--body); padding: 14px 4px; position: relative; } #tabs button.on { color: var(--ink); box-shadow: inset 0 3px 0 var(--home); }
+#badge { position: absolute; top: 6px; right: 12px; background: var(--fit); color: #fff; border-radius: 9px; font-size: 11px; padding: 0 6px; }
+#fab { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; border-radius: 50%; border: 0; background: var(--home); color: #fff; font: 400 34px/1 var(--body); box-shadow: 0 6px 18px #0005; z-index: 8; }
+#toasts { position: fixed; left: 0; right: 0; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 30; pointer-events: none; padding-inline: 16px; }
+.toast { background: #111e; color: #fff; padding: 10px 16px; border-radius: 14px; max-width: 100%; text-align: center; } .toast .s2 { font-size: 13px; opacity: .9; }
+dialog { border: 0; border-radius: 16px; padding: 20px; max-width: 480px; width: calc(100% - 32px); background: var(--surface); color: var(--ink); } dialog::backdrop { background: #0008; }
+dialog.sheet { margin: auto auto 0; max-width: 560px; width: 100%; border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
+.bigrow { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; } .bigbtn { border: 2px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 16px; padding: 14px 8px; font: 700 16px var(--body); display: flex; gap: 10px; justify-content: center; align-items: center; }
+code { background: var(--heat); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+</style>
+
+<div id="app"><main id="view"><p class="spinner">Loading…</p></main></div>
+<nav id="tabs" aria-label="Sections">
+  <button data-tab="today">Today</button><button data-tab="trends">Trends</button><button data-tab="ask">Ask</button><button data-tab="cards">Cards</button><button data-tab="more">More<span id="badge" hidden></span></button>
+</nav>
+<button id="fab" aria-label="Add something" hidden>+</button>
+<input id="snapfile" type="file" accept="image/*" hidden>
+<dialog id="sheet" class="sheet">
+  <div class="bigrow"><button class="bigbtn" id="qa-snap">📷 Photo of a card</button></div>
+  <textarea id="qa-text" placeholder="Tell me what you did. Tap the 🎤 on your keyboard to say it. e.g. “legs, squats 5x5 at 185, then cleaned both bathrooms”"></textarea>
+  <p id="qa-status" class="sub" aria-live="polite"></p>
+  <div class="row"><button class="sec" id="qa-close">Close</button><span class="grow"></span><button class="primary" id="qa-go">Log it</button></div>
+</dialog>
+<dialog id="dlg"></dialog>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(async () => {
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = (s) => new Date(s + 'T00:00:00');
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const addDaysIso = (s, n) => ymd(addDays(parse(s), n));
+const daysBetween = (a, b) => Math.round((parse(b) - parse(a)) / 864e5);
+const monday = (d) => addDays(d, -((d.getDay() + 6) % 7));
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const today = () => ymd(new Date());
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2));
+const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const COLORS = { fitness: 'var(--fit)', home: 'var(--home)' };
+const GOALS = ['fitness', 'home'];
+
+// ================================================================ game rules (pure)
+const XP = { fitness: 15, home: 10, card_clear: 25, discovery: 10, comeback: 15 };
+const LUCKY_P = 0.1, LUCKY_AMOUNTS = [10, 15, 20, 25, 40], MOMENTUM_MAX = 7, SHIELD_CAP = 3;
+function levelFor(xp) { let level = 1, floor = 0; for (;;) { const need = 60 + 20 * (level - 1); if (xp < floor + need) return { level, into: xp - floor, need }; floor += need; level++; } }
+function seasonOf(d) {
+  const [y, m] = d.split('-').map(Number); const q = Math.floor((m - 1) / 3);
+  return { id: `${y}-Q${q + 1}`, name: `${['Winter', 'Spring', 'Summer', 'Fall'][q]} ${y}`, start: `${y}-${pad(q * 3 + 1)}-01`, end: ymd(new Date(y, q * 3 + 3, 0)) };
+}
+function hashUnit(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return ((h >>> 0) % 1000003) / 1000003; }
+function luckyRoll(r) { if (r >= LUCKY_P) return null; return { xp: LUCKY_AMOUNTS[Math.min(LUCKY_AMOUNTS.length - 1, Math.floor((r / LUCKY_P) * LUCKY_AMOUNTS.length))], label: 'Lucky drop' }; }
+function momentum(active, shielded, t, skipSunday) {
+  let m = 0, gap = 0;
+  for (let i = 45; i >= 0; i--) {
+    const d = addDaysIso(t, -i);
+    if (active.has(d)) { m = Math.min(MOMENTUM_MAX, m + 1); gap = 0; continue; }
+    if (d === t || shielded.has(d) || (skipSunday && parse(d).getDay() === 0)) continue;
+    gap++; if (gap >= 2) m = Math.max(0, m - 1);
+  }
+  return m;
+}
+const shieldsAvailable = (activeDays, used) => Math.max(0, Math.min(SHIELD_CAP, Math.floor(activeDays / 7) - used));
+function trophyFor(n) { const tiers = [[30, 'gold'], [15, 'silver'], [5, 'bronze']]; const hit = tiers.find(([k]) => n >= k); const next = [...tiers].reverse().find(([k]) => n < k); return { tier: hit ? hit[1] : null, next: next ? next[0] - n : 0 }; }
+
+// ================================================================ card scheduler (pure)
+const SEGMENTS = [['Mon', 'Tue'], ['Wed', 'Thu'], ['Fri', 'Sat']];
+function nextMonday(iso) { const d = parse(iso); d.setDate(d.getDate() + ((8 - d.getDay()) % 7)); return ymd(d); }
+function buildQuarter(chores, startDate, opts = {}) {
+  const weeks = 13, min = 3, soft = 5, max = 6, n = weeks * 3, monday0 = nextMonday(startDate), warnings = [];
+  const load = Array.from({ length: n }, () => []);
+  const has = (slot, c) => load[slot].some((x) => x.id === c.id);
+  const boostRooms = new Set(opts.boostRooms || []), boosted = [];
+  const active = chores.filter((c) => c.per_quarter > 0).map((c) => ({ ...c, eff: Math.min(c.per_quarter, n) }));
+  let total = active.reduce((s, c) => s + c.eff, 0);
+  for (const c of active) if (boostRooms.has(c.room) && c.per_quarter <= 12 && total + 1 <= n * max - 12) { c.eff++; total++; boosted.push(c.name); }
+  if (total > n * max) warnings.push(`Too many tasks: ${total} placements but only ${n * max} spots. Lower some frequencies.`);
+  if (total < n * min) warnings.push(`Not enough tasks: ${total} placements but cards need at least ${n * min}. Add chores or raise frequencies.`);
+  const byFreq = new Map();
+  for (const c of active) { if (!byFreq.has(c.eff)) byFreq.set(c.eff, []); byFreq.get(c.eff).push(c); }
+  for (const f of [...byFreq.keys()].sort((a, b) => b - a)) {
+    const group = byFreq.get(f).sort((a, b) => (boosted.includes(b.name) ? 1 : 0) - (boosted.includes(a.name) ? 1 : 0));
+    const interval = n / f;
+    group.forEach((chore, gi) => {
+      const phase = (gi * interval) / group.length, used = [];
+      for (let k = 0; k < f; k++) {
+        const ideal = Math.min(n - 1, Math.floor(phase + k * interval + (f > 1 ? 0 : interval / 2 - 0.5)));
+        const reach = Math.max(1, Math.floor(interval / 2));
+        // Prefer cards that have fewer than 5 tasks; only use a 6th slot when no card has room.
+        const search = (cap) => {
+          let best = -1, bestScore = Infinity;
+          for (let d = 0; d <= n; d++) {
+            for (const slot of d === 0 ? [ideal] : [ideal - d, ideal + d]) {
+              if (slot < 0 || slot >= n || load[slot].length >= cap || has(slot, chore)) continue;
+              const adjacent = used.some((u) => Math.abs(u - slot) <= 1) && f < n / 2 ? 3 : 0;
+              const score = load[slot].length + d * 0.6 + adjacent;
+              if (score < bestScore) { bestScore = score; best = slot; }
+            }
+            if (best >= 0 && d >= reach) break;
+          }
+          return best;
+        };
+        let best = search(soft); if (best < 0) best = search(max);
+        if (best < 0) { warnings.push(`Could not place "${chore.name}" (card capacity full).`); continue; }
+        load[best].push(chore); used.push(best);
+      }
+    });
+  }
+  const nearest = (chore, slot, ignore) => { let b = Infinity; load.forEach((l, i) => { if (i !== ignore && l.some((c) => c.id === chore.id)) b = Math.min(b, Math.abs(i - slot)); }); return b; };
+  for (let guard = 0; guard < n * 10; guard++) {
+    const lo = load.findIndex((l) => l.length < min); if (lo < 0) break;
+    let donor = -1;
+    for (let i = 0; i < n; i++) if (load[i].length > min && (donor < 0 || load[i].length > load[donor].length || (load[i].length === load[donor].length && Math.abs(i - lo) < Math.abs(donor - lo))) && load[i].some((c) => !has(lo, c) && c.eff < n)) donor = i;
+    if (donor < 0) { warnings.push(`Card ${lo + 1} has fewer than ${min} tasks.`); break; }
+    const movable = load[donor].filter((c) => !has(lo, c) && c.eff < n).sort((a, b) => a.eff - b.eff).sort((a, b) => nearest(load, b, lo, donor) - nearest(load, a, lo, donor));
+    const pick = movable[0]; load[donor].splice(load[donor].indexOf(pick), 1); load[lo].push(pick);
+  }
+  const cards = load.map((chs, slot) => {
+    const w = Math.floor(slot / 3), s = slot % 3, start = addDaysIso(monday0, w * 7 + s * 2);
+    return { idx: slot, start_date: start, end_date: addDaysIso(start, 1), label: `${SEGMENTS[s][0]}–${SEGMENTS[s][1]}`,
+      items: chs.slice().sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name)).map((c) => ({ chore_id: c.id, name: c.name, room: c.room })) };
+  });
+  const roomCoverage = {}; for (const c of cards) for (const i of c.items) roomCoverage[i.room] = (roomCoverage[i.room] || 0) + 1;
+  return { cards, warnings, roomCoverage, startDate: monday0, boosted, total, softMax: soft, overBy: Math.max(0, total - n * soft), sixes: cards.filter((c) => c.items.length > soft).length };
+}
+
+// ================================================================ charts (SVG strings)
+function bars(data, color, { height = 110, showEvery = 1 } = {}) {
+  const W = 320, pad2 = 18, H = height, max = Math.max(1, ...data.map((d) => d.value)), bw = (W - 4) / Math.max(1, data.length);
+  const out = data.map((d, i) => {
+    const h = Math.round(((H - pad2 - 12) * d.value) / max), x = 2 + i * bw;
+    return `<rect x="${x + bw * 0.12}" y="${H - pad2 - h}" width="${bw * 0.76}" height="${Math.max(h, d.value ? 2 : 0)}" rx="2" fill="${color}"><title>${esc(d.label)}: ${d.value}</title></rect>` +
+      (d.value ? `<text x="${x + bw / 2}" y="${H - pad2 - h - 3}" text-anchor="middle">${d.value}</text>` : '') +
+      (i % showEvery === 0 ? `<text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle">${esc(d.label)}</text>` : '');
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${out}<line x1="0" x2="${W}" y1="${H - pad2}" y2="${H - pad2}" stroke="var(--line)"/></svg>`;
+}
+function heatmap(counts, fromIso, toIso, color) {
+  const start = parse(fromIso); start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = parse(toIso), cell = 14, gap = 3, left = 14, weeks = Math.ceil((end - start) / 864e5 / 7) + 1, max = Math.max(1, ...Object.values(counts));
+  let out = ''; ['M', '', 'W', '', 'F', '', ''].forEach((l, r) => { if (l) out += `<text x="0" y="${r * (cell + gap) + 11}">${l}</text>`; });
+  for (let w = 0; w < weeks; w++) for (let r = 0; r < 7; r++) {
+    const d = new Date(start); d.setDate(start.getDate() + w * 7 + r);
+    if (d > end || d < parse(fromIso)) continue;
+    const key = ymd(d), n = counts[key] || 0;
+    out += `<rect x="${left + w * (cell + gap)}" y="${r * (cell + gap)}" width="${cell}" height="${cell}" rx="3" fill="${n ? color : 'var(--heat)'}" fill-opacity="${n ? 0.3 + 0.7 * (n / max) : 1}"><title>${key}: ${n}</title></rect>`;
+  }
+  const W = left + weeks * (cell + gap), H = 7 * (cell + gap);
+  return `<svg viewBox="0 0 ${W} ${H}" style="max-height:${Math.round(H * 1.6)}px" role="img">${out}</svg>`;
+}
+function hbars(items, color) {
+  if (!items.length) return '';
+  const max = Math.max(1, ...items.map((i) => i.of ?? i.value));
+  return items.map((i) => `<div style="display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;margin:5px 0;font-size:13px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(i.label)}">${esc(i.label)}</span>
+    <div style="background:var(--heat);border-radius:6px;height:12px;overflow:hidden"><div style="width:${(100 * i.value) / max}%;height:100%;background:${color}"></div></div><span class="sub" style="text-align:right">${i.of != null ? `${i.value}/${i.of}` : i.value}</span></div>`).join('');
+}
+function ring(frac, color, label) {
+  const r = 34, c = 2 * Math.PI * r;
+  return `<svg viewBox="0 0 90 90" style="width:92px"><circle cx="45" cy="45" r="${r}" fill="none" stroke="var(--heat)" stroke-width="10"/><circle cx="45" cy="45" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c * frac} ${c}" transform="rotate(-90 45 45)"/>
+    <text x="45" y="49" text-anchor="middle" style="font:800 18px var(--display);fill:var(--ink)">${Math.round(frac * 100)}%</text>${label ? `<text x="45" y="62" text-anchor="middle" style="font-size:8px">${esc(label)}</text>` : ''}</svg>`;
+}
+
+// ================================================================ capabilities + data layer
+const claudeRt = window.claude;
+const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
+const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
+const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
+const limits = sample ? await sample.limits().catch(() => ({})) : {};
+const S = { entries: [], cats: [], chores: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+let current = 'today', chatHistory = [], chatBusy = false;
+
+let chain = Promise.resolve(); // one write at a time
+const queue = (fn) => { const p = chain.then(fn); chain = p.catch(() => {}); return p; };
+const col = (n) => db.collection(n);
+const sum = (rs) => rs.reduce((a, r) => a + r.xp, 0);
+
+let rafId = 0;
+const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { refreshBadge(); if (current !== 'ask' && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
+const editing = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#view') && a.type !== 'checkbox'; };
+function listen(name, key) { return col(name).onSnapshot((snap) => { S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.ready[key] = true; schedule(); }, (e) => { S.err = e.message || e.code; schedule(); }); }
+
+// ---------------------------------------------------------------- derived state
+const entriesOf = (g) => S.entries.filter((e) => e.goal === g);
+const latestSet = () => S.sets.slice().sort((a, b) => b.n - a.n)[0] || null;
+function currentCard(t) {
+  const set = latestSet(); if (!set) return null;
+  const card = set.cards.filter((c) => c.end_date >= t).sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
+  return card ? { set, card } : null;
+}
+function seasonXp(domain, t) {
+  const s = seasonOf(t), inS = (d) => d >= s.start && d <= s.end;
+  let xp = entriesOf(domain).filter((e) => inS(e.date)).reduce((a, e) => a + (e.xp || 0), 0);
+  if (domain === 'home') for (const set of S.sets) for (const c of set.cards) if (c.cleared && inS(c.cleared_date)) xp += XP.card_clear;
+  return xp;
+}
+function domainSummary(domain, t) {
+  const s = seasonOf(t), xp = seasonXp(domain, t), es = entriesOf(domain);
+  const active = new Set(es.map((e) => e.date)), shielded = new Set(S.shields.filter((x) => x.domain === domain).map((x) => x.date));
+  const used = S.shields.filter((x) => x.domain === domain).length;
+  return { season: { ...s, xp, ...levelFor(xp) }, momentum: momentum(active, shielded, t, domain === 'home'), shields: { available: shieldsAvailable(active.size, used), protected_today: shielded.has(t) } };
+}
+function roomStats(t) {
+  const set = latestSet(), planned = {};
+  if (set) for (const c of set.cards) if (c.start_date <= t) for (const i of c.items) { const r = i.room || 'General'; planned[r] = planned[r] || { planned: 0, done: 0 }; planned[r].planned++; if (i.done) planned[r].done++; }
+  const shards = {}; for (const st of S.sets) for (const c of st.cards) if (c.cleared) for (const r of new Set(c.items.map((i) => i.room || 'General'))) shards[r] = (shards[r] || 0) + 1;
+  const names = [...new Set([...S.chores.filter((c) => c.active !== false).map((c) => c.room), ...Object.keys(planned), ...Object.keys(shards)])].sort();
+  return names.map((room) => { const p = planned[room], n = shards[room] || 0, coverage = p && p.planned ? p.done / p.planned : 0; return { room, planned: p?.planned || 0, done: p?.done || 0, coverage, heat: coverage >= 0.7, shards: n, ...trophyFor(n) }; });
+}
+function weekActiveDays(t) { const from = ymd(monday(parse(t))); return new Set(entriesOf('fitness').filter((e) => e.date >= from && e.date <= t).map((e) => e.date)).size; }
+function openItems(t) { const cc = currentCard(t); return cc && cc.card.start_date <= t ? cc.card.items.filter((i) => !i.done).length : 0; }
+
+// ---------------------------------------------------------------- writes
+function awardRewards({ goal, date, seed, newCat }) {
+  const r = [{ kind: 'base', xp: XP[goal] || 10, label: 'Logged' }];
+  const prev = entriesOf(goal).filter((e) => e.date < date).map((e) => e.date).sort().pop();
+  if (prev && daysBetween(prev, date) >= 4 && !entriesOf(goal).some((e) => e.date === date && (e.rewards || []).some((x) => x.kind === 'comeback'))) r.push({ kind: 'comeback', xp: XP.comeback, label: 'Welcome back' });
+  if (newCat) r.push({ kind: 'discovery', xp: XP.discovery, label: `New: ${newCat}` });
+  const roll = luckyRoll(hashUnit(seed || uuid()));
+  if (roll) r.push({ kind: 'lucky', xp: roll.xp, label: roll.label });
+  return r;
+}
+async function addEntry(e) {
+  const rewards = awardRewards(e), ref = col('entries').doc();
+  const doc = { goal: e.goal, date: e.date, activity: e.activity, cat: e.cat || '', details: e.details || {}, raw: e.raw || '', source: e.source, rewards, xp: sum(rewards), created: new Date().toISOString() };
+  S.entries = [...S.entries, { id: ref.id, ...doc }];
+  await queue(() => ref.set(doc));
+  return { id: ref.id, ...doc };
+}
+async function removeEntry(id) {
+  S.entries = S.entries.filter((e) => e.id !== id);
+  const set = S.sets.find((s) => s.cards.some((c) => c.items.some((i) => i.entry_id === id)));
+  if (set) { const copy = structuredClone(set); for (const c of copy.cards) for (const i of c.items) if (i.entry_id === id) { i.done = false; i.done_at = null; i.entry_id = null; c.cleared = false; c.cleared_date = null; } S.sets = S.sets.map((s) => (s.id === set.id ? copy : s)); await queue(() => col('cardsets').doc(set.id).set(stripId(copy))); }
+  await queue(() => col('entries').doc(id).delete());
+}
+const stripId = (o) => { const { id, ...rest } = o; return rest; };
+
+async function ensureCategory(goal, name) {
+  const low = name.trim().toLowerCase();
+  const hit = S.cats.find((c) => c.goal === goal && (c.name.toLowerCase() === low || (c.aliases || []).some((a) => a.toLowerCase() === low)));
+  if (hit) return { cat: hit, created: false };
+  const ref = col('categories').doc(), doc = { goal, name: name.trim(), aliases: [] };
+  S.cats = [...S.cats, { id: ref.id, ...doc }];
+  await queue(() => ref.set(doc));
+  return { cat: { id: ref.id, ...doc }, created: true };
+}
+async function toggleItems(setId, cardCode, { check = [], uncheck = [] }) {
+  const copy = structuredClone(S.sets.find((s) => s.id === setId));
+  const card = copy.cards.find((c) => c.code === cardCode), t = today();
+  const date = t < card.start_date ? card.start_date : t > card.end_date ? card.end_date : t;
+  const rewards = [];
+  for (const id of check) {
+    const it = card.items.find((i) => i.id === id); if (!it || it.done) continue;
+    const { cat } = await ensureCategory('home', it.name);
+    const e = await addEntry({ goal: 'home', date, activity: it.name, cat: cat.id, details: { card: card.code }, raw: `Card ${card.code}: ${it.name}`, source: 'card', seed: `card-item-${copy.n}-${id}` });
+    it.done = true; it.done_at = date; it.entry_id = e.id; rewards.push(...e.rewards);
+  }
+  for (const id of uncheck) {
+    const it = card.items.find((i) => i.id === id); if (!it || !it.done) continue;
+    if (it.entry_id) await removeEntry2(it.entry_id);
+    it.done = false; it.done_at = null; it.entry_id = null;
+  }
+  const all = card.items.every((i) => i.done);
+  if (all && !card.cleared) { card.cleared = true; card.cleared_date = date; rewards.push({ kind: 'card_clear', xp: XP.card_clear, label: `Card ${card.code} cleared` }); }
+  else if (!all) { card.cleared = false; card.cleared_date = null; }
+  S.sets = S.sets.map((s) => (s.id === setId ? copy : s));
+  await queue(() => col('cardsets').doc(setId).set(stripId(copy)));
+  return rewards;
+}
+async function removeEntry2(id) { S.entries = S.entries.filter((e) => e.id !== id); await queue(() => col('entries').doc(id).delete()); }
+
+async function mergeCategories(keepId, dropId) {
+  const keep = S.cats.find((c) => c.id === keepId), drop = S.cats.find((c) => c.id === dropId);
+  if (!keep || !drop || keep.goal !== drop.goal || keepId === dropId) throw new Error('Pick two categories from the same goal.');
+  for (const e of S.entries.filter((x) => x.cat === dropId)) await queue(() => col('entries').doc(e.id).update({ cat: keepId, activity: keep.name }));
+  const aliases = [...new Set([...(keep.aliases || []), ...(drop.aliases || []), drop.name])];
+  await queue(() => col('categories').doc(keepId).update({ aliases }));
+  await queue(() => col('categories').doc(dropId).delete());
+  for (const s of S.sugg.filter((x) => x.a === dropId || x.b === dropId)) await queue(() => col('suggestions').doc(s.id).delete());
+}
+
+// ---------------------------------------------------------------- Claude: natural-language logging
+const COPY = { not_granted: 'Claude access is off for this page. Allow it when prompted to log by text or photo.', rate_limited: 'Too many requests right now. Try again in a minute.', upstream_error: 'That request failed. Try again.', invalid_json: 'I couldn’t read that. Try rephrasing.', session_expired: 'Sign in to Claude again, then retry.' };
+const errCopy = (e) => COPY[e?.code] || e?.message || 'Something went wrong.';
+
+async function logText(text, source, dateHint) {
+  if (!sample) throw new Error('Claude isn’t available in this view, so I can’t read the note.');
+  const t = dateHint || today();
+  const catList = S.cats.map((c) => `[${c.id}] ${c.goal}: ${c.name}${(c.aliases || []).length ? ` (aka ${c.aliases.join(', ')})` : ''}`).join('\n') || '(none yet)';
+  const out = await sample.json(`You turn a person's casual spoken/typed notes into structured log entries for a personal goals tracker.
+Goals: "fitness" (workouts, runs, stretching, sports) and "home" (cleaning, chores, household tasks).
+Today is ${t} (${parse(t).toLocaleDateString('en-US', { weekday: 'long' })}). Resolve "yesterday", "this morning", weekdays etc. to a YYYY-MM-DD date; default to today.
+One entry per distinct activity (e.g. "bench and squats" = two entries). Put numbers in details: sets, reps, weight (lb), duration_min, distance_mi, notes, room.
+Reuse an existing category whenever the activity is the same thing said differently ("jog" = "Running", "hoovered" = "Vacuum main floors"). Set best_match_id to that category's id and match_confidence 0-1 (>=0.8 certain it is the same; 0.5-0.8 probably; below 0.5 no real match). Use a short Title Case name for "activity" (the existing category name when matched).
+Existing categories:
+${catList}
+
+Note: ${JSON.stringify(text)}
+
+Reply with only JSON: {"entries":[{"goal":"fitness|home","date":"YYYY-MM-DD","activity":"Bench Press","best_match_id":null,"match_confidence":0,"details":{}}],"clarification":null}
+Set "clarification" to a short question only if the note was too unclear to log.`, { modelTier: 'quick', cache: false });
+
+  const saved = [], pending = [];
+  for (const e of out.entries || []) {
+    if (!GOALS.includes(e.goal) || !e.activity) continue;
+    const conf = Number(e.match_confidence) || 0, match = S.cats.find((c) => c.id === e.best_match_id && c.goal === e.goal);
+    let cat, created = false;
+    if (match && conf >= 0.8) {
+      cat = match;
+      const low = e.activity.toLowerCase();
+      if (low !== match.name.toLowerCase() && !(match.aliases || []).some((a) => a.toLowerCase() === low)) {
+        const aliases = [...(match.aliases || []), e.activity]; S.cats = S.cats.map((c) => (c.id === match.id ? { ...c, aliases } : c));
+        await queue(() => col('categories').doc(match.id).update({ aliases }));
+      }
+    } else {
+      const r = await ensureCategory(e.goal, e.activity); cat = r.cat; created = r.created;
+      if (match && conf >= 0.5 && cat.id !== match.id && !S.sugg.some((s) => s.a === cat.id && s.b === match.id)) {
+        const ref = col('suggestions').doc(), doc = { a: cat.id, b: match.id, a_name: cat.name, b_name: match.name, goal: e.goal, confidence: conf };
+        S.sugg = [...S.sugg, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); pending.push({ a: cat.name, b: match.name });
+      }
+    }
+    const date = /^\d{4}-\d\d-\d\d$/.test(e.date) ? e.date : t;
+    saved.push(await addEntry({ goal: e.goal, date, activity: cat.name, cat: cat.id, details: e.details || {}, raw: text, source, newCat: created ? cat.name : '' }));
+  }
+  return { saved, pending, clarification: out.clarification || null };
+}
+
+// ---------------------------------------------------------------- Claude: photo of a card
+async function resizeToBlob(file, max = 1600) {
+  const bmp = await createImageBitmap(file), s = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('Could not prepare the photo.'))), 'image/jpeg', 0.85));
+}
+async function readCardPhoto(file) {
+  if (!sample || !limits.images) throw new Error('Reading photos isn’t available in this view.');
+  const t = today(), set = latestSet(); if (!set) throw new Error('Generate a set of cards first.');
+  const cards = set.cards;
+  const listing = cards.map((c) => `${c.code} (card ${c.idx + 1} of ${set.cards.length}, ${c.label}):\n` + c.items.map((i) => `  item ${i.id}: ${i.name}`).join('\n')).join('\n');
+  const out = await sample.json(`These are photos of a printed 4x6 paper checklist card. Each card prints its place in the series like "07 / 39" in a corner (that is card C07), the day pair, and "Week N of 13", and 3-6 tasks each with a checkbox. A box counts as checked if it has a check, X, fill or scribble. Match the printed number to one of the known cards below (answer with its code, like C07) and report each of its items' state. If the code is unreadable, identify the card from the task list and say so with lower confidence. Be conservative: if a box is ambiguous give confidence below 0.7.
+Known cards:
+${listing}
+
+Reply with only JSON: {"card_code":"C07"|null,"card_confidence":0.9,"items":[{"item_id":"4-0","checked":true,"confidence":0.95}],"notes":""}`, { images: [await resizeToBlob(file)], modelTier: 'default', cache: false });
+  const card = cards.find((c) => c.code === out.card_code);
+  if (!card) return { card: null, notes: out.notes || 'I couldn’t tell which card that is. Try a closer, brighter photo.' };
+  const proposal = card.items.map((i) => { const f = (out.items || []).find((x) => String(x.item_id) === i.id); return { item_id: i.id, name: i.name, was_done: !!i.done, checked: f ? !!f.checked : !!i.done, confidence: f ? Number(f.confidence) || 0 : 0 }; });
+  const sure = out.card_confidence >= 0.85 && proposal.every((p) => p.confidence >= 0.8);
+  let rewards = [];
+  if (sure) rewards = await toggleItems(set.id, card.code, { check: proposal.filter((p) => p.checked && !p.was_done).map((p) => p.item_id) });
+  return { card: { setId: set.id, code: card.code }, proposal, auto: sure, rewards, notes: out.notes || '' };
+}
+
+// ================================================================ UI helpers
+function toast(msg, ms = 3500) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; $('#toasts').append(d); setTimeout(() => d.remove(), ms); }
+function rewardToast(head, rewards = []) {
+  const d = document.createElement('div'); d.className = 'toast'; const total = sum(rewards);
+  d.innerHTML = `<b>${esc(head)}</b>${total ? ` · +${total} XP` : ''}` + rewards.filter((r) => r.kind !== 'base').map((r) => `<div class="s2">${r.kind === 'lucky' ? '✨ ' : ''}${esc(r.label)} +${r.xp}</div>`).join('');
+  $('#toasts').append(d); setTimeout(() => d.remove(), 4800);
+}
+async function refreshBadge() { const b = $('#badge'); b.hidden = !S.sugg.length; b.textContent = S.sugg.length; }
+const view = $('#view');
+
+// ================================================================ router
+const tabs = { today: renderToday, trends: renderTrends, ask: renderAsk, cards: renderCards, more: renderMore };
+function go(tab, { keep = false } = {}) {
+  if (!tabs[tab]) tab = 'today'; current = tab;
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  const y = window.scrollY;
+  try { tabs[tab](); } catch (e) { view.innerHTML = `<div class="panel warn">${esc(e.message)}</div>`; }
+  window.scrollTo(0, keep ? y : 0);
+}
+document.querySelectorAll('#tabs button').forEach((b) => (b.onclick = () => { try { history.replaceState(null, '', '#' + b.dataset.tab); } catch {} go(b.dataset.tab); }));
+
+// ================================================================ Today
+let pulseNext = false;
+function renderToday() {
+  const t = today();
+  let dom = store.get('domain', 'home'); if (!GOALS.includes(dom)) dom = 'home';
+  const sums = { fitness: domainSummary('fitness', t), home: domainSummary('home', t) }, D = sums[dom], s = D.season, cls = dom === 'fitness' ? 'fit' : 'home';
+  const todays = entriesOf(dom).filter((e) => e.date === t);
+  const cc = currentCard(t), isToday = !!cc && cc.card.start_date <= t;
+  let bar;
+  if (dom === 'fitness') { const target = S.settings.fitness_weekly_target, done = weekActiveDays(t), left = Math.max(0, target - done); bar = { done, total: target, left, label: left ? `${done} of ${target} active days · ${left} left` : `${done} of ${target} active days · all set` }; }
+  else if (cc) { const total = cc.card.items.length, done = cc.card.items.filter((i) => i.done).length; bar = { done, total, left: total - done, label: isToday ? (total - done ? `${done} of ${total} · ${total - done} left` : `${done} of ${total} · card cleared`) : `Next card: ${cc.card.label} · ${total} tasks` }; }
+  else bar = { done: 0, total: 0, left: 0, label: 'No cards yet. Generate a set on the Cards tab.' };
+  const events = [];
+  for (const e of todays) for (const r of e.rewards || []) events.push({ ...r, name: e.activity });
+  if (dom === 'home') for (const set of S.sets) for (const c of set.cards) if (c.cleared && c.cleared_date === t) events.push({ kind: 'card_clear', xp: XP.card_clear, label: `Card ${c.code} cleared`, name: '' });
+  const xpToday = sum(events), pct = (n, of) => (of ? Math.round((100 * n) / of) : 0);
+  const logged = todays.filter((e) => e.source !== 'card');
+  const entryRow = (e) => { const d = { ...e.details }; delete d.card; const bits = Object.entries(d).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(' · '); return `<div class="entry"><div><b>${esc(e.activity)}</b>${bits ? `<div class="sub">${esc(bits)}</div>` : ''}</div><button class="link danger" data-del="${e.id}" aria-label="Delete">✕</button></div>`; };
+  const rooms = roomStats(t), near = rooms.filter((r) => r.heat && r.coverage < 1);
+
+  view.innerHTML = `${S.err ? `<div class="notice">Storage problem: ${esc(S.err)}</div>` : ''}
+    <div class="seg">${GOALS.map((k) => `<button data-dom="${k}" class="${k === dom ? 'on' : ''}">${k === 'fitness' ? 'Fitness' : 'Home'} <span class="sub">Lv ${sums[k].season.level}</span></button>`).join('')}</div>
+    <section class="panel ${cls}">
+      <div class="row"><div><div class="sub">${esc(s.name)} season</div><h2 style="margin:0">Level ${s.level}</h2></div><span class="grow"></span><div style="text-align:right"><b class="num" style="font-size:20px">${s.xp} XP</b><div class="sub">${xpToday ? `+${xpToday} today` : 'this season'}</div></div></div>
+      <div class="bar" title="${s.into} of ${s.need} XP to next level"><i style="width:${pct(s.into, s.need)}%"></i></div><div class="sub">${s.need - s.into} XP to level ${s.level + 1}</div>
+      <div class="chart-title">Today</div><div class="bar big"><i style="width:${pct(bar.done, bar.total)}%"></i></div><div class="barlabel">${esc(bar.label)}</div>
+      <div class="row wrap" style="margin-top:14px"><div class="momentum" title="Momentum rises with active days and dips gently after 2+ missed days. Your XP never goes down."><span class="sub">Momentum</span> ${Array.from({ length: MOMENTUM_MAX }, (_, i) => `<i class="${i < D.momentum ? 'on' : ''}"></i>`).join('')}</div><span class="grow"></span>
+        ${D.shields.protected_today ? `<button class="sec" id="unshield">🛡 Soft day on · undo</button>` : `<button class="sec" id="shield" ${D.shields.available ? '' : 'disabled'} title="Protects momentum for today. You earn one for every 7 active days (hold up to 3).">🛡 Soft day <span class="sub">${D.shields.available} ready</span></button>`}</div>
+    </section>
+    ${dom === 'home' ? `<section class="panel home"><h2>${cc ? `${esc(cc.card.label)} card <span class="sub">${cc.card.idx + 1} of ${cc.set.cards.length}${isToday ? '' : ' · starts ' + parse(cc.card.start_date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</span>` : 'Cards'}</h2>
+        ${cc ? `<div id="items">${cc.card.items.map((i) => `<label class="check ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''}><span>${esc(i.name)}${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div><p class="sub" style="margin:10px 0 0">Tap to check off, or add a photo of the paper card with +.</p>` : '<div class="empty">No card yet. Generate a quarter on the Cards tab.</div>'}</section>
+      ${logged.length ? `<section class="panel"><h2>Also logged today</h2>${logged.map(entryRow).join('')}</section>` : ''}
+      ${rooms.length ? `<section class="panel home"><h2>House</h2><div class="rooms">${rooms.map((r) => `<div class="room ${r.heat ? 'heat' : ''} ${r.planned ? '' : 'idle'}" style="--cov:${r.coverage}" title="${r.done} of ${r.planned} planned tasks done this quarter"><b>${esc(r.room)}</b><span>${r.planned ? Math.round(r.coverage * 100) + '% lit' : 'not planned'}</span><small>${r.tier ? { bronze: '🥉', silver: '🥈', gold: '🥇' }[r.tier] + ' ' : ''}${r.shards} shard${r.shards === 1 ? '' : 's'}${r.next ? ` · ${r.next} to next` : ''}</small></div>`).join('')}</div>
+        ${near.length ? `<p class="sub" style="margin:10px 0 0">${near.map((r) => `${esc(r.room)} is ${Math.round(r.coverage * 100)}% lit`).join(' · ')}.</p>` : ''}<p class="sub" style="margin:6px 0 0">Rooms light up as their card tasks get done. Clear a whole card for a shard in each of its rooms.</p></section>` : ''}`
+      : `<section class="panel fit"><h2>Logged today</h2>${todays.length ? todays.map(entryRow).join('') : '<div class="empty">Nothing yet. Tap + and tell me what you did.</div>'}</section>`}
+    <section class="panel"><h2>XP today${xpToday ? ` · +${xpToday}` : ''}</h2>${events.length ? events.map((e) => `<div class="entry"><span>${e.kind === 'lucky' ? '✨ ' : ''}${esc(e.label)}${e.name ? ` <span class="sub">· ${esc(e.name)}</span>` : ''}</span><b class="num">+${e.xp}</b></div>`).join('') : '<div class="empty">Nothing yet today. Tap + to add something.</div>'}
+      <p class="sub" style="margin:10px 0 0">Every log earns base XP. About ${Math.round(LUCKY_P * 100)}% also drop a bonus, and it always shows here.</p></section>`;
+
+  view.querySelectorAll('[data-dom]').forEach((b) => (b.onclick = () => { store.set('domain', b.dataset.dom); go('today'); }));
+  const setShield = (on) => async () => {
+    try { const id = `${dom}_${t}`; if (on) { S.shields = [...S.shields, { id, domain: dom, date: t }]; go('today', { keep: true }); await queue(() => col('shields').doc(id).set({ domain: dom, date: t })); } else { S.shields = S.shields.filter((x) => x.id !== id); go('today', { keep: true }); await queue(() => col('shields').doc(id).delete()); } } catch (e) { toast(e.message); }
+  };
+  $('#shield')?.addEventListener('click', setShield(true)); $('#unshield')?.addEventListener('click', setShield(false));
+  view.querySelectorAll('#items input').forEach((cb) => (cb.onchange = async () => {
+    cb.closest('.check').classList.toggle('done', cb.checked);
+    try { const r = await toggleItems(cc.set.id, cc.card.code, cb.checked ? { check: [cb.dataset.id] } : { uncheck: [cb.dataset.id] }); if (cb.checked) rewardToast('Done ✓', r); else toast('Unchecked. XP for that task removed.'); go('today', { keep: true }); } catch (e) { toast(e.message); go('today', { keep: true }); }
+  }));
+  view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => confirmDialog('Delete this entry? Its XP is removed too.', async () => { await removeEntry(b.dataset.del); go('today', { keep: true }); })));
+  if (pulseNext) { pulseNext = false; if (bar.left === 1) view.querySelector('#items .check:not(.done)')?.classList.add('pulse'); }
+}
+function confirmDialog(msg, onYes) {
+  const d = $('#dlg'); d.innerHTML = `<p>${esc(msg)}</p><div class="row"><button class="sec" id="no">Cancel</button><span class="grow"></span><button class="primary" id="yes">Yes</button></div>`; d.showModal();
+  $('#no', d).onclick = () => d.close(); $('#yes', d).onclick = async () => { d.close(); try { await onYes(); } catch (e) { toast(e.message); } };
+}
+
+// ================================================================ Trends
+let dayOffset = 0;
+function rangeFor(kind) {
+  const now = new Date(), t = ymd(now); let from, to, buckets = [];
+  if (kind === 'week') { const m = monday(now); from = m; to = addDays(m, 6); buckets = Array.from({ length: 7 }, (_, i) => ({ label: WD[i][0], from: ymd(addDays(m, i)), to: ymd(addDays(m, i)) })); }
+  else if (kind === 'month') { from = new Date(now.getFullYear(), now.getMonth(), 1); to = new Date(now.getFullYear(), now.getMonth() + 1, 0); buckets = Array.from({ length: to.getDate() }, (_, i) => { const d = ymd(addDays(from, i)); return { label: String(i + 1), from: d, to: d }; }); }
+  else if (kind === 'quarter') { const m = addDays(monday(now), -12 * 7); from = m; to = addDays(m, 13 * 7 - 1); buckets = Array.from({ length: 13 }, (_, i) => { const s = addDays(m, i * 7); return { label: `${s.getMonth() + 1}/${s.getDate()}`, from: ymd(s), to: ymd(addDays(s, 6)) }; }); }
+  else { from = new Date(now.getFullYear(), now.getMonth() - 11, 1); to = new Date(now.getFullYear(), now.getMonth() + 1, 0); buckets = Array.from({ length: 12 }, (_, i) => { const s = new Date(from.getFullYear(), from.getMonth() + i, 1); return { label: s.toLocaleString('en', { month: 'short' }), from: ymd(s), to: ymd(new Date(s.getFullYear(), s.getMonth() + 1, 0)) }; }); }
+  return { from: ymd(from), to: ymd(to), today: t, buckets };
+}
+const KINDS = [['day', 'Day'], ['week', 'Week'], ['month', 'Month'], ['quarter', '3 Months'], ['year', 'Year']];
+function planItems(from, to) { const out = []; for (const set of S.sets) for (const c of set.cards) if (c.start_date >= from && c.start_date <= to) for (const i of c.items) out.push({ room: i.room || 'General', done: !!i.done }); return out; }
+function renderTrends() {
+  const kind = store.get('range', 'week');
+  const seg = `<div class="seg">${KINDS.map(([k, n]) => `<button data-k="${k}" class="${k === kind ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  const bind = () => view.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => { store.set('range', b.dataset.k); go('trends'); }));
+  if (kind === 'day') return renderDay(seg, bind);
+  const R = rangeFor(kind), plan = planItems(R.from, R.today < R.to ? R.today : R.to);
+  const showEvery = { week: 1, month: 5, quarter: 2, year: 1 }[kind], label = { week: 'This week', month: 'This month', quarter: 'Last 13 weeks', year: 'Last 12 months' }[kind];
+  const panel = (goal, title) => {
+    const es = entriesOf(goal).filter((e) => e.date >= R.from && e.date <= R.to), color = COLORS[goal];
+    const series = R.buckets.map((b) => ({ label: b.label, value: es.filter((e) => e.date >= b.from && e.date <= b.to).length }));
+    const dayCounts = {}; es.forEach((e) => (dayCounts[e.date] = (dayCounts[e.date] || 0) + 1));
+    const dow = WD.map((d, i) => ({ label: d, value: es.filter((e) => (parse(e.date).getDay() + 6) % 7 === i).length }));
+    const topDay = dow.some((d) => d.value) ? dow.slice().sort((a, b) => b.value - a.value)[0].label : '–';
+    const byCat = {}; es.forEach((e) => (byCat[e.activity] = (byCat[e.activity] || 0) + 1));
+    const top = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([l, value]) => ({ label: l, value }));
+    let stats, extra = '';
+    if (goal === 'fitness') stats = [[Object.keys(dayCounts).length, 'active days'], [es.length, 'exercises logged'], [topDay, 'busiest day']];
+    else {
+      const planned = plan.length, done = plan.filter((p) => p.done).length;
+      stats = [[planned ? Math.round((100 * done) / planned) + '%' : '–', 'of card tasks done'], [es.length, 'tasks completed'], [topDay, 'busiest day']];
+      const rooms = {}; plan.forEach((p) => { rooms[p.room] = rooms[p.room] || { done: 0, of: 0 }; rooms[p.room].of++; if (p.done) rooms[p.room].done++; });
+      const rb = Object.entries(rooms).sort((a, b) => b[1].of - a[1].of).map(([l, v]) => ({ label: l, value: v.done, of: v.of }));
+      extra = rb.length ? `<div class="chart-title">Card tasks done, by room</div>${hbars(rb, color)}` : '';
+      if (planned) extra = `<div class="row" style="margin-top:6px">${ring(done / planned, color, 'cards')}<div class="sub">${done} of ${planned} planned card tasks checked off so far.</div></div>` + extra;
+    }
+    const body = es.length || (goal === 'home' && plan.length)
+      ? `<div class="stats">${stats.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div>${extra}
+         <div class="chart-title">${goal === 'fitness' ? 'Exercises' : 'Tasks'} logged · ${label.toLowerCase()}</div>${bars(series, color, { showEvery })}
+         ${kind !== 'week' ? `<div class="chart-title">Daily activity</div>${heatmap(dayCounts, R.from, R.to < R.today ? R.to : R.today, color)}` : ''}
+         <div class="chart-title">By day of week</div>${bars(dow, color, { height: 90 })}${top.length ? `<div class="chart-title">Most frequent</div>${hbars(top, color)}` : ''}`
+      : `<div class="empty">Nothing logged ${label.toLowerCase()} yet.</div>`;
+    return `<section class="panel ${goal === 'fitness' ? 'fit' : 'home'}"><h2>${title}</h2>${body}</section>`;
+  };
+  view.innerHTML = `<h1>Trends</h1>${seg}${panel('fitness', 'Fitness')}${panel('home', 'Home life')}`; bind();
+}
+function renderDay(seg, bind) {
+  const day = ymd(addDays(new Date(), dayOffset));
+  const panel = (g, title) => {
+    const es = entriesOf(g).filter((e) => e.date === day), xp = sum(es.map((e) => ({ xp: e.xp || 0 })));
+    return `<section class="panel ${g === 'fitness' ? 'fit' : 'home'}"><div class="row"><h2 class="grow">${title}</h2><b class="num">${xp ? '+' + xp + ' XP' : ''}</b></div>${es.length ? es.map((e) => { const d = { ...e.details }; delete d.card; const bits = Object.entries(d).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(' · '); return `<div class="entry"><div><b>${esc(e.activity)}</b>${bits ? `<div class="sub">${esc(bits)}</div>` : ''}</div><span class="sub">${esc(e.source)}</span></div>`; }).join('') : '<div class="empty">Nothing logged.</div>'}</section>`;
+  };
+  view.innerHTML = `<h1>Trends</h1>${seg}<div class="row" style="margin-bottom:12px"><button class="sec" id="prev" aria-label="Previous day">◀</button><b class="grow" style="text-align:center">${parse(day).toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}</b><button class="sec" id="next" aria-label="Next day" ${dayOffset >= 0 ? 'disabled' : ''}>▶</button></div>${panel('fitness', 'Fitness')}${panel('home', 'Home life')}`;
+  bind(); $('#prev').onclick = () => { dayOffset--; go('trends'); }; $('#next').onclick = () => { dayOffset++; go('trends'); };
+}
+
+// ================================================================ Ask (conversational, with tools + charts)
+function aggregate(a) {
+  const from = a.from || '0000', to = a.to || '9999', t = today();
+  if ((a.source || 'entries') === 'entries') {
+    const es = S.entries.filter((e) => (!a.goal || e.goal === a.goal) && e.date >= from && e.date <= to);
+    const key = (e) => ({ weekday: WD[(parse(e.date).getDay() + 6) % 7], week: ymd(monday(parse(e.date))), month: e.date.slice(0, 7), date: e.date, activity: e.activity }[a.group_by]);
+    const m = new Map(); if (a.group_by === 'weekday') WD.forEach((d) => m.set(d, 0));
+    for (const e of es) { const k = key(e); if (k == null) continue; m.set(k, (m.get(k) || 0) + (a.metric === 'xp' ? e.xp || 0 : 1)); }
+    let rows = [...m].map(([label, value]) => ({ label, value }));
+    if (a.group_by === 'activity') rows = rows.sort((x, y) => y.value - x.value).slice(0, 15); else if (a.group_by !== 'weekday') rows.sort((x, y) => (x.label < y.label ? -1 : 1));
+    return rows;
+  }
+  const m = new Map();
+  for (const set of S.sets) for (const c of set.cards) {
+    if (c.start_date > t || c.start_date < from || c.start_date > to) continue;
+    const past = c.end_date < t;
+    for (const i of c.items) {
+      const k = { room: i.room || 'General', weekday: c.label, week: ymd(monday(parse(c.start_date))), month: c.start_date.slice(0, 7) }[a.group_by || 'room']; if (k == null) continue;
+      const r = m.get(k) || { planned: 0, done: 0, ppast: 0, dpast: 0 }; r.planned++; if (i.done) r.done++; if (past) { r.ppast++; if (i.done) r.dpast++; } m.set(k, r);
+    }
+  }
+  const metric = a.metric || 'done_pct';
+  const rows = [...m].map(([label, r]) => ({ label, value: metric === 'planned' ? r.planned : metric === 'done' ? r.done : metric === 'missed' ? r.ppast - r.dpast : r.ppast ? Math.round((100 * r.dpast) / r.ppast) : 0 }));
+  if (a.group_by === 'weekday') rows.sort((x, y) => ['Mon–Tue', 'Wed–Thu', 'Fri–Sat'].indexOf(x.label) - ['Mon–Tue', 'Wed–Thu', 'Fri–Sat'].indexOf(y.label)); else if (a.group_by !== 'room') rows.sort((x, y) => (x.label < y.label ? -1 : 1));
+  return rows;
+}
+const AGG_PROPS = {
+  source: { type: 'string', enum: ['entries', 'cards'], description: 'entries = logged workouts/chores; cards = printed card checkboxes (planned vs done).' },
+  goal: { type: 'string', enum: GOALS, description: 'Only for source=entries.' },
+  group_by: { type: 'string', enum: ['weekday', 'week', 'month', 'date', 'activity', 'room'], description: 'room only for cards; activity/date only for entries. For cards, weekday = which 2-day card (Mon–Tue, Wed–Thu, Fri–Sat).' },
+  metric: { type: 'string', enum: ['count', 'xp', 'planned', 'done', 'missed', 'done_pct'], description: 'entries: count|xp. cards: planned|done|missed|done_pct (missed and done_pct only count cards whose days are over).' },
+  from: { type: 'string', description: 'YYYY-MM-DD inclusive.' }, to: { type: 'string', description: 'YYYY-MM-DD inclusive.' },
+};
+function drawChart(c) {
+  const color = COLORS[c.goal] || COLORS.home, rows = c.rows || []; let body;
+  if (!rows.length) body = '<div class="empty">No data for that.</div>';
+  else if (c.kind === 'heatmap') { const counts = Object.fromEntries(rows.map((r) => [r.label, r.value])), ds = Object.keys(counts).sort(); body = heatmap(counts, ds[0], ds[ds.length - 1], color); }
+  else if (c.kind === 'hbars') body = hbars(rows, color); else body = bars(rows, color, { showEvery: Math.ceil(rows.length / 12) });
+  return `<div class="panel" style="padding:12px"><div class="chart-title" style="margin-top:0">${esc(c.title)}</div>${body}</div>`;
+}
+function chatInstructions() {
+  const t = today(), es = S.entries;
+  const first = es.map((e) => e.date).sort()[0] || 'none';
+  return `You are the answer engine inside the user's personal habit app. They discover their own patterns by asking you questions; you are not a coach or a nag.
+Today is ${t} (${parse(t).toLocaleDateString('en-US', { weekday: 'long' })}). Printed cards run Mon-Sat; Sunday is a rest day. Domains: fitness and home.
+Data: ${es.length} logged entries since ${first}; ${S.sets.length} card sets. Use the tools to look at the data before answering: aggregate (counts/xp/planned-vs-done by weekday, week, month, activity, room), get_entries (raw rows), and show_chart (draws a chart for the user from the same arguments as aggregate; the app computes the numbers, so do not pass numbers yourself).
+Current status: fitness bar "${statusBar('fitness')}"; home bar "${statusBar('home')}".
+How to answer: query first and look from a couple of angles, then answer plainly with real numbers and dates. Prefer showing evidence with 1-2 charts over long prose. Be warm and brief. Say so when the sample is small. Never invent data.
+Rules: do not lecture, do not moralize about misses, do not suggest a weekly review or routine, no motivational filler. Only if it flows naturally, finish with one line starting "Tiny move:" giving a single optional, concrete suggestion.`;
+}
+function statusBar(g) { const t = today(); if (g === 'fitness') return `${weekActiveDays(t)} of ${S.settings.fitness_weekly_target} active days this week`; const cc = currentCard(t); return cc ? `${cc.card.items.filter((i) => i.done).length} of ${cc.card.items.length} on the ${cc.card.label} card` : 'no card'; }
+function renderAsk() {
+  const ideas = ['When do I tend to slip?', 'How consistent have I been this month?', 'Which rooms get the least attention?', 'What does my workout mix look like?', 'How close am I to the next level?'];
+  view.innerHTML = `<h1>Ask</h1>${sample ? '' : '<div class="notice">Claude isn’t available in this view, so chat is off.</div>'}
+    ${chatHistory.length ? '' : `<div class="chips">${ideas.map((i) => `<button>${esc(i)}</button>`).join('')}</div>`}<div class="chat" id="chat"></div>
+    <div class="row"><input id="q" placeholder="Ask anything about your patterns…" ${sample ? '' : 'disabled'}><button class="primary" id="send" ${sample ? '' : 'disabled'}>Send</button><button class="sec" id="stop" hidden>Stop</button></div>`;
+  const draw = () => { $('#chat').innerHTML = chatHistory.map((m) => `<div class="bubble ${m.role === 'user' ? 'user' : 'ai'}">${esc(m.content)}</div>${(m.charts || []).map(drawChart).join('')}`).join(''); };
+  let ctl;
+  const send = async (text) => {
+    if (!text.trim() || chatBusy || !sample) return; chatBusy = true; chatHistory.push({ role: 'user', content: text }); draw(); $('#q').value = '';
+    const charts = [], bubble = document.createElement('div'); bubble.className = 'bubble ai spinner'; bubble.textContent = 'Looking through your data…'; $('#chat').append(bubble);
+    ctl = new AbortController(); $('#stop').hidden = false; $('#send').disabled = true;
+    const tools = limits.tools ? [
+      { name: 'aggregate', description: 'Summarize the tracker data. Returns [{label,value}] rows (max ~15-60).', inputSchema: { type: 'object', properties: AGG_PROPS, required: ['group_by'] }, execute: (a) => aggregate(a) },
+      { name: 'get_entries', description: 'List raw log entries, newest first (max 80), as lines "date goal activity details".', inputSchema: { type: 'object', properties: { goal: AGG_PROPS.goal, from: AGG_PROPS.from, to: AGG_PROPS.to, activity: { type: 'string', description: 'Case-insensitive substring of the activity name.' } } },
+        execute: (a) => S.entries.filter((e) => (!a.goal || e.goal === a.goal) && (!a.from || e.date >= a.from) && (!a.to || e.date <= a.to) && (!a.activity || e.activity.toLowerCase().includes(String(a.activity).toLowerCase()))).sort((x, y) => y.date.localeCompare(x.date)).slice(0, 80).map((e) => `${e.date} ${e.goal} ${e.activity} ${JSON.stringify(e.details || {})}`) },
+      { name: 'show_chart', description: 'Show a chart to the user. kind: bars (ordered), hbars (ranked), heatmap (needs group_by=date). Other args as in aggregate.', inputSchema: { type: 'object', properties: { kind: { type: 'string', enum: ['bars', 'hbars', 'heatmap'] }, title: { type: 'string' }, ...AGG_PROPS }, required: ['kind', 'title', 'group_by'] },
+        execute: (a) => { const rows = aggregate(a); charts.push({ kind: a.kind, title: a.title, goal: a.goal || 'home', rows }); bubble.dataset.c = charts.length; return `Chart shown (${rows.length} rows).`; } },
+    ] : undefined;
+    const turns = [{ role: 'user', content: chatInstructions() + (tools ? '' : '\n\nRecent entries (no tools available):\n' + S.entries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 150).map((e) => `${e.date} ${e.goal} ${e.activity}`).join('\n')) }, ...chatHistory.map(({ role, content }) => ({ role, content }))];
+    try {
+      const r = await sample(turns, { tools, signal: ctl.signal, cache: false, onText: ({ text }) => { bubble.classList.remove('spinner'); bubble.textContent = text; } });
+      chatHistory.push({ role: 'assistant', content: r.text, charts });
+    } catch (e) { if (e.code === 'cancelled') chatHistory.push({ role: 'assistant', content: e.text || '(stopped)', charts }); else { chatHistory.pop(); toast(errCopy(e)); } }
+    chatBusy = false; draw(); $('#stop').hidden = true; $('#send').disabled = false; $('#q').focus();
+  };
+  $('#send').onclick = () => send($('#q').value); $('#q').onkeydown = (e) => { if (e.key === 'Enter') send($('#q').value); }; $('#stop').onclick = () => ctl?.abort();
+  view.querySelectorAll('.chips button').forEach((b) => (b.onclick = () => { send(b.textContent); b.parentElement.remove(); })); draw();
+}
+
+// ================================================================ Cards
+const PRESETS = [[39, 'Every card'], [13, 'Weekly'], [7, 'Every 2 weeks'], [6, 'Twice a month'], [3, 'Monthly'], [1, 'Quarterly']];
+const freqSelect = (v, id = '') => { const o = PRESETS.some(([n]) => n === v) ? PRESETS : [...PRESETS, [v, `${v}× / quarter`]]; return `<select ${id ? `id="${id}"` : 'data-chore="freq"'}>${o.map(([n, l]) => `<option value="${n}" ${n === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`; };
+let preview = null;
+function renderCards() {
+  const active = S.chores.filter((c) => c.active !== false).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
+  const rs = roomStats(today()).filter((r) => r.planned >= 3 && r.coverage < 0.6);
+  const sets = S.sets.slice().sort((a, b) => b.n - a.n);
+  view.innerHTML = `<h1>Cards</h1>
+    <section class="panel"><h2>Generate a quarter of cards</h2><div class="row wrap"><div class="grow"><label class="sub" for="start">First Monday</label><input type="date" id="start" value="${nextMonday(today())}"></div><button class="primary" id="gen" ${active.length ? '' : 'disabled'}>Preview</button></div>
+      ${rs.length ? `<label class="row" style="margin-top:10px"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last set: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
+      ${active.length ? '' : '<p class="sub">Add some house tasks below first.</p>'}<div id="preview"></div></section>
+    <section class="panel"><h2>Cycles</h2>${sets.length ? `${sets.map((x) => `<div class="entry"><span>Cycle ${x.n} · starts ${x.start_date}${x.n === sets[0].n ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('')}
+      <div class="chart-title">Start the next cycle with the same cards</div><div class="row wrap"><div class="grow"><label class="sub" for="cyc-start">First Monday</label><input type="date" id="cyc-start" value="${nextMonday(addDaysIso(sets[0].cards[sets[0].cards.length - 1].end_date, 1))}"></div><button class="primary" id="cyc-go">Start cycle</button></div>
+      <p class="sub">Your printed cards carry no dates, only their place in the cycle (like 07 / 39). Start a new cycle and keep using the same deck. Checking boxes always counts toward the current cycle.</p>` : '<div class="empty">None yet. Generate cards above.</div>'}</section>
+    <section class="panel"><h2>Printable decks</h2>${[...new Map(sets.map((x) => [x.deck || 'd' + x.n, x])).values()].map((x) => `<div class="entry"><span>Deck ${esc(String(x.deck || 'd' + x.n).replace('d', ''))} · ${x.cards.length} cards</span><button class="sec" data-print="${x.id}">PDF to print</button></div>`).join('') || '<div class="empty">None yet.</div>'}
+      <p class="sub">A PDF with one 4×6 in card per page and no dates. On iPhone: open the saved PDF in Files, tap Share, then Print, and choose your printer. The page size is already 4×6. If you change the house tasks and generate again, that makes a new deck to reprint.</p></section>
+    <section class="panel"><h2>House tasks</h2><p class="sub">${active.reduce((s, c) => s + Math.min(c.per_quarter, 39), 0)} placements across 39 cards. ${(() => { const t = active.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0); return t > 195 ? `<b>${t - 195} over</b>: 195 keeps every card at 5 or fewer, and cards get a 6th task only above that.` : t < 117 ? 'Under 117 leaves some cards with fewer than 3.' : 'This keeps every card at 3 to 5.'; })()}</p>
+      ${active.map((c) => `<div class="chore" data-id="${c.id}"><input data-chore="name" value="${esc(c.name)}"><div class="row"><input data-chore="room" value="${esc(c.room)}">${freqSelect(c.per_quarter)}<button class="link danger" data-rm="${c.id}" aria-label="Remove">✕</button></div></div>`).join('')}
+      <div class="chore"><input id="nc-name" placeholder="New task"><div class="row"><input id="nc-room" placeholder="Room">${freqSelect(13, 'nc-freq')}<button class="sec" id="nc-add">Add</button></div></div></section>`;
+  $('#gen').onclick = () => generate(active, rs);
+  $('#cyc-go')?.addEventListener('click', () => startCycle(sets[0], $('#cyc-start').value).catch((e) => toast(e.message)));
+  view.querySelectorAll('[data-print]').forEach((b) => (b.onclick = () => saveCardsFile(S.sets.find((s) => s.id === b.dataset.print))));
+  view.querySelectorAll('.chore[data-id]').forEach((el) => el.querySelectorAll('[data-chore]').forEach((f) => (f.onchange = async () => {
+    const c = S.chores.find((x) => x.id === el.dataset.id); const upd = { name: $('[data-chore=name]', el).value.trim() || c.name, room: $('[data-chore=room]', el).value.trim() || 'General', per_quarter: +$('select', el).value };
+    await queue(() => col('chores').doc(c.id).update(upd)); await ensureCategory('home', upd.name); toast('Saved');
+  })));
+  view.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = () => confirmDialog('Remove this task from future cards? Past cards keep it.', async () => { await queue(() => col('chores').doc(b.dataset.rm).update({ active: false })); })));
+  $('#nc-add').onclick = async () => { const name = $('#nc-name').value.trim(); if (!name) return; await queue(() => col('chores').doc().set({ name, room: $('#nc-room').value.trim() || 'General', per_quarter: +$('#nc-freq').value, active: true })); await ensureCategory('home', name); };
+}
+async function startCycle(src, startDate) {
+  const n = Math.max(0, ...S.sets.map((x) => x.n)) + 1, id = `s${n}`, m0 = nextMonday(startDate);
+  const set = { n, deck: src.deck || `d${src.n}`, start_date: m0, created: new Date().toISOString(), cards: src.cards.map((c) => { const w = Math.floor(c.idx / 3), seg = c.idx % 3, st = addDaysIso(m0, w * 7 + seg * 2);
+    return { code: c.code, idx: c.idx, start_date: st, end_date: addDaysIso(st, 1), label: c.label, cleared: false, cleared_date: null, items: c.items.map((i) => ({ id: i.id, chore_id: i.chore_id, name: i.name, room: i.room, done: false, done_at: null, entry_id: null })) }; }) };
+  S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set)); toast(`Cycle ${n} starts ${m0}`);
+}
+function generate(active, weak) {
+  const boostRooms = $('#boost')?.checked ? weak.map((r) => r.room) : [];
+  preview = buildQuarter(active.map((c, i) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), $('#start').value, { boostRooms });
+  $('#preview').innerHTML = `${preview.warnings.map((w) => `<p class="warn">⚠ ${esc(w)}</p>`).join('')}<div class="chart-title">Tasks per card (13 weeks × Mon–Tue / Wed–Thu / Fri–Sat)</div>
+    <div class="strip">${preview.cards.map((c) => `<i style="height:${(c.items.length / 6) * 100}%" title="${c.items.length}"></i>`).join('')}</div>
+    <div class="chart-title">Placements by room</div>${hbars(Object.entries(preview.roomCoverage).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), 'var(--home)')}
+    ${preview.sixes ? `<p class="sub"><b>${preview.sixes} card${preview.sixes === 1 ? ' has' : 's have'} 6 tasks.</b> Your list adds up to ${preview.total} placements and 5 per card fits ${preview.softMax * 39}. To keep every card at 5 or fewer, remove or lower about ${preview.overBy} placements in House tasks.</p>` : '<p class="sub">Every card has 3 to 5 tasks.</p>'}${preview.boosted.length ? `<p class="sub">Extra attention this round: ${preview.boosted.map(esc).join(', ')}.</p>` : ''}<p class="sub">The first cycle starts Monday ${preview.startDate}. Printed cards show no dates, only the card's place in the 39-card cycle, so you can reuse them. Saving does not touch your existing cards.</p>
+    <div class="row"><button class="primary" id="save-set">Save and get PDF</button><button class="sec" id="save-only">Save only</button></div>`;
+  const save = async (file) => {
+    const n = Math.max(0, ...S.sets.map((s) => s.n)) + 1, id = `s${n}`;
+    const set = { n, deck: `d${n}`, start_date: preview.startDate, created: new Date().toISOString(), cards: preview.cards.map((c) => ({ code: `C${pad(c.idx + 1)}`, idx: c.idx, start_date: c.start_date, end_date: c.end_date, label: c.label, cleared: false, cleared_date: null, items: c.items.map((it, pos) => ({ id: `${c.idx}-${pos}`, chore_id: it.chore_id, name: it.name, room: it.room, done: false, done_at: null, entry_id: null })) })) };
+    S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set));
+    if (file) saveCardsFile({ id, ...set }); else toast('Saved');
+  };
+  $('#save-set').onclick = () => save(true).catch((e) => toast(e.message)); $('#save-only').onclick = () => save(false).catch((e) => toast(e.message));
+}
+const weekOf = (c) => Math.floor(c.idx / 3) + 1;
+const cardNo = (set, c) => `${pad(c.idx + 1)} / ${set.cards.length}`;
+function cardsHtml(set) {
+  const css = '@page{size:4in 6in;margin:0}body{margin:0;background:#ddd;font-family:-apple-system,Helvetica,Arial,sans-serif}.bar{padding:12px;background:#222;color:#fff;font-size:14px}.bar button{font-size:15px;padding:6px 12px}.pcard{width:4in;height:6in;padding:.28in .3in;box-sizing:border-box;page-break-after:always;break-after:page;display:flex;flex-direction:column;background:#fff;margin:12px auto;color:#000;overflow:hidden}header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:.1in;margin-bottom:.12in}h3{margin:0;font-size:26pt;letter-spacing:.02em;line-height:1}.dates{font-size:11pt;margin-top:4px}.code{font:700 15pt Menlo,monospace;border:2px solid #000;padding:2px 8px;border-radius:4px}ul{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;justify-content:space-evenly}li{display:flex;align-items:center;gap:.14in;font-size:14pt;line-height:1.15}.box{width:.36in;height:.36in;border:2.5px solid #000;border-radius:4px;flex:none}.room{font-size:8.5pt;color:#555;display:block;text-transform:uppercase;letter-spacing:.06em}footer{font-size:8pt;color:#555;margin-top:.08in;display:flex;justify-content:space-between}@media print{body{background:#fff}.bar{display:none}.pcard{margin:0}}';
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Cards</title><style>${css}</style></head><body><div class="bar">${set.cards.length} cards, 4×6 in. <button onclick="window.print()">Print</button> Choose 4×6 paper and no margins.</div>` +
+    set.cards.map((c) => `<section class="pcard"><header><div><h3>${esc(c.label.replace('–', ' · ').toUpperCase())}</h3><div class="dates">Week ${weekOf(c)} of ${Math.ceil(set.cards.length / 3)}</div></div><div class="code">${cardNo(set, c)}</div></header><ul>${c.items.map((i) => `<li><span class="box"></span><span>${esc(i.name)}${i.room ? `<span class="room">${esc(i.room)}</span>` : ''}</span></li>`).join('')}</ul><footer><span>Home · 2-day card</span><span>Check the box when done</span></footer></section>`).join('') + '</body></html>';
+}
+function cardsPdf(set) {
+  const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
+  const doc = new J({ unit: 'pt', format: [288, 432] }), L = 24, R = 264, weeks = Math.ceil(set.cards.length / 3);
+  set.cards.forEach((c, ci) => {
+    if (ci) doc.addPage([288, 432]);
+    doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26); doc.text(c.label.replace('–', ' · ').toUpperCase(), L, 52);
+    doc.setFont('helvetica', 'normal').setFontSize(11); doc.text(`Week ${weekOf(c)} of ${weeks}`, L, 70);
+    doc.setFont('courier', 'bold').setFontSize(15); const no = cardNo(set, c), cw = doc.getTextWidth(no) + 16;
+    doc.setLineWidth(1.6); doc.roundedRect(R - cw, 30, cw, 26, 3, 3); doc.text(no, R - cw / 2, 48, { align: 'center' });
+    doc.setLineWidth(1.6); doc.line(L, 82, R, 82);
+    const top = 92, bottom = 398, n = c.items.length, rh = (bottom - top) / n;
+    c.items.forEach((it, i) => {
+      const cy = top + rh * i + rh / 2;
+      doc.setLineWidth(2); doc.roundedRect(L, cy - 13, 26, 26, 3, 3);
+      doc.setFont('helvetica', 'normal').setFontSize(14);
+      const lines = doc.splitTextToSize(it.name, R - 60).slice(0, 2), y0 = cy - (lines.length - 1) * 8 + (it.room ? -3 : 5);
+      doc.text(lines, 58, y0, { lineHeightFactor: 1.15 });
+      if (it.room) { doc.setFontSize(8).setTextColor(100); doc.text(it.room.toUpperCase(), 58, y0 + (lines.length - 1) * 16 + 12); doc.setTextColor(0); }
+    });
+    doc.setFontSize(8).setTextColor(100); doc.text('Home - 2-day card', L, 420); doc.text('Check the box when done', R, 420, { align: 'right' });
+  });
+  return doc.output('blob');
+}
+async function saveCardsFile(set) {
+  if (!downloads) { toast('Saving files isn’t available in this view.'); return; }
+  try {
+    const pdf = cardsPdf(set);
+    if (pdf) await downloads.save({ filename: `life-tracker-cards-deck-${set.deck || set.n}.pdf`, data: pdf });
+    else await downloads.save({ filename: `life-tracker-cards-deck-${set.deck || set.n}.html`, data: cardsHtml(set) });
+    toast('Saved. Open the file and print it.');
+  } catch (e) { if (e.code !== 'declined') toast(e.message || 'Could not save the file.'); }
+}
+
+// ================================================================ More
+function renderMore() {
+  const cats = S.cats.slice().sort((a, b) => a.goal.localeCompare(b.goal) || a.name.localeCompare(b.name));
+  const uses = (id) => S.entries.filter((e) => e.cat === id).length, opt = (c) => `<option value="${c.id}">${c.goal} · ${esc(c.name)} (${uses(c.id)})</option>`;
+  const recent = S.entries.filter((e) => e.date >= ymd(addDays(new Date(), -14))).sort((a, b) => b.date.localeCompare(a.date) || b.created.localeCompare(a.created));
+  const row = (e) => { const d = { ...e.details }; delete d.card; const bits = Object.entries(d).map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v}`).join(' · '); return `<div class="entry"><div><span class="tag ${e.goal}">${e.goal}</span> <b>${esc(e.activity)}</b><div class="sub">${parse(e.date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}${bits ? ' · ' + esc(bits) : ''}</div></div><button class="link danger" data-del="${e.id}" aria-label="Delete">✕</button></div>`; };
+  view.innerHTML = `<h1>More</h1>
+    <section class="panel"><h2>Settings</h2><div class="row"><label class="grow" for="target">Fitness target: active days per week</label><select id="target" style="width:80px">${[1, 2, 3, 4, 5, 6, 7].map((n) => `<option ${n === S.settings.fitness_weekly_target ? 'selected' : ''}>${n}</option>`).join('')}</select></div><p class="sub">Only used for the "X of Y · Z left" bar. Nothing is lost for missing it.</p></section>
+    <section class="panel"><h2>Possible duplicates</h2>${S.sugg.length ? S.sugg.map((s) => `<div class="sug"><b>${esc(s.a_name)}</b> and <b>${esc(s.b_name)}</b>: same thing? <span class="sub">(${Math.round(s.confidence * 100)}% sure)</span><div class="row wrap" style="margin-top:8px"><button class="primary" data-keep="${s.b}" data-drop="${s.a}">Merge into “${esc(s.b_name)}”</button><button class="sec" data-keep="${s.a}" data-drop="${s.b}">…into “${esc(s.a_name)}”</button><button class="link" data-dismiss="${s.id}">Different</button></div></div>`).join('') : '<div class="empty">Nothing to review. Wording that is clearly the same is merged automatically.</div>'}</section>
+    <section class="panel"><h2>Last 2 weeks</h2>${recent.length ? recent.map(row).join('') : '<div class="empty">No entries yet.</div>'}</section>
+    <section class="panel"><h2>Merge categories yourself</h2><div class="row wrap"><select id="m-drop" class="grow">${cats.map(opt).join('')}</select><span>→</span><select id="m-keep" class="grow">${cats.map(opt).join('')}</select></div><p></p><button class="sec" id="m-go">Merge</button></section>
+    <section class="panel"><h2>Your data</h2><p class="sub">Everything is stored with this page in your Claude account and syncs across your devices. You can also save a full copy.</p><div class="row"><button class="sec" id="export" ${downloads ? '' : 'disabled'}>Save backup (JSON)</button></div></section>`;
+  $('#target').onchange = async (e) => { S.settings = { ...S.settings, fitness_weekly_target: +e.target.value }; await queue(() => db.doc('settings/main').set({ fitness_weekly_target: +e.target.value })); toast('Saved'); };
+  const merge = (k, d) => mergeCategories(k, d).then(() => toast('Merged')).catch((e) => toast(e.message));
+  view.querySelectorAll('[data-keep]').forEach((b) => (b.onclick = () => merge(b.dataset.keep, b.dataset.drop)));
+  view.querySelectorAll('[data-dismiss]').forEach((b) => (b.onclick = async () => { await queue(() => col('suggestions').doc(b.dataset.dismiss).delete()); }));
+  view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => confirmDialog('Delete this entry? Its XP is removed too.', () => removeEntry(b.dataset.del))));
+  $('#m-go').onclick = () => { const d = $('#m-drop').value, k = $('#m-keep').value; if (d !== k) confirmDialog('Merge these? This cannot be undone.', () => mergeCategories(k, d)); };
+  $('#export').onclick = async () => { try { await downloads.save({ filename: `life-tracker-${today()}.json`, data: JSON.stringify({ exported_at: new Date().toISOString(), entries: S.entries, categories: S.cats, chores: S.chores, cardsets: S.sets, shields: S.shields, settings: S.settings }, null, 2) }); toast('Saved'); } catch (e) { if (e.code !== 'declined') toast(e.message); } };
+}
+
+// ================================================================ quick add sheet + photo
+const sheet = $('#sheet');
+function openSheet() { $('#qa-status').textContent = ''; $('#qa-text').value = ''; if (!sheet.open) sheet.showModal(); }
+$('#fab').onclick = openSheet; $('#qa-close').onclick = () => sheet.close();
+$('#qa-snap').onclick = () => $('#snapfile').click();
+$('#snapfile').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; sheet.close(); handlePhoto(f); };
+const submit = async () => {
+  const text = $('#qa-text').value.trim(); if (!text) return; const go2 = $('#qa-go'); go2.disabled = true; $('#qa-status').textContent = 'Working on it…';
+  try {
+    const r = await logText(text, 'text');
+    if (!r.saved.length) { $('#qa-status').textContent = r.clarification || 'I couldn’t find anything to log.'; return; }
+    store.set('domain', r.saved[0].goal); sheet.close();
+    rewardToast(`Logged ✓ ${r.saved.map((s) => s.activity).join(', ')}`, r.saved.flatMap((s) => s.rewards));
+    if (r.pending.length) setTimeout(() => toast(`Not sure if ${r.pending[0].a} is the same as ${r.pending[0].b}. Check More.`), 2500);
+    go(current === 'ask' || current === 'cards' ? current : 'today', { keep: true });
+  } catch (e) { $('#qa-status').textContent = errCopy(e); } finally { go2.disabled = false; }
+};
+$('#qa-go').onclick = submit; $('#qa-text').onkeydown = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit(); };
+document.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openSheet(); $('#qa-text').focus(); } });
+
+async function handlePhoto(file) {
+  toast('Reading your card…');
+  try {
+    const r = await readCardPhoto(file);
+    if (!r.card) { toast(r.notes); return; }
+    const added = r.proposal.filter((p) => p.checked && !p.was_done).length, left = r.proposal.filter((p) => !p.checked).length;
+    if (r.auto) { pulseNext = true; rewardToast(`${r.card.code}: ${added} new ✓ · ${left ? `${left} left` : 'card cleared!'}`, r.rewards); go('today', { keep: true }); return; }
+    const d = $('#dlg');
+    d.innerHTML = `<h2>Is this right? · ${esc(r.card.code)}</h2><p class="sub">I wasn't fully sure about a few boxes. Nothing is recorded until you confirm. ${esc(r.notes)}</p>${r.proposal.map((p) => `<label class="check"><input type="checkbox" data-id="${p.item_id}" data-was="${p.was_done ? 1 : 0}" ${p.checked ? 'checked' : ''}><span>${esc(p.name)}${p.confidence < 0.8 ? '<small>unsure</small>' : ''}</span></label>`).join('')}
+      <div class="row" style="margin-top:12px"><button class="sec" id="cancel">Cancel</button><span class="grow"></span><button class="primary" id="ok">Confirm</button></div>`;
+    d.showModal(); $('#cancel', d).onclick = () => d.close();
+    $('#ok', d).onclick = async () => { const boxes = [...d.querySelectorAll('input')]; d.close(); try { const rw = await toggleItems(r.card.setId, r.card.code, { check: boxes.filter((b) => b.checked && b.dataset.was === '0').map((b) => b.dataset.id), uncheck: boxes.filter((b) => !b.checked && b.dataset.was === '1').map((b) => b.dataset.id) }); pulseNext = true; rewardToast('Card updated', rw); go('today', { keep: true }); } catch (e) { toast(e.message); } };
+  } catch (e) { toast(errCopy(e)); }
+}
+
+// ================================================================ boot
+if (!db) { view.innerHTML = '<div class="panel"><h2>Storage isn’t available here</h2><p>Open this page in the Claude app or on claude.ai while signed in, so it can keep your data.</p></div>'; return; }
+$('#fab').hidden = false;
+listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('shields', 'shields'); listen('suggestions', 'sugg');
+db.doc('settings/main').onSnapshot((d) => { if (d.exists) S.settings = { fitness_weekly_target: Number(d.data().fitness_weekly_target) || 3 }; schedule(); }, () => {});
+const hash = (location.hash || '').slice(1);
+go(tabs[hash] ? hash : 'today');
+})();
+</script>

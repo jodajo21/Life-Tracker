@@ -44,4 +44,5 @@ const count = (r, id) => r.cards.flatMap((c) => c.items).filter((i) => i.chore_i
 assert.equal(count(boosted, 3), count(base, 3) + 1); assert.equal(count(boosted, 5), 2); assert.equal(count(boosted, 1), 39);
 assert.deepEqual(boosted.boosted.sort(), ['c', 'd', 'e']);
 for (const c of boosted.cards) assert.ok(c.items.length >= 3 && c.items.length <= 6);
+assert.ok(base.cards.every((c) => c.items.length <= 5));
 console.log('core ok');
