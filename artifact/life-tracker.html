@@ -66,6 +66,30 @@ svg { display: block; width: 100%; height: auto; } svg text { fill: var(--muted)
 dialog { border: 0; border-radius: 16px; padding: 20px; max-width: 480px; width: calc(100% - 32px); background: var(--surface); color: var(--ink); } dialog::backdrop { background: #0008; }
 dialog.sheet { margin: auto auto 0; max-width: 560px; width: 100%; border-radius: 22px 22px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
 .bigrow { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; } .bigbtn { border: 2px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 16px; padding: 14px 8px; font: 700 16px var(--body); display: flex; gap: 10px; justify-content: center; align-items: center; }
+#app.wide { max-width: 1280px; }
+.deckbar { grid-template-columns: minmax(0, 1fr); } .deckbar > * { min-width: 0; } #rv-off { text-align: right; }
+[hidden] { display: none !important; }
+.grip { display: none; cursor: grab; color: var(--muted); font-size: 18px; width: 14px; text-align: center; user-select: none; flex: none; } @media (hover: hover) and (pointer: fine) { .grip { display: block; } }
+.deckbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 4; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; display: grid; gap: 8px; box-shadow: 0 6px 12px -8px #0006; }
+.deckbar .row select { width: auto; flex: 1 1 140px; min-width: 0; }
+.deckgrid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 760px) { .deckgrid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
+@media (min-width: 900px) { .deckbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 14px; } .deckbar > div:first-child { flex: 1 1 220px; } .deckbar > .row { flex: 0 1 auto; } .deckbar > .row select { flex: 0 1 auto; width: auto; } .deckbar > p { flex-basis: 100%; } }
+.pc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px #0002; scroll-margin-top: 150px; }
+.pc.reviewed { border-color: var(--home); } .pc.dragover { outline: 2px dashed var(--home); outline-offset: 2px; }
+.pc-h { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
+.pc-t { font: 800 22px/1 var(--display); letter-spacing: .02em; } .pc-n { font: 700 14px ui-monospace, Menlo, monospace; border: 2px solid var(--ink); border-radius: 4px; padding: 1px 7px; }
+.pc-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; } .pc-l li { display: flex; gap: 8px; align-items: center; } 
+.pc .box { width: 22px; height: 22px; border: 2px solid var(--ink); border-radius: 4px; flex: none; }
+.pc-in { flex: 1; min-width: 0; display: grid; gap: 2px; } .pc-in input { padding: 4px 8px; border-radius: 8px; } .pc-in input[data-room] { font-size: 11px; padding: 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; background: transparent; border-color: transparent; }
+.pc-in input[data-room]:hover, .pc-in input[data-room]:focus { border-color: var(--line); background: var(--bg); }
+.icon { border: 0; background: var(--heat); color: var(--ink); width: 34px; height: 34px; border-radius: 10px; font-size: 18px; flex: none; }
+.pc-f { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); } .pc-f .bad { color: var(--warn); font-weight: 700; } .pc-f .six { color: var(--fit); font-weight: 700; }
+.rev { display: flex; align-items: center; gap: 6px; font-weight: 600; color: var(--ink); } .rev input { width: 20px; height: 20px; accent-color: var(--home); padding: 0; }
+.pc-add { display: flex; gap: 6px; } .pc-add input { padding: 5px 8px; }
+details.panel > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; } details.panel > summary::-webkit-details-marker { display: none; } details.panel > summary::after { content: '▾'; margin-left: auto; color: var(--muted); }
+.toast button { margin-left: 10px; pointer-events: auto; border: 0; border-radius: 8px; padding: 4px 10px; font-weight: 700; background: #fff3; color: #fff; }
+#toasts .toast { pointer-events: auto; }
 code { background: var(--heat); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
 </style>
 
@@ -230,7 +254,7 @@ const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
 const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
 const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
 const limits = sample ? await sample.limits().catch(() => ({})) : {};
-const S = { entries: [], cats: [], chores: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+const S = { entries: [], cats: [], chores: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
 let current = 'today', chatHistory = [], chatBusy = false;
 
 let chain = Promise.resolve(); // one write at a time
@@ -238,8 +262,8 @@ const queue = (fn) => { const p = chain.then(fn); chain = p.catch(() => {}); ret
 const col = (n) => db.collection(n);
 const sum = (rs) => rs.reduce((a, r) => a + r.xp, 0);
 
-let rafId = 0;
-const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { refreshBadge(); if (current !== 'ask' && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
+let rafId = 0, lastLocalDeckEdit = 0;
+const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); refreshBadge(); if (current !== 'ask' && !(current === 'cards' && Date.now() - lastLocalDeckEdit < 2500) && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
 const editing = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#view') && a.type !== 'checkbox'; };
 function listen(name, key) { return col(name).onSnapshot((snap) => { S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.ready[key] = true; schedule(); }, (e) => { S.err = e.message || e.code; schedule(); }); }
 
@@ -397,7 +421,7 @@ async function resizeToBlob(file, max = 1600) {
 }
 async function readCardPhoto(file) {
   if (!sample || !limits.images) throw new Error('Reading photos isn’t available in this view.');
-  const t = today(), set = latestSet(); if (!set) throw new Error('Generate a set of cards first.');
+  const t = today(), set = latestSet(); if (!set) throw new Error('Start a cycle on the Cards tab first.');
   const cards = set.cards;
   const listing = cards.map((c) => `${c.code} (card ${c.idx + 1} of ${set.cards.length}, ${c.label}):\n` + c.items.map((i) => `  item ${i.id}: ${i.name}`).join('\n')).join('\n');
   const out = await sample.json(`These are photos of a printed 4x6 paper checklist card. Each card prints its place in the series like "07 / 39" in a corner (that is card C07), the day pair, and "Week N of 13", and 3-6 tasks each with a checkbox. A box counts as checked if it has a check, X, fill or scribble. Match the printed number to one of the known cards below (answer with its code, like C07) and report each of its items' state. If the code is unreadable, identify the card from the task list and say so with lower confidence. Be conservative: if a box is ambiguous give confidence below 0.7.
@@ -415,6 +439,7 @@ Reply with only JSON: {"card_code":"C07"|null,"card_confidence":0.9,"items":[{"i
 }
 
 // ================================================================ UI helpers
+function toastAction(msg, label, fn, ms = 7000) { const d = document.createElement('div'); d.className = 'toast'; d.append(msg + ' '); const b = document.createElement('button'); b.textContent = label; b.onclick = () => { d.remove(); fn(); }; d.append(b); $('#toasts').append(d); setTimeout(() => d.remove(), ms); }
 function toast(msg, ms = 3500) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = msg; $('#toasts').append(d); setTimeout(() => d.remove(), ms); }
 function rewardToast(head, rewards = []) {
   const d = document.createElement('div'); d.className = 'toast'; const total = sum(rewards);
@@ -429,6 +454,7 @@ const tabs = { today: renderToday, trends: renderTrends, ask: renderAsk, cards: 
 function go(tab, { keep = false } = {}) {
   if (!tabs[tab]) tab = 'today'; current = tab;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  $('#app').classList.toggle('wide', tab === 'cards');
   const y = window.scrollY;
   try { tabs[tab](); } catch (e) { view.innerHTML = `<div class="panel warn">${esc(e.message)}</div>`; }
   window.scrollTo(0, keep ? y : 0);
@@ -446,7 +472,7 @@ function renderToday() {
   let bar;
   if (dom === 'fitness') { const target = S.settings.fitness_weekly_target, done = weekActiveDays(t), left = Math.max(0, target - done); bar = { done, total: target, left, label: left ? `${done} of ${target} active days · ${left} left` : `${done} of ${target} active days · all set` }; }
   else if (cc) { const total = cc.card.items.length, done = cc.card.items.filter((i) => i.done).length; bar = { done, total, left: total - done, label: isToday ? (total - done ? `${done} of ${total} · ${total - done} left` : `${done} of ${total} · card cleared`) : `Next card: ${cc.card.label} · ${total} tasks` }; }
-  else bar = { done: 0, total: 0, left: 0, label: 'No cards yet. Generate a set on the Cards tab.' };
+  else bar = { done: 0, total: 0, left: 0, label: 'No cycle running. Make a deck and start a cycle on the Cards tab.' };
   const events = [];
   for (const e of todays) for (const r of e.rewards || []) events.push({ ...r, name: e.activity });
   if (dom === 'home') for (const set of S.sets) for (const c of set.cards) if (c.cleared && c.cleared_date === t) events.push({ kind: 'card_clear', xp: XP.card_clear, label: `Card ${c.code} cleared`, name: '' });
@@ -465,7 +491,7 @@ function renderToday() {
         ${D.shields.protected_today ? `<button class="sec" id="unshield">🛡 Soft day on · undo</button>` : `<button class="sec" id="shield" ${D.shields.available ? '' : 'disabled'} title="Protects momentum for today. You earn one for every 7 active days (hold up to 3).">🛡 Soft day <span class="sub">${D.shields.available} ready</span></button>`}</div>
     </section>
     ${dom === 'home' ? `<section class="panel home"><h2>${cc ? `${esc(cc.card.label)} card <span class="sub">${cc.card.idx + 1} of ${cc.set.cards.length}${isToday ? '' : ' · starts ' + parse(cc.card.start_date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</span>` : 'Cards'}</h2>
-        ${cc ? `<div id="items">${cc.card.items.map((i) => `<label class="check ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''}><span>${esc(i.name)}${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div><p class="sub" style="margin:10px 0 0">Tap to check off, or add a photo of the paper card with +.</p>` : '<div class="empty">No card yet. Generate a quarter on the Cards tab.</div>'}</section>
+        ${cc ? `<div id="items">${cc.card.items.map((i) => `<label class="check ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''}><span>${esc(i.name)}${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div><p class="sub" style="margin:10px 0 0">Tap to check off, or add a photo of the paper card with +.</p>` : '<div class="empty">No cycle running. Make a deck and start a cycle on the Cards tab.</div>'}</section>
       ${logged.length ? `<section class="panel"><h2>Also logged today</h2>${logged.map(entryRow).join('')}</section>` : ''}
       ${rooms.length ? `<section class="panel home"><h2>House</h2><div class="rooms">${rooms.map((r) => `<div class="room ${r.heat ? 'heat' : ''} ${r.planned ? '' : 'idle'}" style="--cov:${r.coverage}" title="${r.done} of ${r.planned} planned tasks done this quarter"><b>${esc(r.room)}</b><span>${r.planned ? Math.round(r.coverage * 100) + '% lit' : 'not planned'}</span><small>${r.tier ? { bronze: '🥉', silver: '🥈', gold: '🥇' }[r.tier] + ' ' : ''}${r.shards} shard${r.shards === 1 ? '' : 's'}${r.next ? ` · ${r.next} to next` : ''}</small></div>`).join('')}</div>
         ${near.length ? `<p class="sub" style="margin:10px 0 0">${near.map((r) => `${esc(r.room)} is ${Math.round(r.coverage * 100)}% lit`).join(' · ')}.</p>` : ''}<p class="sub" style="margin:6px 0 0">Rooms light up as their card tasks get done. Clear a whole card for a shard in each of its rooms.</p></section>` : ''}`
@@ -627,96 +653,229 @@ function renderAsk() {
   view.querySelectorAll('.chips button').forEach((b) => (b.onclick = () => { send(b.textContent); b.parentElement.remove(); })); draw();
 }
 
-// ================================================================ Cards
+// ================================================================ Cards: decks (undated, editable) and cycles (dated runs of a deck)
 const PRESETS = [[39, 'Every card'], [13, 'Weekly'], [7, 'Every 2 weeks'], [6, 'Twice a month'], [3, 'Monthly'], [1, 'Quarterly']];
 const freqSelect = (v, id = '') => { const o = PRESETS.some(([n]) => n === v) ? PRESETS : [...PRESETS, [v, `${v}× / quarter`]]; return `<select ${id ? `id="${id}"` : 'data-chore="freq"'}>${o.map(([n, l]) => `<option value="${n}" ${n === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`; };
 let preview = null;
+const ui = { week: 'all', show: 'all' };
+const uid = () => Math.random().toString(36).slice(2, 8);
+const weekOf = (c) => Math.floor(c.idx / 3) + 1;
+const cardNo = (d, c) => `${pad(c.idx + 1)} / ${d.cards.length}`;
+const currentDeck = () => S.decks.find((d) => d.id === store.get('deck', '')) || S.decks.slice().sort((a, b) => b.n - a.n)[0] || null;
+const offTarget = (c) => c.items.length < 3 || c.items.length > 5;
+
+// Older data kept the card structure inside the dated set. Create a matching editable deck once.
+let migrating = false;
+async function migrateLegacy() {
+  if (migrating || !S.ready.decks || !S.ready.sets) return;
+  const missing = [...new Map(S.sets.filter((x) => x.deck && !S.decks.some((d) => d.id === x.deck)).map((x) => [x.deck, x])).values()]; if (!missing.length) return;
+  migrating = true;
+  try { for (const x of missing) { const deck = { n: Number(String(x.deck).replace(/\D/g, '')) || x.n, created: x.created || new Date().toISOString(), cards: x.cards.map((c) => ({ idx: c.idx, code: c.code, label: c.label, reviewed: true, items: c.items.map((i) => ({ id: i.id, chore_id: i.chore_id || null, name: i.name, room: i.room })) })) }; S.decks = [...S.decks, { id: x.deck, ...deck }]; await queue(() => col('decks').doc(x.deck).set(deck)); } } finally { migrating = false; }
+}
+async function commitDeck(deck) {
+  lastLocalDeckEdit = Date.now();
+  S.decks = S.decks.map((d) => (d.id === deck.id ? deck : d));
+  await queue(() => col('decks').doc(deck.id).set(stripId(deck)));
+  await syncCycle(deck);
+}
+// Keep the newest cycle that uses this deck in step with edits, preserving check-offs on unchanged tasks.
+async function syncCycle(deck) {
+  const set = S.sets.filter((x) => x.deck === deck.id).sort((a, b) => b.n - a.n)[0]; if (!set) return;
+  const copy = structuredClone(set);
+  for (const c of copy.cards) {
+    const dc = deck.cards.find((x) => x.idx === c.idx); if (!dc) continue;
+    const old = new Map(c.items.map((i) => [i.id, i]));
+    c.items = dc.items.map((i) => (old.has(i.id) ? { ...old.get(i.id), chore_id: i.chore_id || null, name: i.name, room: i.room } : { id: i.id, chore_id: i.chore_id || null, name: i.name, room: i.room, done: false, done_at: null, entry_id: null }));
+    if (!(c.cleared && c.items.length && c.items.every((i) => i.done))) { c.cleared = false; c.cleared_date = null; }
+  }
+  S.sets = S.sets.map((x) => (x.id === set.id ? copy : x));
+  await queue(() => col('cardsets').doc(set.id).set(stripId(copy)));
+}
+async function startCycle(deck, startDate) {
+  const n = Math.max(0, ...S.sets.map((x) => x.n)) + 1, id = `s${n}`, m0 = nextMonday(startDate);
+  const set = { n, deck: deck.id, start_date: m0, created: new Date().toISOString(), cards: deck.cards.map((c) => { const w = Math.floor(c.idx / 3), seg = c.idx % 3, st = addDaysIso(m0, w * 7 + seg * 2);
+    return { code: c.code, idx: c.idx, start_date: st, end_date: addDaysIso(st, 1), label: c.label, cleared: false, cleared_date: null, items: c.items.map((i) => ({ id: i.id, chore_id: i.chore_id || null, name: i.name, room: i.room, done: false, done_at: null, entry_id: null })) }; }) };
+  S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set)); toast(`Cycle ${n} starts ${m0}`);
+}
+
 function renderCards() {
   const active = S.chores.filter((c) => c.active !== false).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
   const rs = roomStats(today()).filter((r) => r.planned >= 3 && r.coverage < 0.6);
-  const sets = S.sets.slice().sort((a, b) => b.n - a.n);
+  const sets = S.sets.slice().sort((a, b) => b.n - a.n), deck = currentDeck();
+  const total = active.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0);
   view.innerHTML = `<h1>Cards</h1>
-    <section class="panel"><h2>Generate a quarter of cards</h2><div class="row wrap"><div class="grow"><label class="sub" for="start">First Monday</label><input type="date" id="start" value="${nextMonday(today())}"></div><button class="primary" id="gen" ${active.length ? '' : 'disabled'}>Preview</button></div>
-      ${rs.length ? `<label class="row" style="margin-top:10px"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last set: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
+    <section class="panel"><h2>${deck ? 'Generate a new deck' : 'Generate your first deck'}</h2><p class="sub" style="margin-top:0">Builds 39 undated cards (13 weeks × Mon–Tue / Wed–Thu / Fri–Sat) from your house tasks. You edit them before anything is printed.</p>
+      <div class="row"><button class="primary" id="gen" ${active.length ? '' : 'disabled'}>Preview a deck</button></div>
+      ${rs.length ? `<label class="row" style="margin-top:10px"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last cycle: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
       ${active.length ? '' : '<p class="sub">Add some house tasks below first.</p>'}<div id="preview"></div></section>
-    <section class="panel"><h2>Cycles</h2>${sets.length ? `${sets.map((x) => `<div class="entry"><span>Cycle ${x.n} · starts ${x.start_date}${x.n === sets[0].n ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('')}
-      <div class="chart-title">Start the next cycle with the same cards</div><div class="row wrap"><div class="grow"><label class="sub" for="cyc-start">First Monday</label><input type="date" id="cyc-start" value="${nextMonday(addDaysIso(sets[0].cards[sets[0].cards.length - 1].end_date, 1))}"></div><button class="primary" id="cyc-go">Start cycle</button></div>
-      <p class="sub">Your printed cards carry no dates, only their place in the cycle (like 07 / 39). Start a new cycle and keep using the same deck. Checking boxes always counts toward the current cycle.</p>` : '<div class="empty">None yet. Generate cards above.</div>'}</section>
-    <section class="panel"><h2>Printable decks</h2>${[...new Map(sets.map((x) => [x.deck || 'd' + x.n, x])).values()].map((x) => `<div class="entry"><span>Deck ${esc(String(x.deck || 'd' + x.n).replace('d', ''))} · ${x.cards.length} cards</span><button class="sec" data-print="${x.id}">PDF to print</button></div>`).join('') || '<div class="empty">None yet.</div>'}
-      <p class="sub">A PDF with one 4×6 in card per page and no dates. On iPhone: open the saved PDF in Files, tap Share, then Print, and choose your printer. The page size is already 4×6. If you change the house tasks and generate again, that makes a new deck to reprint.</p></section>
-    <section class="panel"><h2>House tasks</h2><p class="sub">${active.reduce((s, c) => s + Math.min(c.per_quarter, 39), 0)} placements across 39 cards. ${(() => { const t = active.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0); return t > 195 ? `<b>${t - 195} over</b>: 195 keeps every card at 5 or fewer, and cards get a 6th task only above that.` : t < 117 ? 'Under 117 leaves some cards with fewer than 3.' : 'This keeps every card at 3 to 5.'; })()}</p>
-      ${active.map((c) => `<div class="chore" data-id="${c.id}"><input data-chore="name" value="${esc(c.name)}"><div class="row"><input data-chore="room" value="${esc(c.room)}">${freqSelect(c.per_quarter)}<button class="link danger" data-rm="${c.id}" aria-label="Remove">✕</button></div></div>`).join('')}
-      <div class="chore"><input id="nc-name" placeholder="New task"><div class="row"><input id="nc-room" placeholder="Room">${freqSelect(13, 'nc-freq')}<button class="sec" id="nc-add">Add</button></div></div></section>`;
+    ${deck ? editorHtml(deck) : ''}
+    <section class="panel"><h2>Cycles</h2>${sets.length ? sets.map((x) => `<div class="entry"><span>Cycle ${x.n} · starts ${x.start_date} · deck ${esc(String(x.deck || '').replace('d', ''))}${x.n === sets[0].n ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('') : '<div class="empty">No cycle running yet.</div>'}
+      ${S.decks.length ? `<div class="chart-title">Start a cycle</div><div class="row wrap"><select id="cyc-deck" style="flex:1 1 140px;width:auto">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${deck && d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>
+        <div style="flex:1 1 150px"><input type="date" id="cyc-start" aria-label="First Monday" value="${nextMonday(sets.length ? addDaysIso(sets[0].cards[sets[0].cards.length - 1].end_date, 1) : today())}"></div><button class="primary" id="cyc-go">Start cycle</button></div>
+        <p class="sub">Printed cards carry no dates, only their place in the cycle (like 07 / 39), so the same deck runs again and again. Start a cycle to put dates on it. Edits to a deck flow into its newest cycle and keep your check-offs.</p>` : '<p class="sub">Create a deck first.</p>'}</section>
+    <details class="panel" id="lib"><summary><h2 style="margin:0">House tasks</h2><span class="sub">the task list decks are built from</span></summary>
+      <p class="sub">${total} placements per cycle. ${total > 195 ? `<b>${total - 195} over 195</b>: some cards would need a 6th task.` : total < 117 ? 'Under 117 leaves some cards with fewer than 3.' : 'Fits 3 to 5 per card.'} Changing this list does not change decks you already made.</p>
+      ${active.map((c) => `<div class="chore" data-id="${c.id}"><input data-chore="name" value="${esc(c.name)}" aria-label="Task name"><div class="row"><input data-chore="room" value="${esc(c.room)}" aria-label="Room">${freqSelect(c.per_quarter)}<button class="link danger" data-rm="${c.id}" aria-label="Remove">✕</button></div></div>`).join('')}
+      <div class="chore"><input id="nc-name" placeholder="New task"><div class="row"><input id="nc-room" placeholder="Room">${freqSelect(13, 'nc-freq')}<button class="sec" id="nc-add">Add</button></div></div></details>
+    <datalist id="tasklib">${active.map((c) => `<option value="${esc(c.name)}">`).join('')}</datalist><datalist id="rooms">${[...new Set(active.map((c) => c.room))].map((r) => `<option value="${esc(r)}">`).join('')}</datalist>`;
   $('#gen').onclick = () => generate(active, rs);
-  $('#cyc-go')?.addEventListener('click', () => startCycle(sets[0], $('#cyc-start').value).catch((e) => toast(e.message)));
-  view.querySelectorAll('[data-print]').forEach((b) => (b.onclick = () => saveCardsFile(S.sets.find((s) => s.id === b.dataset.print))));
+  $('#cyc-go')?.addEventListener('click', () => { const d = S.decks.find((x) => x.id === $('#cyc-deck').value); if (d) startCycle(d, $('#cyc-start').value).catch((e) => toast(e.message)); });
   view.querySelectorAll('.chore[data-id]').forEach((el) => el.querySelectorAll('[data-chore]').forEach((f) => (f.onchange = async () => {
     const c = S.chores.find((x) => x.id === el.dataset.id); const upd = { name: $('[data-chore=name]', el).value.trim() || c.name, room: $('[data-chore=room]', el).value.trim() || 'General', per_quarter: +$('select', el).value };
     await queue(() => col('chores').doc(c.id).update(upd)); await ensureCategory('home', upd.name); toast('Saved');
   })));
-  view.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = () => confirmDialog('Remove this task from future cards? Past cards keep it.', async () => { await queue(() => col('chores').doc(b.dataset.rm).update({ active: false })); })));
+  view.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = () => confirmDialog('Remove this task from future decks? Existing decks keep it.', async () => { await queue(() => col('chores').doc(b.dataset.rm).update({ active: false })); })));
   $('#nc-add').onclick = async () => { const name = $('#nc-name').value.trim(); if (!name) return; await queue(() => col('chores').doc().set({ name, room: $('#nc-room').value.trim() || 'General', per_quarter: +$('#nc-freq').value, active: true })); await ensureCategory('home', name); };
+  if (deck) bindEditor(deck);
 }
-async function startCycle(src, startDate) {
-  const n = Math.max(0, ...S.sets.map((x) => x.n)) + 1, id = `s${n}`, m0 = nextMonday(startDate);
-  const set = { n, deck: src.deck || `d${src.n}`, start_date: m0, created: new Date().toISOString(), cards: src.cards.map((c) => { const w = Math.floor(c.idx / 3), seg = c.idx % 3, st = addDaysIso(m0, w * 7 + seg * 2);
-    return { code: c.code, idx: c.idx, start_date: st, end_date: addDaysIso(st, 1), label: c.label, cleared: false, cleared_date: null, items: c.items.map((i) => ({ id: i.id, chore_id: i.chore_id, name: i.name, room: i.room, done: false, done_at: null, entry_id: null })) }; }) };
-  S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set)); toast(`Cycle ${n} starts ${m0}`);
+
+// ---------------------------------------------------------------- deck editor
+function cardHtml(deck, c) {
+  const n = c.items.length, cls = n < 3 || n > 6 ? 'bad' : n === 6 ? 'six' : '';
+  const msg = n < 3 ? `${n} task${n === 1 ? '' : 's'} · needs 3 or more` : n === 6 ? '6 tasks · use only if needed' : n > 6 ? `${n} tasks · too many` : `${n} tasks`;
+  return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}">
+    <div class="pc-h"><div><div class="pc-t">${esc(c.label.replace('–', ' · ').toUpperCase())}</div><div class="sub">Week ${weekOf(c)} of ${Math.ceil(deck.cards.length / 3)}</div></div><div class="pc-n">${cardNo(deck, c)}</div></div>
+    <ul class="pc-l">${c.items.map((i) => `<li data-id="${i.id}"><span class="grip" draggable="true" title="Drag to another card" aria-hidden="true">⠿</span><span class="box"></span><div class="pc-in"><input data-name value="${esc(i.name)}" aria-label="Task"><input data-room value="${esc(i.room || '')}" list="rooms" aria-label="Room" placeholder="Room"></div><button class="icon" data-more aria-label="Task options">⋯</button></li>`).join('')}</ul>
+    <div class="pc-add"><input data-add list="tasklib" placeholder="Add a task" aria-label="Add a task to card ${c.idx + 1}"><button class="sec" data-addbtn>Add</button></div>
+    <div class="pc-f"><span class="${cls}" data-count>${msg}</span><label class="rev"><input type="checkbox" data-rev ${c.reviewed ? 'checked' : ''}> Reviewed</label></div></article>`;
 }
+const cardVisible = (c) => (ui.week === 'all' || weekOf(c) === +ui.week) && (ui.show === 'all' || (ui.show === 'review' && !c.reviewed) || (ui.show === 'off' && offTarget(c)));
+function editorHtml(deck) {
+  const weeks = Math.ceil(deck.cards.length / 3), size = store.get('cardsize', 'index');
+  return `<section class="panel" id="editor"><div class="row wrap"><h2 class="grow" style="margin:0">Your cards · deck ${deck.n}</h2>${S.decks.length > 1 ? `<select id="deck-pick" style="width:auto" aria-label="Deck">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>` : ''}</div>
+    <p class="sub" style="margin:4px 0 12px">Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
+    <div class="deckbar"><div><div class="row"><b id="rv-count"></b><span class="grow"></span><span class="sub" id="rv-off"></span></div><div class="bar" style="margin:6px 0 0"><i id="rv-bar"></i></div></div>
+      <div class="row wrap"><select id="wk" aria-label="Week"><option value="all">All weeks</option>${Array.from({ length: weeks }, (_, i) => `<option value="${i + 1}" ${ui.week == i + 1 ? 'selected' : ''}>Week ${i + 1}</option>`).join('')}</select>
+        <select id="show" aria-label="Show"><option value="all" ${ui.show === 'all' ? 'selected' : ''}>All cards</option><option value="review" ${ui.show === 'review' ? 'selected' : ''}>Needs review</option><option value="off" ${ui.show === 'off' ? 'selected' : ''}>Not 3 to 5 tasks</option></select>
+        <button class="sec" id="approve">Approve remaining</button></div>
+      <div class="row wrap"><select id="pdf-size" aria-label="Paper layout"><option value="index" ${size === 'index' ? 'selected' : ''}>4 × 6 in cards · 2 per letter sheet</option><option value="half" ${size === 'half' ? 'selected' : ''}>5.5 × 8.5 in cards · 2 per letter sheet</option></select><button class="primary" id="make-pdf">Make PDF</button></div>
+      <p class="sub" id="pdf-hint" style="margin:0"></p></div>
+    <div class="deckgrid" id="grid">${deck.cards.map((c) => cardHtml(deck, c)).join('')}</div></section>`;
+}
+function refreshChrome(deck) {
+  const rv = deck.cards.filter((c) => c.reviewed).length, off = deck.cards.filter(offTarget).length, tot = deck.cards.length, rem = tot - rv;
+  $('#rv-count').textContent = `${rv} of ${tot} cards reviewed`; $('#rv-bar').style.width = `${(100 * rv) / tot}%`;
+  $('#rv-off').textContent = off ? `${off} not at 3 to 5 tasks` : 'All cards have 3 to 5 tasks';
+  $('#make-pdf').disabled = rem > 0; $('#approve').hidden = rem === 0;
+  $('#pdf-hint').textContent = rem ? `Review ${rem} more card${rem === 1 ? '' : 's'} before making the PDF: edit it, or tick Reviewed. “Approve remaining” ticks them all.` : 'Every card is reviewed. The PDF is built from the cards exactly as shown here.';
+  deck.cards.forEach((c) => { const el = $(`#card-${c.idx}`); if (!el) return; el.classList.toggle('reviewed', !!c.reviewed); el.hidden = !cardVisible(c); const n = c.items.length, ct = $('[data-count]', el); ct.className = n < 3 || n > 6 ? 'bad' : n === 6 ? 'six' : ''; ct.textContent = n < 3 ? `${n} task${n === 1 ? '' : 's'} · needs 3 or more` : n === 6 ? '6 tasks · use only if needed' : n > 6 ? `${n} tasks · too many` : `${n} tasks`; $('[data-rev]', el).checked = !!c.reviewed; });
+}
+function bindEditor(deck0) {
+  const grid = $('#grid'); refreshChrome(deck0);
+  const cur = () => currentDeck();
+  // fresh clone → mutate → save. render=true re-draws the grid (structural change); otherwise only the status chrome updates.
+  const edit = (fn, { render = false, undo = '' } = {}) => {
+    const before = cur(), d = structuredClone(before); fn(d);
+    commitDeck(d).catch((e) => toast(e.message));
+    if (render) { const y = window.scrollY; $('#grid').innerHTML = d.cards.map((c) => cardHtml(d, c)).join(''); refreshChrome(d); window.scrollTo(0, y); } else refreshChrome(d);
+    if (undo) toastAction(undo, 'Undo', () => { commitDeck(before).catch((e) => toast(e.message)); $('#grid').innerHTML = before.cards.map((c) => cardHtml(before, c)).join(''); refreshChrome(before); });
+  };
+  const find = (d, el) => { const art = el.closest('.pc'), c = d.cards.find((x) => x.idx === +art.dataset.idx), li = el.closest('li'); return { c, it: li ? c.items.find((i) => i.id === li.dataset.id) : null }; };
+  grid.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.matches('[data-name]')) { const v = t.value.trim(); if (!v) { const { it } = find(cur(), t); t.value = it?.name || ''; return; } edit((d) => { const { c, it } = find(d, t); it.name = v; c.reviewed = true; }); }
+    else if (t.matches('[data-room]')) edit((d) => { const { c, it } = find(d, t); it.room = t.value.trim() || 'General'; c.reviewed = true; });
+    else if (t.matches('[data-rev]')) edit((d) => { find(d, t).c.reviewed = t.checked; });
+  });
+  const addTask = (art) => {
+    const inp = $('[data-add]', art), name = inp.value.trim(); if (!name) return; const lib = S.chores.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    edit((d) => { const c = d.cards.find((x) => x.idx === +art.dataset.idx); c.items.push({ id: uid(), chore_id: lib?.id || null, name, room: lib?.room || 'General' }); c.reviewed = true; }, { render: true });
+    $(`#card-${art.dataset.idx} [data-add]`)?.focus();
+  };
+  grid.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t.matches('[data-addbtn]')) return addTask(t.closest('.pc'));
+    if (t.matches('[data-more]')) return taskMenu(t, edit, cur);
+  });
+  grid.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('[data-add]')) { e.preventDefault(); addTask(e.target.closest('.pc')); } else if (e.key === 'Enter' && e.target.matches('[data-name],[data-room]')) e.target.blur(); });
+  // drag and drop between cards (Mac); touch devices use the ⋯ menu
+  let drag = null;
+  grid.addEventListener('dragstart', (e) => { const g = e.target.closest && e.target.closest('.grip'); const li = g && g.closest('li[data-id]'); if (!li) return; drag = { from: +li.closest('.pc').dataset.idx, id: li.dataset.id }; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', li.dataset.id); try { e.dataTransfer.setDragImage(li, 12, 12); } catch {} });
+  grid.addEventListener('dragover', (e) => { const art = e.target.closest('.pc'); if (drag && art) { e.preventDefault(); grid.querySelectorAll('.dragover').forEach((x) => x !== art && x.classList.remove('dragover')); art.classList.add('dragover'); } });
+  grid.addEventListener('dragleave', (e) => { if (!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('.pc')) grid.querySelectorAll('.dragover').forEach((x) => x.classList.remove('dragover')); });
+  grid.addEventListener('drop', (e) => { const art = e.target.closest('.pc'); grid.querySelectorAll('.dragover').forEach((x) => x.classList.remove('dragover')); if (!drag || !art) return; e.preventDefault(); const to = +art.dataset.idx, d0 = drag; drag = null; if (to !== d0.from) moveTask(edit, d0.from, d0.id, to); });
+  grid.addEventListener('dragend', () => { drag = null; grid.querySelectorAll('.dragover').forEach((x) => x.classList.remove('dragover')); });
+
+  $('#wk').onchange = (e) => { ui.week = e.target.value; refreshChrome(cur()); }; $('#show').onchange = (e) => { ui.show = e.target.value; refreshChrome(cur()); };
+  $('#deck-pick')?.addEventListener('change', (e) => { store.set('deck', e.target.value); go('cards', { keep: true }); });
+  $('#approve').onclick = () => edit((d) => d.cards.forEach((c) => (c.reviewed = true)));
+  $('#pdf-size').onchange = (e) => store.set('cardsize', e.target.value);
+  $('#make-pdf').onclick = () => saveCardsFile(cur());
+}
+function moveTask(edit, from, id, to) {
+  edit((d) => { const a = d.cards.find((c) => c.idx === from), b = d.cards.find((c) => c.idx === to), i = a.items.findIndex((x) => x.id === id); if (i < 0) return; b.items.push(...a.items.splice(i, 1)); a.reviewed = true; b.reviewed = true; }, { render: true, undo: `Moved to card ${to + 1}.` });
+}
+function taskMenu(btn, edit, cur) {
+  const art = btn.closest('.pc'), li = btn.closest('li'), idx = +art.dataset.idx, id = li.dataset.id, deck = cur(), c = deck.cards.find((x) => x.idx === idx), pos = c.items.findIndex((x) => x.id === id), it = c.items[pos];
+  const d = $('#dlg');
+  d.innerHTML = `<h2 style="font-size:16px">${esc(it.name)}</h2><p class="sub" style="margin:0 0 10px">Card ${idx + 1} · ${esc(c.label)}</p>
+    <div style="display:grid;gap:8px"><div class="row"><button class="sec grow" id="m-up" ${pos === 0 ? 'disabled' : ''}>↑ Move up</button><button class="sec grow" id="m-down" ${pos === c.items.length - 1 ? 'disabled' : ''}>↓ Move down</button></div>
+      <label class="sub" for="m-to">Move to another card</label><select id="m-to"><option value="">Choose a card…</option>${deck.cards.filter((x) => x.idx !== idx).map((x) => `<option value="${x.idx}">${pad(x.idx + 1)} · ${esc(x.label)} · week ${weekOf(x)} (${x.items.length} tasks)</option>`).join('')}</select>
+      <button class="sec danger" id="m-del">Remove from this card</button><button class="link" id="m-close">Close</button></div>`;
+  d.showModal(); const close = () => d.close();
+  $('#m-close', d).onclick = close;
+  $('#m-up', d).onclick = () => { close(); edit((dk) => { const cc = dk.cards.find((x) => x.idx === idx); [cc.items[pos - 1], cc.items[pos]] = [cc.items[pos], cc.items[pos - 1]]; cc.reviewed = true; }, { render: true }); };
+  $('#m-down', d).onclick = () => { close(); edit((dk) => { const cc = dk.cards.find((x) => x.idx === idx); [cc.items[pos + 1], cc.items[pos]] = [cc.items[pos], cc.items[pos + 1]]; cc.reviewed = true; }, { render: true }); };
+  $('#m-to', d).onchange = (e) => { if (e.target.value === '') return; close(); moveTask(edit, idx, id, +e.target.value); };
+  $('#m-del', d).onclick = () => { close(); edit((dk) => { const cc = dk.cards.find((x) => x.idx === idx); cc.items.splice(cc.items.findIndex((x) => x.id === id), 1); cc.reviewed = true; }, { render: true, undo: `Removed “${it.name}”.` }); };
+}
+
+// ---------------------------------------------------------------- generate a new deck (a draft to edit, never a PDF)
 function generate(active, weak) {
   const boostRooms = $('#boost')?.checked ? weak.map((r) => r.room) : [];
-  preview = buildQuarter(active.map((c, i) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), $('#start').value, { boostRooms });
-  $('#preview').innerHTML = `${preview.warnings.map((w) => `<p class="warn">⚠ ${esc(w)}</p>`).join('')}<div class="chart-title">Tasks per card (13 weeks × Mon–Tue / Wed–Thu / Fri–Sat)</div>
+  preview = buildQuarter(active.map((c) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), today(), { boostRooms });
+  $('#preview').innerHTML = `${preview.warnings.map((w) => `<p class="warn">⚠ ${esc(w)}</p>`).join('')}<div class="chart-title">Tasks per card (39 cards)</div>
     <div class="strip">${preview.cards.map((c) => `<i style="height:${(c.items.length / 6) * 100}%" title="${c.items.length}"></i>`).join('')}</div>
     <div class="chart-title">Placements by room</div>${hbars(Object.entries(preview.roomCoverage).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), 'var(--home)')}
-    ${preview.sixes ? `<p class="sub"><b>${preview.sixes} card${preview.sixes === 1 ? ' has' : 's have'} 6 tasks.</b> Your list adds up to ${preview.total} placements and 5 per card fits ${preview.softMax * 39}. To keep every card at 5 or fewer, remove or lower about ${preview.overBy} placements in House tasks.</p>` : '<p class="sub">Every card has 3 to 5 tasks.</p>'}${preview.boosted.length ? `<p class="sub">Extra attention this round: ${preview.boosted.map(esc).join(', ')}.</p>` : ''}<p class="sub">The first cycle starts Monday ${preview.startDate}. Printed cards show no dates, only the card's place in the 39-card cycle, so you can reuse them. Saving does not touch your existing cards.</p>
-    <div class="row"><button class="primary" id="save-set">Save and get PDF</button><button class="sec" id="save-only">Save only</button></div>`;
-  const save = async (file) => {
-    const n = Math.max(0, ...S.sets.map((s) => s.n)) + 1, id = `s${n}`;
-    const set = { n, deck: `d${n}`, start_date: preview.startDate, created: new Date().toISOString(), cards: preview.cards.map((c) => ({ code: `C${pad(c.idx + 1)}`, idx: c.idx, start_date: c.start_date, end_date: c.end_date, label: c.label, cleared: false, cleared_date: null, items: c.items.map((it, pos) => ({ id: `${c.idx}-${pos}`, chore_id: it.chore_id, name: it.name, room: it.room, done: false, done_at: null, entry_id: null })) })) };
-    S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set));
-    if (file) saveCardsFile({ id, ...set }); else toast('Saved');
+    ${preview.sixes ? `<p class="sub"><b>${preview.sixes} card${preview.sixes === 1 ? ' has' : 's have'} 6 tasks.</b> Your list adds up to ${preview.total} placements and 5 per card fits ${preview.softMax * 39}. To keep every card at 5 or fewer, remove or lower about ${preview.overBy} placements in House tasks, or fix it by hand in the deck.</p>` : '<p class="sub">Every card has 3 to 5 tasks.</p>'}
+    ${preview.boosted.length ? `<p class="sub">Extra attention this round: ${preview.boosted.map(esc).join(', ')}.</p>` : ''}<p class="sub">This makes a draft deck you can edit card by card. Nothing is printed yet, and your other decks stay as they are.</p>
+    <div class="row"><button class="primary" id="make-deck">Create deck to edit</button></div>`;
+  $('#make-deck').onclick = async () => {
+    let n = Math.max(0, ...S.decks.map((d) => d.n)) + 1; while (S.decks.some((d) => d.id === `d${n}`) || S.sets.some((x) => x.deck === `d${n}`)) n++;
+    const id = `d${n}`, deck = { n, created: new Date().toISOString(), cards: preview.cards.map((c) => ({ idx: c.idx, code: `C${pad(c.idx + 1)}`, label: c.label, reviewed: false, items: c.items.map((it) => ({ id: uid(), chore_id: it.chore_id || null, name: it.name, room: it.room })) })) };
+    S.decks = [...S.decks, { id, ...deck }]; store.set('deck', id); ui.week = 'all'; ui.show = 'all';
+    try { await queue(() => col('decks').doc(id).set(deck)); toast(`Deck ${n} created. Review the cards below.`); go('cards', { keep: true }); setTimeout(() => $('#editor')?.scrollIntoView({ behavior: 'smooth' }), 50); } catch (e) { toast(e.message); }
   };
-  $('#save-set').onclick = () => save(true).catch((e) => toast(e.message)); $('#save-only').onclick = () => save(false).catch((e) => toast(e.message));
 }
-const weekOf = (c) => Math.floor(c.idx / 3) + 1;
-const cardNo = (set, c) => `${pad(c.idx + 1)} / ${set.cards.length}`;
-function cardsHtml(set) {
-  const css = '@page{size:4in 6in;margin:0}body{margin:0;background:#ddd;font-family:-apple-system,Helvetica,Arial,sans-serif}.bar{padding:12px;background:#222;color:#fff;font-size:14px}.bar button{font-size:15px;padding:6px 12px}.pcard{width:4in;height:6in;padding:.28in .3in;box-sizing:border-box;page-break-after:always;break-after:page;display:flex;flex-direction:column;background:#fff;margin:12px auto;color:#000;overflow:hidden}header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:.1in;margin-bottom:.12in}h3{margin:0;font-size:26pt;letter-spacing:.02em;line-height:1}.dates{font-size:11pt;margin-top:4px}.code{font:700 15pt Menlo,monospace;border:2px solid #000;padding:2px 8px;border-radius:4px}ul{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;justify-content:space-evenly}li{display:flex;align-items:center;gap:.14in;font-size:14pt;line-height:1.15}.box{width:.36in;height:.36in;border:2.5px solid #000;border-radius:4px;flex:none}.room{font-size:8.5pt;color:#555;display:block;text-transform:uppercase;letter-spacing:.06em}footer{font-size:8pt;color:#555;margin-top:.08in;display:flex;justify-content:space-between}@media print{body{background:#fff}.bar{display:none}.pcard{margin:0}}';
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Cards</title><style>${css}</style></head><body><div class="bar">${set.cards.length} cards, 4×6 in. <button onclick="window.print()">Print</button> Choose 4×6 paper and no margins.</div>` +
-    set.cards.map((c) => `<section class="pcard"><header><div><h3>${esc(c.label.replace('–', ' · ').toUpperCase())}</h3><div class="dates">Week ${weekOf(c)} of ${Math.ceil(set.cards.length / 3)}</div></div><div class="code">${cardNo(set, c)}</div></header><ul>${c.items.map((i) => `<li><span class="box"></span><span>${esc(i.name)}${i.room ? `<span class="room">${esc(i.room)}</span>` : ''}</span></li>`).join('')}</ul><footer><span>Home · 2-day card</span><span>Check the box when done</span></footer></section>`).join('') + '</body></html>';
-}
-function cardsPdf(set) {
-  const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
-  const doc = new J({ unit: 'pt', format: [288, 432] }), L = 24, R = 264, weeks = Math.ceil(set.cards.length / 3);
-  set.cards.forEach((c, ci) => {
-    if (ci) doc.addPage([288, 432]);
-    doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26); doc.text(c.label.replace('–', ' · ').toUpperCase(), L, 52);
-    doc.setFont('helvetica', 'normal').setFontSize(11); doc.text(`Week ${weekOf(c)} of ${weeks}`, L, 70);
-    doc.setFont('courier', 'bold').setFontSize(15); const no = cardNo(set, c), cw = doc.getTextWidth(no) + 16;
-    doc.setLineWidth(1.6); doc.roundedRect(R - cw, 30, cw, 26, 3, 3); doc.text(no, R - cw / 2, 48, { align: 'center' });
-    doc.setLineWidth(1.6); doc.line(L, 82, R, 82);
-    const top = 92, bottom = 398, n = c.items.length, rh = (bottom - top) / n;
-    c.items.forEach((it, i) => {
-      const cy = top + rh * i + rh / 2;
-      doc.setLineWidth(2); doc.roundedRect(L, cy - 13, 26, 26, 3, 3);
-      doc.setFont('helvetica', 'normal').setFontSize(14);
-      const lines = doc.splitTextToSize(it.name, R - 60).slice(0, 2), y0 = cy - (lines.length - 1) * 8 + (it.room ? -3 : 5);
-      doc.text(lines, 58, y0, { lineHeightFactor: 1.15 });
-      if (it.room) { doc.setFontSize(8).setTextColor(100); doc.text(it.room.toUpperCase(), 58, y0 + (lines.length - 1) * 16 + 12); doc.setTextColor(0); }
-    });
-    doc.setFontSize(8).setTextColor(100); doc.text('Home - 2-day card', L, 420); doc.text('Check the box when done', R, 420, { align: 'right' });
+
+// ---------------------------------------------------------------- PDF: two cards per letter sheet
+function drawCard(doc, deck, c, ox, oy, k) {
+  const X = (v) => ox + v * k, Y = (v) => oy + v * k, L = 24, R = 264, weeks = Math.ceil(deck.cards.length / 3);
+  doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26 * k); doc.text(c.label.replace('–', ' · ').toUpperCase(), X(L), Y(52));
+  doc.setFont('helvetica', 'normal').setFontSize(11 * k); doc.text(`Week ${weekOf(c)} of ${weeks}`, X(L), Y(70));
+  doc.setFont('courier', 'bold').setFontSize(15 * k); const no = cardNo(deck, c), cw = doc.getTextWidth(no) + 16 * k;
+  doc.setLineWidth(1.6 * k); doc.roundedRect(X(R) - cw, Y(30), cw, 26 * k, 3 * k, 3 * k); doc.text(no, X(R) - cw / 2, Y(48), { align: 'center' });
+  doc.line(X(L), Y(82), X(R), Y(82));
+  const top = 92, bottom = 398, n = c.items.length, rh = (bottom - top) / n;
+  c.items.forEach((it, i) => {
+    const cy = top + rh * i + rh / 2;
+    doc.setLineWidth(2 * k); doc.roundedRect(X(L), Y(cy - 13), 26 * k, 26 * k, 3 * k, 3 * k);
+    doc.setFont('helvetica', 'normal').setFontSize(14 * k);
+    const lines = doc.splitTextToSize(it.name, (R - 60) * k).slice(0, 2), y0 = cy - (lines.length - 1) * 8 + (it.room ? -3 : 5);
+    doc.text(lines, X(58), Y(y0), { lineHeightFactor: 1.15 });
+    if (it.room) { doc.setFontSize(8 * k).setTextColor(100); doc.text(it.room.toUpperCase(), X(58), Y(y0 + (lines.length - 1) * 16 + 12)); doc.setTextColor(0); }
   });
+  doc.setFontSize(8 * k).setTextColor(100); doc.text('Home - 2-day card', X(L), Y(420)); doc.text('Check the box when done', X(R), Y(420), { align: 'right' }); doc.setTextColor(0);
+}
+function cardsPdf(deck, size) {
+  const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
+  const doc = new J({ orientation: 'landscape', unit: 'pt', format: 'letter' }); // 11 × 8.5 in
+  const k = size === 'half' ? 1.3125 : 1, cw = 288 * k, ch = 432 * k, left = (792 - 2 * cw) / 2, top = (612 - ch) / 2;
+  const cards = deck.cards.slice().sort((a, b) => a.idx - b.idx);
+  for (let i = 0; i < cards.length; i += 2) {
+    if (i) doc.addPage('letter', 'landscape');
+    [0, 1].forEach((j) => { if (cards[i + j]) drawCard(doc, deck, cards[i + j], left + j * cw, top, k); });
+    doc.setDrawColor(170).setLineWidth(0.5).setLineDashPattern([4, 3], 0); // dashed cut guides at each card's edge
+    [0, 1].forEach((j) => { if (cards[i + j]) doc.rect(left + j * cw, top, cw, ch); });
+    doc.setLineDashPattern([], 0);
+  }
   return doc.output('blob');
 }
-async function saveCardsFile(set) {
+async function saveCardsFile(deck) {
   if (!downloads) { toast('Saving files isn’t available in this view.'); return; }
-  try {
-    const pdf = cardsPdf(set);
-    if (pdf) await downloads.save({ filename: `life-tracker-cards-deck-${set.deck || set.n}.pdf`, data: pdf });
-    else await downloads.save({ filename: `life-tracker-cards-deck-${set.deck || set.n}.html`, data: cardsHtml(set) });
-    toast('Saved. Open the file and print it.');
-  } catch (e) { if (e.code !== 'declined') toast(e.message || 'Could not save the file.'); }
+  const pdf = cardsPdf(deck, store.get('cardsize', 'index'));
+  if (!pdf) { toast('The PDF tool didn’t load. Reload the page and try again.'); return; }
+  try { await downloads.save({ filename: `life-tracker-cards-deck-${deck.n}.pdf`, data: pdf }); toast('Saved. Open the PDF and print it at 100% scale, landscape, US Letter.'); } catch (e) { if (e.code !== 'declined') toast(e.message || 'Could not save the file.'); }
 }
 
 // ================================================================ More
@@ -778,7 +937,7 @@ async function handlePhoto(file) {
 // ================================================================ boot
 if (!db) { view.innerHTML = '<div class="panel"><h2>Storage isn’t available here</h2><p>Open this page in the Claude app or on claude.ai while signed in, so it can keep your data.</p></div>'; return; }
 $('#fab').hidden = false;
-listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('shields', 'shields'); listen('suggestions', 'sugg');
+listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('shields', 'shields'); listen('suggestions', 'sugg');
 db.doc('settings/main').onSnapshot((d) => { if (d.exists) S.settings = { fitness_weekly_target: Number(d.data().fitness_weekly_target) || 3 }; schedule(); }, () => {});
 const hash = (location.hash || '').slice(1);
 go(tabs[hash] ? hash : 'today');
