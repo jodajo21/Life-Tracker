@@ -77,6 +77,7 @@ dialog.sheet { margin: auto auto 0; max-width: 560px; width: 100%; border-radius
 @media (min-width: 900px) { .deckbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 14px; } .deckbar > div:first-child { flex: 1 1 220px; } .deckbar > .row { flex: 0 1 auto; } .deckbar > .row select { flex: 0 1 auto; width: auto; } .deckbar > p { flex-basis: 100%; } }
 .pc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 8px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px #0002; scroll-margin-top: 150px; }
 .pc.reviewed { border-color: var(--home); } .pc.dragover { outline: 2px dashed var(--home); outline-offset: 2px; }
+.pc-clamp { height: 20px; margin: -2px -2px 0; border-radius: 8px; background: repeating-linear-gradient(135deg, var(--heat) 0 6px, transparent 6px 12px); display: grid; place-items: center; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .pc-h { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 8px; }
 .pc-t { font: 800 22px/1 var(--display); letter-spacing: .02em; } .pc-n { font: 700 14px ui-monospace, Menlo, monospace; border: 2px solid var(--ink); border-radius: 4px; padding: 1px 7px; }
 .pc-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; } .pc-l li { display: flex; gap: 8px; align-items: center; } 
@@ -90,6 +91,10 @@ dialog.sheet { margin: auto auto 0; max-width: 560px; width: 100%; border-radius
 details.panel > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; } details.panel > summary::-webkit-details-marker { display: none; } details.panel > summary::after { content: '▾'; margin-left: auto; color: var(--muted); }
 .toast button { margin-left: 10px; pointer-events: auto; border: 0; border-radius: 8px; padding: 4px 10px; font-weight: 700; background: #fff3; color: #fff; }
 #toasts .toast { pointer-events: auto; }
+.rates { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; } @media (min-width: 640px) { .rates { grid-template-columns: repeat(4, 1fr); } }
+.rate { background: var(--bg); border-radius: 12px; padding: 12px; } .rate b { display: block; font-size: 32px; line-height: 1.1; margin: 2px 0; } .up { color: var(--home); font-size: 12px; font-weight: 700; } .down { color: var(--fit); font-size: 12px; font-weight: 700; }
+.ins { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 2px; } .ins:last-of-type { border-bottom: 0; } .ins-t { font: 800 16px var(--display); }
+.cyc { display: grid; grid-template-columns: 44px repeat(3, 1fr); gap: 4px; align-items: center; font-size: 12px; } .cyc .cell { border-radius: 6px; padding: 7px 0; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--home) calc(var(--v) * 70%), var(--heat)); color: var(--ink); } .cyc .cell.none { background: transparent; border: 1px dashed var(--line); color: var(--muted); font-weight: 400; }
 code { background: var(--heat); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
 </style>
 
@@ -219,7 +224,7 @@ function bars(data, color, { height = 110, showEvery = 1 } = {}) {
     const h = Math.round(((H - pad2 - 12) * d.value) / max), x = 2 + i * bw;
     return `<rect x="${x + bw * 0.12}" y="${H - pad2 - h}" width="${bw * 0.76}" height="${Math.max(h, d.value ? 2 : 0)}" rx="2" fill="${color}"><title>${esc(d.label)}: ${d.value}</title></rect>` +
       (d.value ? `<text x="${x + bw / 2}" y="${H - pad2 - h - 3}" text-anchor="middle">${d.value}</text>` : '') +
-      (i % showEvery === 0 ? `<text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle">${esc(d.label)}</text>` : '');
+      (i % showEvery === 0 ? `<text x="${i === 0 ? x : i === data.length - 1 ? x + bw : x + bw / 2}" y="${H - 4}" text-anchor="${i === 0 ? 'start' : i === data.length - 1 ? 'end' : 'middle'}">${esc(d.label)}</text>` : '');
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" role="img">${out}<line x1="0" x2="${W}" y1="${H - pad2}" y2="${H - pad2}" stroke="var(--line)"/></svg>`;
 }
@@ -270,6 +275,14 @@ function listen(name, key) { return col(name).onSnapshot((snap) => { S[key] = sn
 // ---------------------------------------------------------------- derived state
 const entriesOf = (g) => S.entries.filter((e) => e.goal === g);
 const latestSet = () => S.sets.slice().sort((a, b) => b.n - a.n)[0] || null;
+const weekMonday = (iso) => ymd(monday(parse(iso)));
+const weekEnd = (card) => addDaysIso(weekMonday(card.start_date), 6); // the Sunday that ends the card's week
+const isLocked = (card, t = today()) => t > weekEnd(card);              // cards close after that Sunday
+function weekCards(t) {
+  const set = latestSet(); if (!set) return null;
+  const mon = weekMonday(t), cards = set.cards.filter((c) => weekMonday(c.start_date) === mon).sort((a, b) => a.idx - b.idx);
+  return cards.length ? { set, cards } : null;
+}
 function currentCard(t) {
   const set = latestSet(); if (!set) return null;
   const card = set.cards.filter((c) => c.end_date >= t).sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
@@ -334,6 +347,7 @@ async function ensureCategory(goal, name) {
 async function toggleItems(setId, cardCode, { check = [], uncheck = [] }) {
   const copy = structuredClone(S.sets.find((s) => s.id === setId));
   const card = copy.cards.find((c) => c.code === cardCode), t = today();
+  if (isLocked(card, t)) throw new Error('That card is closed. Cards close after the Sunday of their week.');
   const date = t < card.start_date ? card.start_date : t > card.end_date ? card.end_date : t;
   const rewards = [];
   for (const id of check) {
@@ -430,6 +444,7 @@ ${listing}
 
 Reply with only JSON: {"card_code":"C07"|null,"card_confidence":0.9,"items":[{"item_id":"4-0","checked":true,"confidence":0.95}],"notes":""}`, { images: [await resizeToBlob(file)], modelTier: 'default', cache: false });
   const card = cards.find((c) => c.code === out.card_code);
+  if (card && isLocked(card, t)) return { card: null, notes: `That card belongs to the week of ${parse(weekMonday(card.start_date)).toLocaleDateString('en', { month: 'short', day: 'numeric' })}, which has closed. Cards close after Sunday.` };
   if (!card) return { card: null, notes: out.notes || 'I couldn’t tell which card that is. Try a closer, brighter photo.' };
   const proposal = card.items.map((i) => { const f = (out.items || []).find((x) => String(x.item_id) === i.id); return { item_id: i.id, name: i.name, was_done: !!i.done, checked: f ? !!f.checked : !!i.done, confidence: f ? Number(f.confidence) || 0 : 0 }; });
   const sure = out.card_confidence >= 0.85 && proposal.every((p) => p.confidence >= 0.8);
@@ -468,7 +483,10 @@ function renderToday() {
   let dom = store.get('domain', 'home'); if (!GOALS.includes(dom)) dom = 'home';
   const sums = { fitness: domainSummary('fitness', t), home: domainSummary('home', t) }, D = sums[dom], s = D.season, cls = dom === 'fitness' ? 'fit' : 'home';
   const todays = entriesOf(dom).filter((e) => e.date === t);
-  const cc = currentCard(t), isToday = !!cc && cc.card.start_date <= t;
+  const wk = weekCards(t); let cc;
+  if (wk) { const pick = wk.cards.find((c) => c.idx === ui.todayCard), dflt = wk.cards.find((c) => c.start_date <= t && t <= c.end_date) || wk.cards[wk.cards.length - 1]; cc = { set: wk.set, card: pick || dflt, week: wk.cards }; }
+  else cc = currentCard(t);
+  const isToday = !!cc && cc.card.start_date <= t;
   let bar;
   if (dom === 'fitness') { const target = S.settings.fitness_weekly_target, done = weekActiveDays(t), left = Math.max(0, target - done); bar = { done, total: target, left, label: left ? `${done} of ${target} active days · ${left} left` : `${done} of ${target} active days · all set` }; }
   else if (cc) { const total = cc.card.items.length, done = cc.card.items.filter((i) => i.done).length; bar = { done, total, left: total - done, label: isToday ? (total - done ? `${done} of ${total} · ${total - done} left` : `${done} of ${total} · card cleared`) : `Next card: ${cc.card.label} · ${total} tasks` }; }
@@ -491,7 +509,7 @@ function renderToday() {
         ${D.shields.protected_today ? `<button class="sec" id="unshield">🛡 Soft day on · undo</button>` : `<button class="sec" id="shield" ${D.shields.available ? '' : 'disabled'} title="Protects momentum for today. You earn one for every 7 active days (hold up to 3).">🛡 Soft day <span class="sub">${D.shields.available} ready</span></button>`}</div>
     </section>
     ${dom === 'home' ? `<section class="panel home"><h2>${cc ? `${esc(cc.card.label)} card <span class="sub">${cc.card.idx + 1} of ${cc.set.cards.length}${isToday ? '' : ' · starts ' + parse(cc.card.start_date).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</span>` : 'Cards'}</h2>
-        ${cc ? `<div id="items">${cc.card.items.map((i) => `<label class="check ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''}><span>${esc(i.name)}${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div><p class="sub" style="margin:10px 0 0">Tap to check off, or add a photo of the paper card with +.</p>` : '<div class="empty">No cycle running. Make a deck and start a cycle on the Cards tab.</div>'}</section>
+        ${cc ? `${pillsHtml(cc, t)}<div id="items">${cc.card.items.map((i) => `<label class="check ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''}><span>${esc(i.name)}${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div><p class="sub" style="margin:10px 0 0">Tap to check off, or add a photo of the paper card with +.</p>` : '<div class="empty">No cycle running. Make a deck and start a cycle on the Cards tab.</div>'}</section>
       ${logged.length ? `<section class="panel"><h2>Also logged today</h2>${logged.map(entryRow).join('')}</section>` : ''}
       ${rooms.length ? `<section class="panel home"><h2>House</h2><div class="rooms">${rooms.map((r) => `<div class="room ${r.heat ? 'heat' : ''} ${r.planned ? '' : 'idle'}" style="--cov:${r.coverage}" title="${r.done} of ${r.planned} planned tasks done this quarter"><b>${esc(r.room)}</b><span>${r.planned ? Math.round(r.coverage * 100) + '% lit' : 'not planned'}</span><small>${r.tier ? { bronze: '🥉', silver: '🥈', gold: '🥇' }[r.tier] + ' ' : ''}${r.shards} shard${r.shards === 1 ? '' : 's'}${r.next ? ` · ${r.next} to next` : ''}</small></div>`).join('')}</div>
         ${near.length ? `<p class="sub" style="margin:10px 0 0">${near.map((r) => `${esc(r.room)} is ${Math.round(r.coverage * 100)}% lit`).join(' · ')}.</p>` : ''}<p class="sub" style="margin:6px 0 0">Rooms light up as their card tasks get done. Clear a whole card for a shard in each of its rooms.</p></section>` : ''}`
@@ -500,6 +518,7 @@ function renderToday() {
       <p class="sub" style="margin:10px 0 0">Every log earns base XP. About ${Math.round(LUCKY_P * 100)}% also drop a bonus, and it always shows here.</p></section>`;
 
   view.querySelectorAll('[data-dom]').forEach((b) => (b.onclick = () => { store.set('domain', b.dataset.dom); go('today'); }));
+  view.querySelectorAll('[data-pick]').forEach((b) => (b.onclick = () => { ui.todayCard = +b.dataset.pick; go('today', { keep: true }); }));
   const setShield = (on) => async () => {
     try { const id = `${dom}_${t}`; if (on) { S.shields = [...S.shields, { id, domain: dom, date: t }]; go('today', { keep: true }); await queue(() => col('shields').doc(id).set({ domain: dom, date: t })); } else { S.shields = S.shields.filter((x) => x.id !== id); go('today', { keep: true }); await queue(() => col('shields').doc(id).delete()); } } catch (e) { toast(e.message); }
   };
@@ -511,9 +530,168 @@ function renderToday() {
   view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => confirmDialog('Delete this entry? Its XP is removed too.', async () => { await removeEntry(b.dataset.del); go('today', { keep: true }); })));
   if (pulseNext) { pulseNext = false; if (bar.left === 1) view.querySelector('#items .check:not(.done)')?.classList.add('pulse'); }
 }
+function pillsHtml(cc, t) {
+  if (!cc.week) return '';
+  const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5);
+  return `<div class="seg" style="margin:8px 0 6px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}">${esc(c.label)} <span class="sub">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>
+    <p class="sub" style="margin:0 0 6px">This week's cards stay open through Sunday${left > 0 ? ` (${left} day${left === 1 ? '' : 's'} left)` : ' (today is the last day)'}. After that they close, so there's no catching up on the past.</p>`;
+}
 function confirmDialog(msg, onYes) {
   const d = $('#dlg'); d.innerHTML = `<p>${esc(msg)}</p><div class="row"><button class="sec" id="no">Cancel</button><span class="grow"></span><button class="primary" id="yes">Yes</button></div>`; d.showModal();
   $('#no', d).onclick = () => d.close(); $('#yes', d).onclick = async () => { d.close(); try { await onYes(); } catch (e) { toast(e.message); } };
+}
+
+// ================================================================ Completion analytics (cards)
+const SEGNAME = ['Mon–Tue', 'Wed–Thu', 'Fri–Sat'];
+const pctS = (r) => (r == null ? '–' : Math.round(r * 100) + '%');
+const fmtShort = (iso) => parse(iso).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+function nthWeekday(y, m, wd, n) { if (n > 0) { const off = (wd - new Date(y, m, 1).getDay() + 7) % 7; return ymd(new Date(y, m, 1 + off + 7 * (n - 1))); } const last = new Date(y, m + 1, 0); return ymd(new Date(y, m, last.getDate() - ((last.getDay() - wd + 7) % 7))); }
+function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return ymd(new Date(y, mo - 1, da)); }
+function holidaysFor(y) {
+  return [["New Year's Day", `${y}-01-01`], ['MLK Day', nthWeekday(y, 0, 1, 3)], ["Presidents' Day", nthWeekday(y, 1, 1, 3)], ['Easter', easter(y)], ['Memorial Day', nthWeekday(y, 4, 1, -1)], ['Juneteenth', `${y}-06-19`], ['July 4th', `${y}-07-04`], ['Labor Day', nthWeekday(y, 8, 1, 1)],
+    ['Columbus Day', nthWeekday(y, 9, 1, 2)], ['Halloween', `${y}-10-31`], ['Thanksgiving', nthWeekday(y, 10, 4, 4)], ['Christmas Eve', `${y}-12-24`], ['Christmas', `${y}-12-25`], ["New Year's Eve", `${y}-12-31`]].map(([name, date]) => ({ name, date }));
+}
+const holidayList = (() => { const m = {}; return (y) => (m[y] ||= holidaysFor(y)); })();
+function holidayNear(start, end) { // a holiday on the card's days or the day on either side
+  const lo = addDaysIso(start, -1), hi = addDaysIso(end, 1);
+  for (const y of new Set([+lo.slice(0, 4), +hi.slice(0, 4)])) for (const h of holidayList(y)) if (h.date >= lo && h.date <= hi) return h.name;
+  return null;
+}
+/** One record per card of every cycle. `finished` = the card's two days are over. */
+function cardRecords() {
+  const t = today(), out = [];
+  for (const set of S.sets) for (const c of set.cards) {
+    if (!c.items.length) continue;
+    out.push({ cycle: set.n, demo: !!set.demo, idx: c.idx, seg: c.idx % 3, start: c.start_date, end: c.end_date, weekStart: weekMonday(c.start_date), planned: c.items.length, done: c.items.filter((i) => i.done).length, finished: c.end_date < t, items: c.items, holiday: holidayNear(c.start_date, c.end_date) });
+  }
+  return out.sort((a, b) => a.start.localeCompare(b.start));
+}
+const rateOf = (rs) => { const planned = rs.reduce((a, r) => a + r.planned, 0), done = rs.reduce((a, r) => a + r.done, 0); return { planned, done, rate: planned ? done / planned : null, cards: rs.length }; };
+function completionRates() {
+  const fin = cardRecords().filter((r) => r.finished), t = today(), mon = weekMonday(t), prevMon = addDaysIso(mon, -7), ym = t.slice(0, 7), prevYm = ymd(new Date(+t.slice(0, 4), +t.slice(5, 7) - 2, 1)).slice(0, 7);
+  return {
+    fin,
+    week: rateOf(fin.filter((r) => r.weekStart === mon)), lastWeek: rateOf(fin.filter((r) => r.weekStart === prevMon)),
+    month: rateOf(fin.filter((r) => r.start.slice(0, 7) === ym)), lastMonth: rateOf(fin.filter((r) => r.start.slice(0, 7) === prevYm)),
+    ytd: rateOf(fin.filter((r) => r.start.slice(0, 4) === t.slice(0, 4))), life: rateOf(fin),
+  };
+}
+function computeInsights(fin) {
+  const tot = rateOf(fin), out = [], add = (score, i) => out.push({ score, ...i });
+  if (tot.planned < 20) return { tot, items: [] };
+  // 1. weakest day pair
+  const segs = [0, 1, 2].map((s) => ({ s, ...rateOf(fin.filter((r) => r.seg === s)) })).filter((x) => x.planned >= 12);
+  if (segs.length > 1) { const w = segs.reduce((a, b) => (b.rate < a.rate ? b : a)), b = segs.reduce((a, c) => (c.rate > a.rate ? c : a)), gap = b.rate - w.rate;
+    if (gap >= 0.08) add(gap + 0.15, { title: `You miss ${SEGNAME[w.s]} cards more than any others`, detail: `${pctS(w.rate)} of their tasks get done, against ${pctS(tot.rate)} overall. ${SEGNAME[b.s]} is your strongest at ${pctS(b.rate)}.`, bars: segs.map((x) => ({ label: SEGNAME[x.s], v: x.rate })) }); }
+  // 2. holidays
+  const near = fin.filter((r) => r.holiday), far = fin.filter((r) => !r.holiday), nr = rateOf(near), fr = rateOf(far);
+  if (near.length >= 3 && nr.planned >= 10 && fr.rate - nr.rate >= 0.08) {
+    const by = {}; near.forEach((r) => (by[r.holiday] ||= []).push(r));
+    const worst = Object.entries(by).map(([name, rs]) => ({ name, ...rateOf(rs) })).filter((x) => x.rate < fr.rate).sort((a, b) => a.rate - b.rate).slice(0, 3);
+    add(fr.rate - nr.rate + 0.12, { title: 'Tasks slip around holidays', detail: `Cards on or next to a holiday are ${pctS(nr.rate)} done, against ${pctS(fr.rate)} on other days.${worst.length ? ` Hardest hit: ${worst.map((x) => `${x.name} (${pctS(x.rate)})`).join(', ')}.` : ''}`, bars: [{ label: 'Near a holiday', v: nr.rate }, { label: 'Other days', v: fr.rate }] });
+  }
+  // 3. weakest room
+  const rooms = {}; fin.forEach((r) => r.items.forEach((i) => { const k = i.room || 'General'; (rooms[k] ||= { planned: 0, done: 0 }).planned++; if (i.done) rooms[k].done++; }));
+  const rl = Object.entries(rooms).filter(([, v]) => v.planned >= 12).map(([name, v]) => ({ name, rate: v.done / v.planned, ...v })).sort((a, b) => a.rate - b.rate);
+  if (rl.length > 2 && tot.rate - rl[0].rate >= 0.1) add(tot.rate - rl[0].rate + 0.05, { title: `${rl[0].name} gets the least attention`, detail: `${rl[0].done} of ${rl[0].planned} tasks done (${pctS(rl[0].rate)}), against ${pctS(tot.rate)} overall.`, bars: rl.slice(0, 3).map((x) => ({ label: x.name, v: x.rate })) });
+  // 4. most-skipped tasks
+  const tasks = {}; fin.forEach((r) => r.items.forEach((i) => { (tasks[i.name] ||= { planned: 0, done: 0 }).planned++; if (i.done) tasks[i.name].done++; }));
+  const skipped = Object.entries(tasks).filter(([, v]) => v.planned >= 3 && v.done / v.planned <= 0.5).map(([name, v]) => ({ name, ...v, rate: v.done / v.planned })).sort((a, b) => a.rate - b.rate || b.planned - a.planned).slice(0, 4);
+  if (skipped.length) add(0.1 + (0.5 - skipped[0].rate) * 0.3, { title: 'Tasks that often get skipped', detail: skipped.map((x) => `${x.name}: ${x.done} of ${x.planned}`).join(' · ') });
+  // 5. recent trend (last 4 finished weeks vs the 4 before)
+  const weeks = [...new Set(fin.map((r) => r.weekStart))].sort(), last = weeks.slice(-4), prev = weeks.slice(-8, -4);
+  if (last.length === 4 && prev.length === 4) { const a = rateOf(fin.filter((r) => last.includes(r.weekStart))), b = rateOf(fin.filter((r) => prev.includes(r.weekStart))), d = a.rate - b.rate;
+    if (Math.abs(d) >= 0.05) add(Math.abs(d) + 0.1, { title: d > 0 ? 'You’re on an upswing' : 'Your last month dipped', detail: `The last 4 weeks are ${pctS(a.rate)} done, ${d > 0 ? 'up' : 'down'} ${Math.round(Math.abs(d) * 100)} points from the 4 weeks before (${pctS(b.rate)}).` }); }
+  // 6. late in the month
+  const late = fin.filter((r) => +r.start.slice(8) >= 22), early = fin.filter((r) => +r.start.slice(8) < 22), lr = rateOf(late), er = rateOf(early);
+  if (lr.planned >= 15 && er.rate - lr.rate >= 0.08) add(er.rate - lr.rate + 0.02, { title: 'The end of the month is harder', detail: `Cards from the 22nd on are ${pctS(lr.rate)} done, against ${pctS(er.rate)} earlier in the month.` });
+  // 7. workout days vs card completion
+  const wdays = new Set(entriesOf('fitness').map((e) => e.date));
+  const withW = fin.filter((r) => { for (let d = r.start; d <= r.end; d = addDaysIso(d, 1)) if (wdays.has(d)) return true; return false; }), noW = fin.filter((r) => !withW.includes(r)), a = rateOf(withW), b = rateOf(noW);
+  if (a.planned >= 15 && b.planned >= 15 && Math.abs(a.rate - b.rate) >= 0.08) add(Math.abs(a.rate - b.rate) + 0.03, { title: a.rate > b.rate ? 'Workout days are good home days too' : 'Workout days cost you home tasks', detail: `Cards that overlap a workout are ${pctS(a.rate)} done, against ${pctS(b.rate)} when there was no workout.` });
+  // 8. best run of fully cleared cards
+  let best = { n: 0 }, run = null; for (const r of fin) { if (r.done === r.planned) { run = run ? { ...run, n: run.n + 1, to: r.end } : { n: 1, from: r.start, to: r.end }; if (run.n > best.n) best = run; } else run = null; }
+  if (best.n >= 3) add(0.2 + best.n * 0.01, { title: `Your longest clean sweep is ${best.n} cards in a row`, detail: `Every task on ${best.n} straight cards, ${fmtShort(best.from)} to ${fmtShort(best.to)}.` });
+  return { tot, items: out.sort((x, y) => y.score - x.score).slice(0, 6) };
+}
+function pbars(items, color) {
+  return items.map((i) => `<div style="display:grid;grid-template-columns:104px 1fr 44px;gap:8px;align-items:center;margin:5px 0;font-size:13px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(i.label)}">${esc(i.label)}</span>
+    <div style="background:var(--heat);border-radius:6px;height:12px;overflow:hidden"><div style="width:${Math.round(i.v * 100)}%;height:100%;background:${color}"></div></div><span class="sub" style="text-align:right">${pctS(i.v)}</span></div>`).join('');
+}
+function rateTile(label, r, prev, prevLabel) {
+  let delta = '';
+  if (prev && prev.rate != null && r.rate != null) { const d = Math.round((r.rate - prev.rate) * 100); delta = d === 0 ? `<span class="sub">same as ${prevLabel}</span>` : `<span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? '▲' : '▼'} ${Math.abs(d)} pts vs ${prevLabel}</span>`; }
+  return `<div class="rate"><div class="sub">${label}</div><b class="num">${pctS(r.rate)}</b><div class="sub">${r.planned ? `${r.done} of ${r.planned} tasks · ${r.cards} cards` : 'No finished cards yet'}</div><div class="sub">${delta}</div></div>`;
+}
+function cycleHeat(fin) {
+  const cycles = [...new Set(S.sets.map((x) => x.n))].sort((a, b) => b - a), withData = cycles.filter((n) => fin.some((r) => r.cycle === n)); if (!withData.length) return '';
+  const sel = withData.includes(ui.cyc) ? ui.cyc : withData[0], set = S.sets.find((x) => x.n === sel), t = today();
+  const cell = (c) => { if (!c) return '<div class="cell none">–</div>'; const done = c.items.filter((i) => i.done).length, v = c.items.length ? done / c.items.length : 0, fin2 = c.end_date < t;
+    return fin2 ? `<div class="cell" style="--v:${v}" title="${esc(c.label)} · ${fmtShort(c.start_date)} · ${done} of ${c.items.length} done${holidayNear(c.start_date, c.end_date) ? ' · near ' + esc(holidayNear(c.start_date, c.end_date)) : ''}">${Math.round(v * 100)}</div>` : '<div class="cell none" title="Not finished yet">·</div>'; };
+  const weeks = Math.ceil(set.cards.length / 3);
+  return `<div class="row wrap" style="margin-bottom:8px"><span class="sub" style="flex:1 1 100%">Each square is one 2-day card (percent of its tasks done).</span><select id="cyc-pick" style="width:auto" aria-label="Cycle">${withData.map((n) => { const x = S.sets.find((y) => y.n === n); return `<option value="${n}" ${n === sel ? 'selected' : ''}>${x.demo ? 'Demo cycle ' + Math.abs(n) : 'Cycle ' + n} · from ${fmtShort(x.start_date)}</option>`; }).join('')}</select></div>
+    <div class="cyc"><span></span>${SEGNAME.map((n) => `<span class="sub" style="text-align:center">${n}</span>`).join('')}${Array.from({ length: weeks }, (_, w) => `<span class="sub">Wk ${w + 1}</span>${[0, 1, 2].map((g) => cell(set.cards.find((c) => c.idx === w * 3 + g))).join('')}`).join('')}</div>`;
+}
+function completionHtml() {
+  const R = completionRates(), fin = R.fin;
+  if (!fin.length) return `<section class="panel home"><h2>Card completion</h2><div class="empty">Rates and insights appear once some cards have finished. To try the screens now, load sample data on the More tab (you can clear it any time).<div style="margin-top:10px"><button class="sec" id="demo-go">Load sample data</button></div></div></section>`;
+  const I = computeInsights(fin);
+  const weeksMap = {}; fin.forEach((r) => (weeksMap[r.weekStart] ||= []).push(r));
+  const series = Object.keys(weeksMap).sort().slice(-26).map((w) => ({ label: fmtShort(w).replace(/\s/g, ''), value: Math.round((rateOf(weeksMap[w]).rate || 0) * 100) }));
+  const segRows = [0, 1, 2].map((g) => ({ label: SEGNAME[g], v: rateOf(fin.filter((r) => r.seg === g)).rate || 0 }));
+  const rooms = {}; fin.forEach((r) => r.items.forEach((i) => { const k = i.room || 'General'; (rooms[k] ||= { planned: 0, done: 0 }).planned++; if (i.done) rooms[k].done++; }));
+  const roomRows = Object.entries(rooms).map(([label, v]) => ({ label, v: v.done / v.planned })).sort((a, b) => a.v - b.v);
+  return `<section class="panel home"><h2>Card completion</h2>
+      <div class="rates">${rateTile('This week', R.week, R.lastWeek, 'last week')}${rateTile('This month', R.month, R.lastMonth, 'last month')}${rateTile('Year to date', R.ytd)}${rateTile('Lifetime', R.life)}</div>
+      <p class="sub" style="margin:10px 0 0">Counts the tasks on cards whose two days are over. A card that is still open isn't counted as missed yet.</p></section>
+    <section class="panel"><h2>What I'm noticing</h2>${I.items.length ? I.items.map((x) => `<div class="ins"><div class="ins-t">${esc(x.title)}</div><div class="sub" style="font-size:14px;color:var(--ink)">${esc(x.detail)}</div>${x.bars ? pbars(x.bars, 'var(--home)') : ''}</div>`).join('') : '<div class="empty">Insights appear after about five finished cards.</div>'}
+      <p class="sub" style="margin:8px 0 0">Patterns only, from ${I.tot.planned} finished tasks. Small samples can mislead, so treat these as hints.</p></section>
+    <section class="panel"><h2>Weekly completion</h2>${series.length > 1 ? bars(series, 'var(--home)', { height: 120, showEvery: Math.ceil(series.length / 10) }) : '<div class="empty">More weeks needed.</div>'}
+      <div class="chart-title">By day pair</div>${pbars(segRows, 'var(--home)')}<div class="chart-title">By room (lowest first)</div>${pbars(roomRows, 'var(--home)')}</section>
+    <section class="panel"><h2>Cycle heat map</h2>${cycleHeat(fin)}</section>`;
+}
+
+// ---------------------------------------------------------------- sample data (flagged so it can be cleared)
+function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+async function pool(tasks, n = 8) { const it = tasks[Symbol.iterator](); await Promise.all(Array.from({ length: n }, async () => { for (const f of it) await f(); })); }
+async function loadDemo() {
+  if (S.sets.some((x) => x.demo) || S.entries.some((e) => e.demo)) throw new Error('Sample data is already loaded.');
+  const chores = S.chores.filter((c) => c.active !== false); if (!chores.length) throw new Error('Add some house tasks first.');
+  const t = today(), m0 = weekMonday(t), rnd = mulberry32(7);
+  const base = buildQuarter(chores.map((c) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), m0).cards;
+  const catId = {}; for (const n of new Set([...chores.map((c) => c.name)])) catId[n] = (await ensureCategory('home', n)).cat.id;
+  const fitActs = ['Bench Press', 'Squat', 'Running', 'Yoga', 'Deadlift']; for (const n of fitActs) catId[n] = (await ensureCategory('fitness', n)).cat.id;
+  const cycles = [{ n: -3, start: addDaysIso(m0, -273), p: 0.62, id: 'demo3' }, { n: -2, start: addDaysIso(m0, -182), p: 0.72, id: 'demo2' }, { n: -1, start: addDaysIso(m0, -91), p: 0.8, id: 'demo1' }];
+  const SEG = [1.12, 1.0, 0.72], writes = [], newEntries = [], newSets = [], slump = new Set();
+  for (const cy of cycles) {
+    for (let k = 0; k < 2; k++) slump.add(addDaysIso(cy.start, Math.floor(rnd() * 13) * 7)); // two "off" weeks per cycle
+    const cards = base.map((c) => {
+      const w = Math.floor(c.idx / 3), seg = c.idx % 3, st = addDaysIso(cy.start, w * 7 + seg * 2), en = addDaysIso(st, 1), hol = holidayNear(st, en), off = slump.has(addDaysIso(cy.start, w * 7));
+      const items = c.items.map((it, pos) => {
+        const itemF = /windows|oven/i.test(it.name) ? 0.5 : 1, roomF = /bedroom|laundry/i.test(it.room) ? 0.85 : 1;
+        const prob = Math.min(0.97, Math.max(0.05, cy.p * SEG[seg] * (hol ? 0.45 : 1) * (off ? 0.35 : 1) * itemF * roomF)), done = rnd() < prob, date = addDaysIso(st, rnd() < 0.7 ? 0 : 1);
+        const item = { id: `${c.idx}-${pos}`, chore_id: it.chore_id || null, name: it.name, room: it.room, done, done_at: done ? date : null, entry_id: null };
+        if (done) { const ref = col('entries').doc(); item.entry_id = ref.id; const doc = { goal: 'home', date, activity: it.name, cat: catId[it.name] || '', details: { card: `C${pad(c.idx + 1)}` }, raw: 'sample data', source: 'card', rewards: [{ kind: 'base', xp: XP.home, label: 'Logged' }], xp: XP.home, created: new Date().toISOString(), demo: true }; newEntries.push({ id: ref.id, ...doc }); writes.push(() => ref.set(doc)); }
+        return item;
+      });
+      const cleared = items.every((i) => i.done);
+      return { code: `C${pad(c.idx + 1)}`, idx: c.idx, start_date: st, end_date: en, label: c.label, cleared, cleared_date: cleared ? en : null, items };
+    });
+    const doc = { n: cy.n, deck: 'demo', demo: true, start_date: cy.start, created: new Date().toISOString(), cards }; newSets.push({ id: cy.id, ...doc }); writes.push(() => col('cardsets').doc(cy.id).set(doc));
+  }
+  const dayP = [0.25, 0.75, 0.3, 0.7, 0.25, 0.6, 0.35]; // Sun..Sat chance of a workout
+  for (let d = cycles[0].start; d < t; d = addDaysIso(d, 1)) {
+    const wkOff = slump.has(weekMonday(d)); if (rnd() > dayP[parse(d).getDay()] * (wkOff ? 0.3 : 1)) continue;
+    const a = fitActs[Math.floor(rnd() * fitActs.length)], ref = col('entries').doc(), doc = { goal: 'fitness', date: d, activity: a, cat: catId[a], details: a === 'Running' ? { distance_mi: 2 + Math.floor(rnd() * 4) } : { sets: 4, reps: 8 }, raw: 'sample data', source: 'text', rewards: [{ kind: 'base', xp: XP.fitness, label: 'Logged' }], xp: XP.fitness, created: new Date().toISOString(), demo: true };
+    newEntries.push({ id: ref.id, ...doc }); writes.push(() => ref.set(doc));
+  }
+  S.sets = [...S.sets, ...newSets]; S.entries = [...S.entries, ...newEntries];
+  await pool(writes, 8); return { entries: newEntries.length, cycles: newSets.length };
+}
+async function clearDemo() {
+  const es = S.entries.filter((e) => e.demo), ss = S.sets.filter((x) => x.demo);
+  S.entries = S.entries.filter((e) => !e.demo); S.sets = S.sets.filter((x) => !x.demo);
+  await pool([...es.map((e) => () => col('entries').doc(e.id).delete()), ...ss.map((x) => () => col('cardsets').doc(x.id).delete())], 8); return { entries: es.length, cycles: ss.length };
 }
 
 // ================================================================ Trends
@@ -561,7 +739,9 @@ function renderTrends() {
       : `<div class="empty">Nothing logged ${label.toLowerCase()} yet.</div>`;
     return `<section class="panel ${goal === 'fitness' ? 'fit' : 'home'}"><h2>${title}</h2>${body}</section>`;
   };
-  view.innerHTML = `<h1>Trends</h1>${seg}${panel('fitness', 'Fitness')}${panel('home', 'Home life')}`; bind();
+  view.innerHTML = `<h1>Trends</h1>${completionHtml()}<h2 style="margin:18px 0 8px">Activity</h2>${seg}${panel('fitness', 'Fitness')}${panel('home', 'Home life')}`; bind();
+  $('#cyc-pick')?.addEventListener('change', (e) => { ui.cyc = +e.target.value; go('trends', { keep: true }); });
+  $('#demo-go')?.addEventListener('click', () => confirmDialog('Load sample data so you can try the charts? It is clearly marked and you can remove it from the More tab.', async () => { toast('Loading sample data…'); const r = await loadDemo(); toast(`Loaded ${r.entries} sample entries.`); go('trends'); }));
 }
 function renderDay(seg, bind) {
   const day = ymd(addDays(new Date(), dayOffset));
@@ -668,7 +848,7 @@ const offTarget = (c) => c.items.length < 3 || c.items.length > 5;
 let migrating = false;
 async function migrateLegacy() {
   if (migrating || !S.ready.decks || !S.ready.sets) return;
-  const missing = [...new Map(S.sets.filter((x) => x.deck && !S.decks.some((d) => d.id === x.deck)).map((x) => [x.deck, x])).values()]; if (!missing.length) return;
+  const missing = [...new Map(S.sets.filter((x) => !x.demo && x.deck && !S.decks.some((d) => d.id === x.deck)).map((x) => [x.deck, x])).values()]; if (!missing.length) return;
   migrating = true;
   try { for (const x of missing) { const deck = { n: Number(String(x.deck).replace(/\D/g, '')) || x.n, created: x.created || new Date().toISOString(), cards: x.cards.map((c) => ({ idx: c.idx, code: c.code, label: c.label, reviewed: true, items: c.items.map((i) => ({ id: i.id, chore_id: i.chore_id || null, name: i.name, room: i.room })) })) }; S.decks = [...S.decks, { id: x.deck, ...deck }]; await queue(() => col('decks').doc(x.deck).set(deck)); } } finally { migrating = false; }
 }
@@ -709,7 +889,7 @@ function renderCards() {
       ${rs.length ? `<label class="row" style="margin-top:10px"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last cycle: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
       ${active.length ? '' : '<p class="sub">Add some house tasks below first.</p>'}<div id="preview"></div></section>
     ${deck ? editorHtml(deck) : ''}
-    <section class="panel"><h2>Cycles</h2>${sets.length ? sets.map((x) => `<div class="entry"><span>Cycle ${x.n} · starts ${x.start_date} · deck ${esc(String(x.deck || '').replace('d', ''))}${x.n === sets[0].n ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('') : '<div class="empty">No cycle running yet.</div>'}
+    <section class="panel"><h2>Cycles</h2>${sets.length ? sets.map((x) => `<div class="entry"><span>${x.demo ? 'Sample cycle ' + Math.abs(x.n) + ' · starts ' + x.start_date : 'Cycle ' + x.n + ' · starts ' + x.start_date + ' · deck ' + esc(String(x.deck || '').replace('d', ''))}${x.n === sets[0].n && !x.demo ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('') : '<div class="empty">No cycle running yet.</div>'}
       ${S.decks.length ? `<div class="chart-title">Start a cycle</div><div class="row wrap"><select id="cyc-deck" style="flex:1 1 140px;width:auto">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${deck && d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>
         <div style="flex:1 1 150px"><input type="date" id="cyc-start" aria-label="First Monday" value="${nextMonday(sets.length ? addDaysIso(sets[0].cards[sets[0].cards.length - 1].end_date, 1) : today())}"></div><button class="primary" id="cyc-go">Start cycle</button></div>
         <p class="sub">Printed cards carry no dates, only their place in the cycle (like 07 / 39), so the same deck runs again and again. Start a cycle to put dates on it. Edits to a deck flow into its newest cycle and keep your check-offs.</p>` : '<p class="sub">Create a deck first.</p>'}</section>
@@ -734,6 +914,7 @@ function cardHtml(deck, c) {
   const n = c.items.length, cls = n < 3 || n > 6 ? 'bad' : n === 6 ? 'six' : '';
   const msg = n < 3 ? `${n} task${n === 1 ? '' : 's'} · needs 3 or more` : n === 6 ? '6 tasks · use only if needed' : n > 6 ? `${n} tasks · too many` : `${n} tasks`;
   return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}">
+    <div class="pc-clamp" title="Left blank on the printed card so a clip or clamp can hold it">clamp space</div>
     <div class="pc-h"><div><div class="pc-t">${esc(c.label.replace('–', ' · ').toUpperCase())}</div><div class="sub">Week ${weekOf(c)} of ${Math.ceil(deck.cards.length / 3)}</div></div><div class="pc-n">${cardNo(deck, c)}</div></div>
     <ul class="pc-l">${c.items.map((i) => `<li data-id="${i.id}"><span class="grip" draggable="true" title="Drag to another card" aria-hidden="true">⠿</span><span class="box"></span><div class="pc-in"><input data-name value="${esc(i.name)}" aria-label="Task"><input data-room value="${esc(i.room || '')}" list="rooms" aria-label="Room" placeholder="Room"></div><button class="icon" data-more aria-label="Task options">⋯</button></li>`).join('')}</ul>
     <div class="pc-add"><input data-add list="tasklib" placeholder="Add a task" aria-label="Add a task to card ${c.idx + 1}"><button class="sec" data-addbtn>Add</button></div>
@@ -743,7 +924,7 @@ const cardVisible = (c) => (ui.week === 'all' || weekOf(c) === +ui.week) && (ui.
 function editorHtml(deck) {
   const weeks = Math.ceil(deck.cards.length / 3), size = store.get('cardsize', 'index');
   return `<section class="panel" id="editor"><div class="row wrap"><h2 class="grow" style="margin:0">Your cards · deck ${deck.n}</h2>${S.decks.length > 1 ? `<select id="deck-pick" style="width:auto" aria-label="Deck">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>` : ''}</div>
-    <p class="sub" style="margin:4px 0 12px">Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
+    <p class="sub" style="margin:4px 0 12px">Each card keeps a blank strip at the top for a clip or clamp. Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
     <div class="deckbar"><div><div class="row"><b id="rv-count"></b><span class="grow"></span><span class="sub" id="rv-off"></span></div><div class="bar" style="margin:6px 0 0"><i id="rv-bar"></i></div></div>
       <div class="row wrap"><select id="wk" aria-label="Week"><option value="all">All weeks</option>${Array.from({ length: weeks }, (_, i) => `<option value="${i + 1}" ${ui.week == i + 1 ? 'selected' : ''}>Week ${i + 1}</option>`).join('')}</select>
         <select id="show" aria-label="Show"><option value="all" ${ui.show === 'all' ? 'selected' : ''}>All cards</option><option value="review" ${ui.show === 'review' ? 'selected' : ''}>Needs review</option><option value="off" ${ui.show === 'off' ? 'selected' : ''}>Not 3 to 5 tasks</option></select>
@@ -839,14 +1020,16 @@ function generate(active, weak) {
 }
 
 // ---------------------------------------------------------------- PDF: two cards per letter sheet
+const CLAMP = 54; // points of blank card at the top (0.75 in) so a clip or clamp can hold it without covering text
 function drawCard(doc, deck, c, ox, oy, k) {
-  const X = (v) => ox + v * k, Y = (v) => oy + v * k, L = 24, R = 264, weeks = Math.ceil(deck.cards.length / 3);
-  doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26 * k); doc.text(c.label.replace('–', ' · ').toUpperCase(), X(L), Y(52));
-  doc.setFont('helvetica', 'normal').setFontSize(11 * k); doc.text(`Week ${weekOf(c)} of ${weeks}`, X(L), Y(70));
+  const X = (v) => ox + v * k, Y = (v) => oy + v * k, L = 24, R = 264, z = CLAMP, weeks = Math.ceil(deck.cards.length / 3);
+  doc.setDrawColor(200).setLineWidth(0.5 * k); [[0, 10], [278, 288]].forEach(([a, b]) => doc.line(X(a), Y(z), X(b), Y(z))); // small ticks mark where the clamp area ends
+  doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26 * k); doc.text(c.label.replace('–', ' · ').toUpperCase(), X(L), Y(z + 30));
+  doc.setFont('helvetica', 'normal').setFontSize(11 * k); doc.text(`Week ${weekOf(c)} of ${weeks}`, X(L), Y(z + 48));
   doc.setFont('courier', 'bold').setFontSize(15 * k); const no = cardNo(deck, c), cw = doc.getTextWidth(no) + 16 * k;
-  doc.setLineWidth(1.6 * k); doc.roundedRect(X(R) - cw, Y(30), cw, 26 * k, 3 * k, 3 * k); doc.text(no, X(R) - cw / 2, Y(48), { align: 'center' });
-  doc.line(X(L), Y(82), X(R), Y(82));
-  const top = 92, bottom = 398, n = c.items.length, rh = (bottom - top) / n;
+  doc.setLineWidth(1.6 * k); doc.roundedRect(X(R) - cw, Y(z + 8), cw, 26 * k, 3 * k, 3 * k); doc.text(no, X(R) - cw / 2, Y(z + 26), { align: 'center' });
+  doc.line(X(L), Y(z + 60), X(R), Y(z + 60));
+  const top = z + 70, bottom = 402, n = c.items.length, rh = (bottom - top) / Math.max(1, n);
   c.items.forEach((it, i) => {
     const cy = top + rh * i + rh / 2;
     doc.setLineWidth(2 * k); doc.roundedRect(X(L), Y(cy - 13), 26 * k, 26 * k, 3 * k, 3 * k);
@@ -855,7 +1038,7 @@ function drawCard(doc, deck, c, ox, oy, k) {
     doc.text(lines, X(58), Y(y0), { lineHeightFactor: 1.15 });
     if (it.room) { doc.setFontSize(8 * k).setTextColor(100); doc.text(it.room.toUpperCase(), X(58), Y(y0 + (lines.length - 1) * 16 + 12)); doc.setTextColor(0); }
   });
-  doc.setFontSize(8 * k).setTextColor(100); doc.text('Home - 2-day card', X(L), Y(420)); doc.text('Check the box when done', X(R), Y(420), { align: 'right' }); doc.setTextColor(0);
+  doc.setFontSize(8 * k).setTextColor(100); doc.text('Home - 2-day card', X(L), Y(424)); doc.text('Check the box when done', X(R), Y(424), { align: 'right' }); doc.setTextColor(0);
 }
 function cardsPdf(deck, size) {
   const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
@@ -889,7 +1072,11 @@ function renderMore() {
     <section class="panel"><h2>Possible duplicates</h2>${S.sugg.length ? S.sugg.map((s) => `<div class="sug"><b>${esc(s.a_name)}</b> and <b>${esc(s.b_name)}</b>: same thing? <span class="sub">(${Math.round(s.confidence * 100)}% sure)</span><div class="row wrap" style="margin-top:8px"><button class="primary" data-keep="${s.b}" data-drop="${s.a}">Merge into “${esc(s.b_name)}”</button><button class="sec" data-keep="${s.a}" data-drop="${s.b}">…into “${esc(s.a_name)}”</button><button class="link" data-dismiss="${s.id}">Different</button></div></div>`).join('') : '<div class="empty">Nothing to review. Wording that is clearly the same is merged automatically.</div>'}</section>
     <section class="panel"><h2>Last 2 weeks</h2>${recent.length ? recent.map(row).join('') : '<div class="empty">No entries yet.</div>'}</section>
     <section class="panel"><h2>Merge categories yourself</h2><div class="row wrap"><select id="m-drop" class="grow">${cats.map(opt).join('')}</select><span>→</span><select id="m-keep" class="grow">${cats.map(opt).join('')}</select></div><p></p><button class="sec" id="m-go">Merge</button></section>
+    <section class="panel"><h2>Sample data</h2><p class="sub" style="margin-top:0">Fake history (about 9 months of cards and workouts) for trying the Trends charts. Everything is marked as sample and clearing removes only that.</p>
+      <div class="row wrap"><button class="sec" id="demo-load" ${S.entries.some((e) => e.demo) ? 'disabled' : ''}>Load sample data</button><button class="sec danger" id="demo-clear" ${S.entries.some((e) => e.demo) ? '' : 'disabled'}>Clear sample data</button><span class="sub" id="demo-note">${S.entries.filter((e) => e.demo).length ? S.entries.filter((e) => e.demo).length + ' sample entries are loaded.' : ''}</span></div></section>
     <section class="panel"><h2>Your data</h2><p class="sub">Everything is stored with this page in your Claude account and syncs across your devices. You can also save a full copy.</p><div class="row"><button class="sec" id="export" ${downloads ? '' : 'disabled'}>Save backup (JSON)</button></div></section>`;
+  $('#demo-load').onclick = () => confirmDialog('Load sample data? It adds fake history marked as sample.', async () => { $('#demo-note').textContent = 'Loading…'; const r = await loadDemo(); toast(`Loaded ${r.entries} sample entries.`); go('more', { keep: true }); });
+  $('#demo-clear').onclick = () => confirmDialog('Remove all sample data? Your own entries and cards are not touched.', async () => { $('#demo-note').textContent = 'Clearing…'; const r = await clearDemo(); toast(`Removed ${r.entries} sample entries.`); go('more', { keep: true }); });
   $('#target').onchange = async (e) => { S.settings = { ...S.settings, fitness_weekly_target: +e.target.value }; await queue(() => db.doc('settings/main').set({ fitness_weekly_target: +e.target.value })); toast('Saved'); };
   const merge = (k, d) => mergeCategories(k, d).then(() => toast('Merged')).catch((e) => toast(e.message));
   view.querySelectorAll('[data-keep]').forEach((b) => (b.onclick = () => merge(b.dataset.keep, b.dataset.drop)));
