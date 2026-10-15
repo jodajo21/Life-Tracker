@@ -95,12 +95,20 @@ details.panel > summary { cursor: pointer; list-style: none; display: flex; alig
 .rate { background: var(--bg); border-radius: 12px; padding: 12px; } .rate b { display: block; font-size: 32px; line-height: 1.1; margin: 2px 0; } .up { color: var(--home); font-size: 12px; font-weight: 700; } .down { color: var(--fit); font-size: 12px; font-weight: 700; }
 .ins { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 2px; } .ins:last-of-type { border-bottom: 0; } .ins-t { font: 800 16px var(--display); }
 .cyc { display: grid; grid-template-columns: 44px repeat(3, 1fr); gap: 4px; align-items: center; font-size: 12px; } .cyc .cell { border-radius: 6px; padding: 7px 0; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--home) calc(var(--v) * 70%), var(--heat)); color: var(--ink); } .cyc .cell.none { background: transparent; border: 1px dashed var(--line); color: var(--muted); font-weight: 400; }
+.twocol { display: grid; grid-template-columns: 1fr; gap: 14px; } @media (min-width: 900px) { .twocol { grid-template-columns: 1fr 1fr; } }
+.rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); } .rrow:last-child { border: 0; } .rrow select { width: auto; } .rrow input { min-width: 0; } .rrow .rinfo { grid-column: 1 / -1; margin-top: -2px; }
+.tplgrid { display: grid; grid-template-columns: 1fr; gap: 8px; } @media (min-width: 900px) { .tplgrid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); } }
+.tpl { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); align-self: start; } .tpl > summary { cursor: pointer; list-style: none; padding: 10px 12px; display: grid; gap: 1px; } .tpl > summary::-webkit-details-marker { display: none; } .tpl-n { font-weight: 700; } .tpl-s { overflow-wrap: anywhere; } .tpl[open] { border-color: var(--home); } .tpl-body { display: grid; gap: 8px; padding: 0 12px 12px; }
+.seg.mini { margin: 0; } .seg.mini button { padding: 6px 10px; font-size: 13px; }
+.chips2 { display: flex; flex-wrap: wrap; gap: 6px; } .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 16px; font-size: 14px; background: var(--bg); } .chip input { width: 16px; height: 16px; padding: 0; accent-color: var(--home); }
+.rec { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; } .rec:last-child { border: 0; } .rec-t { font: 700 15px var(--body); }
+.rates.three { grid-template-columns: repeat(2, 1fr); } @media (min-width: 640px) { .rates.three { grid-template-columns: repeat(3, 1fr); } }
 code { background: var(--heat); padding: 1px 5px; border-radius: 5px; font-size: 12px; }
 </style>
 
 <div id="app"><main id="view"><p class="spinner">Loading…</p></main></div>
 <nav id="tabs" aria-label="Sections">
-  <button data-tab="today">Today</button><button data-tab="trends">Trends</button><button data-tab="ask">Ask</button><button data-tab="cards">Cards</button><button data-tab="more">More<span id="badge" hidden></span></button>
+  <button data-tab="today">Today</button><button data-tab="trends">Trends</button><button data-tab="ask">Ask</button><button data-tab="rooms">Rooms</button><button data-tab="cards">Cards</button><button data-tab="more">More<span id="badge" hidden></span></button>
 </nav>
 <button id="fab" aria-label="Add something" hidden>+</button>
 <input id="snapfile" type="file" accept="image/*" hidden>
@@ -180,11 +188,11 @@ function buildQuarter(chores, startDate, opts = {}) {
         const ideal = Math.min(n - 1, Math.floor(phase + k * interval + (f > 1 ? 0 : interval / 2 - 0.5)));
         const reach = Math.max(1, Math.floor(interval / 2));
         // Prefer cards that have fewer than 5 tasks; only use a 6th slot when no card has room.
-        const search = (cap) => {
+        const search = (cap, bySeg) => {
           let best = -1, bestScore = Infinity;
           for (let d = 0; d <= n; d++) {
             for (const slot of d === 0 ? [ideal] : [ideal - d, ideal + d]) {
-              if (slot < 0 || slot >= n || load[slot].length >= cap || has(slot, chore)) continue;
+              if (slot < 0 || slot >= n || load[slot].length >= (bySeg ? Math.min(cap, (opts.softBySeg || [])[slot % 3] ?? cap) : cap) || has(slot, chore)) continue;
               const adjacent = used.some((u) => Math.abs(u - slot) <= 1) && f < n / 2 ? 3 : 0;
               const score = load[slot].length + d * 0.6 + adjacent;
               if (score < bestScore) { bestScore = score; best = slot; }
@@ -193,7 +201,7 @@ function buildQuarter(chores, startDate, opts = {}) {
           }
           return best;
         };
-        let best = search(soft); if (best < 0) best = search(max);
+        let best = search(soft, true); if (best < 0) best = search(soft); if (best < 0) best = search(max);
         if (best < 0) { warnings.push(`Could not place "${chore.name}" (card capacity full).`); continue; }
         load[best].push(chore); used.push(best);
       }
@@ -259,7 +267,7 @@ const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
 const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
 const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
 const limits = sample ? await sample.limits().catch(() => ({})) : {};
-const S = { entries: [], cats: [], chores: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+const S = { entries: [], cats: [], chores: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
 let current = 'today', chatHistory = [], chatBusy = false;
 
 let chain = Promise.resolve(); // one write at a time
@@ -268,7 +276,7 @@ const col = (n) => db.collection(n);
 const sum = (rs) => rs.reduce((a, r) => a + r.xp, 0);
 
 let rafId = 0, lastLocalDeckEdit = 0;
-const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); refreshBadge(); if (current !== 'ask' && !(current === 'cards' && Date.now() - lastLocalDeckEdit < 2500) && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
+const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); migrateRooms(); refreshBadge(); if (current !== 'ask' && !(current === 'cards' && Date.now() - lastLocalDeckEdit < 2500) && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
 const editing = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#view') && a.type !== 'checkbox'; };
 function listen(name, key) { return col(name).onSnapshot((snap) => { S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.ready[key] = true; schedule(); }, (e) => { S.err = e.message || e.code; schedule(); }); }
 
@@ -304,7 +312,7 @@ function roomStats(t) {
   const set = latestSet(), planned = {};
   if (set) for (const c of set.cards) if (c.start_date <= t) for (const i of c.items) { const r = i.room || 'General'; planned[r] = planned[r] || { planned: 0, done: 0 }; planned[r].planned++; if (i.done) planned[r].done++; }
   const shards = {}; for (const st of S.sets) for (const c of st.cards) if (c.cleared) for (const r of new Set(c.items.map((i) => i.room || 'General'))) shards[r] = (shards[r] || 0) + 1;
-  const names = [...new Set([...S.chores.filter((c) => c.active !== false).map((c) => c.room), ...Object.keys(planned), ...Object.keys(shards)])].sort();
+  const names = [...new Set([...expandTasks().map((x) => x.room), ...Object.keys(planned), ...Object.keys(shards)])].sort();
   return names.map((room) => { const p = planned[room], n = shards[room] || 0, coverage = p && p.planned ? p.done / p.planned : 0; return { room, planned: p?.planned || 0, done: p?.done || 0, coverage, heat: coverage >= 0.7, shards: n, ...trophyFor(n) }; });
 }
 function weekActiveDays(t) { const from = ymd(monday(parse(t))); return new Set(entriesOf('fitness').filter((e) => e.date >= from && e.date <= t).map((e) => e.date)).size; }
@@ -465,11 +473,11 @@ async function refreshBadge() { const b = $('#badge'); b.hidden = !S.sugg.length
 const view = $('#view');
 
 // ================================================================ router
-const tabs = { today: renderToday, trends: renderTrends, ask: renderAsk, cards: renderCards, more: renderMore };
+const tabs = { today: renderToday, trends: renderTrends, ask: renderAsk, rooms: renderRooms, cards: renderCards, more: renderMore };
 function go(tab, { keep = false } = {}) {
   if (!tabs[tab]) tab = 'today'; current = tab;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
-  $('#app').classList.toggle('wide', tab === 'cards');
+  $('#app').classList.toggle('wide', tab === 'cards' || tab === 'rooms');
   const y = window.scrollY;
   try { tabs[tab](); } catch (e) { view.innerHTML = `<div class="panel warn">${esc(e.message)}</div>`; }
   window.scrollTo(0, keep ? y : 0);
@@ -612,7 +620,31 @@ function computeInsights(fin) {
   // 8. best run of fully cleared cards
   let best = { n: 0 }, run = null; for (const r of fin) { if (r.done === r.planned) { run = run ? { ...run, n: run.n + 1, to: r.end } : { n: 1, from: r.start, to: r.end }; if (run.n > best.n) best = run; } else run = null; }
   if (best.n >= 3) add(0.2 + best.n * 0.01, { title: `Your longest clean sweep is ${best.n} cards in a row`, detail: `Every task on ${best.n} straight cards, ${fmtShort(best.from)} to ${fmtShort(best.to)}.` });
+  // 9. recovery after a weak card
+  const rc = recoveryStats(fin);
+  if (rc.afterWeak >= 5) add(Math.abs(rc.bounce - 0.5) * 1.0 + 0.12, rc.bounce >= 0.5 ? { title: `You bounce back after a bad card ${pctS(rc.bounce)} of the time`, detail: `After a card under 50% done, the next one is 80%+ in ${rc.strong} of ${rc.afterWeak} cases. It usually takes ${rc.median ?? '–'} card${rc.median === 1 ? '' : 's'} to get fully back.` } : { title: 'A weak card is often followed by another', detail: `After a card under 50% done, the next one is weak again ${pctS(rc.again)} of the time (${rc.weak} of ${rc.afterWeak}). Your longest slump is ${rc.longest} cards.` });
   return { tot, items: out.sort((x, y) => y.score - x.score).slice(0, 6) };
+}
+/** Recovery: what happens after a weak card (under 50% of its tasks done). Strong = 80% or more. */
+function recoveryStats(fin) {
+  const rate = (r) => r.done / r.planned; let afterWeak = 0, strong = 0, mid = 0, weak = 0, longest = 0, run = 0; const lens = [];
+  for (let i = 0; i < fin.length; i++) {
+    const w = rate(fin[i]) < 0.5; run = w ? run + 1 : 0; longest = Math.max(longest, run);
+    if (w && fin[i + 1]) { afterWeak++; const nx = rate(fin[i + 1]); if (nx >= 0.8) strong++; else if (nx < 0.5) weak++; else mid++; }
+    if (w && (i === 0 || rate(fin[i - 1]) >= 0.5)) { let k = 0; while (fin[i + k] && rate(fin[i + k]) < 0.8 && k < 12) k++; if (fin[i + k]) lens.push(k); }
+  }
+  lens.sort((a, b) => a - b);
+  return { afterWeak, strong, mid, weak, bounce: afterWeak ? strong / afterWeak : null, again: afterWeak ? weak / afterWeak : null, median: lens.length ? lens[Math.floor(lens.length / 2)] : null, longest, slumps: lens.length };
+}
+function recoveryHtml(fin) {
+  const r = recoveryStats(fin);
+  if (r.afterWeak < 3) return `<section class="panel"><h2>Recovery</h2><div class="empty">Recovery needs a few weak cards (under 50% done) to measure. That's a good problem to have.</div></section>`;
+  return `<section class="panel"><h2>Recovery</h2><div class="rates three">
+      <div class="rate"><div class="sub">Bounce-back rate</div><b class="num">${pctS(r.bounce)}</b><div class="sub">next card is 80%+ after a weak one · ${r.afterWeak} cases</div></div>
+      <div class="rate"><div class="sub">Typical recovery</div><b class="num">${r.median == null ? '–' : r.median}</b><div class="sub">${r.median === 1 ? 'card' : 'cards'} to get back to a strong card</div></div>
+      <div class="rate"><div class="sub">Longest slump</div><b class="num">${r.longest}</b><div class="sub">weak cards in a row · ${r.slumps} slump${r.slumps === 1 ? '' : 's'} in all</div></div></div>
+    <div class="chart-title">After a weak card, the next card is</div>${pbars([{ label: 'Strong (80%+)', v: r.strong / r.afterWeak }, { label: 'Middling', v: r.mid / r.afterWeak }, { label: 'Weak again', v: r.weak / r.afterWeak }], 'var(--home)')}
+    <p class="sub" style="margin:8px 0 0">A weak card is under 50% of its tasks done. Recovery is how quickly the next cards climb back.</p></section>`;
 }
 function pbars(items, color) {
   return items.map((i) => `<div style="display:grid;grid-template-columns:104px 1fr 44px;gap:8px;align-items:center;margin:5px 0;font-size:13px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(i.label)}">${esc(i.label)}</span>
@@ -646,6 +678,7 @@ function completionHtml() {
       <p class="sub" style="margin:10px 0 0">Counts the tasks on cards whose two days are over. A card that is still open isn't counted as missed yet.</p></section>
     <section class="panel"><h2>What I'm noticing</h2>${I.items.length ? I.items.map((x) => `<div class="ins"><div class="ins-t">${esc(x.title)}</div><div class="sub" style="font-size:14px;color:var(--ink)">${esc(x.detail)}</div>${x.bars ? pbars(x.bars, 'var(--home)') : ''}</div>`).join('') : '<div class="empty">Insights appear after about five finished cards.</div>'}
       <p class="sub" style="margin:8px 0 0">Patterns only, from ${I.tot.planned} finished tasks. Small samples can mislead, so treat these as hints.</p></section>
+    ${recoveryHtml(fin)}
     <section class="panel"><h2>Weekly completion</h2>${series.length > 1 ? bars(series, 'var(--home)', { height: 120, showEvery: Math.ceil(series.length / 10) }) : '<div class="empty">More weeks needed.</div>'}
       <div class="chart-title">By day pair</div>${pbars(segRows, 'var(--home)')}<div class="chart-title">By room (lowest first)</div>${pbars(roomRows, 'var(--home)')}</section>
     <section class="panel"><h2>Cycle heat map</h2>${cycleHeat(fin)}</section>`;
@@ -656,7 +689,7 @@ function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t 
 async function pool(tasks, n = 8) { const it = tasks[Symbol.iterator](); await Promise.all(Array.from({ length: n }, async () => { for (const f of it) await f(); })); }
 async function loadDemo() {
   if (S.sets.some((x) => x.demo) || S.entries.some((e) => e.demo)) throw new Error('Sample data is already loaded.');
-  const chores = S.chores.filter((c) => c.active !== false); if (!chores.length) throw new Error('Add some house tasks first.');
+  const chores = expandTasks(); if (!chores.length) throw new Error('Add some rooms and tasks first.');
   const t = today(), m0 = weekMonday(t), rnd = mulberry32(7);
   const base = buildQuarter(chores.map((c) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), m0).cards;
   const catId = {}; for (const n of new Set([...chores.map((c) => c.name)])) catId[n] = (await ensureCategory('home', n)).cat.id;
@@ -878,35 +911,41 @@ async function startCycle(deck, startDate) {
   S.sets = [...S.sets, { id, ...set }]; await queue(() => col('cardsets').doc(id).set(set)); toast(`Cycle ${n} starts ${m0}`);
 }
 
+function weakestSeg() { const fin = cardRecords().filter((r) => r.finished), segs = [0, 1, 2].map((g) => ({ g, ...rateOf(fin.filter((r) => r.seg === g)) })).filter((x) => x.planned >= 12); if (segs.length < 2) return null; const w = segs.reduce((a, c) => (c.rate < a.rate ? c : a)), bst = segs.reduce((a, c) => (c.rate > a.rate ? c : a)); return bst.rate - w.rate >= 0.08 ? w.g : null; }
 function renderCards() {
-  const active = S.chores.filter((c) => c.active !== false).sort((a, b) => a.room.localeCompare(b.room) || a.name.localeCompare(b.name));
-  const rs = roomStats(today()).filter((r) => r.planned >= 3 && r.coverage < 0.6);
-  const sets = S.sets.slice().sort((a, b) => b.n - a.n), deck = currentDeck();
-  const total = active.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0);
+  const tasks = expandTasks(), rs = roomStats(today()).filter((r) => r.planned >= 3 && r.coverage < 0.6);
+  const sets = S.sets.slice().sort((a, b) => b.n - a.n), deck = currentDeck(), total = tasks.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0), wseg = weakestSeg();
   view.innerHTML = `<h1>Cards</h1>
-    <section class="panel"><h2>${deck ? 'Generate a new deck' : 'Generate your first deck'}</h2><p class="sub" style="margin-top:0">Builds 39 undated cards (13 weeks × Mon–Tue / Wed–Thu / Fri–Sat) from your house tasks. You edit them before anything is printed.</p>
-      <div class="row"><button class="primary" id="gen" ${active.length ? '' : 'disabled'}>Preview a deck</button></div>
-      ${rs.length ? `<label class="row" style="margin-top:10px"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last cycle: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
-      ${active.length ? '' : '<p class="sub">Add some house tasks below first.</p>'}<div id="preview"></div></section>
+    <section class="panel"><h2>${deck ? 'Generate a new deck' : 'Generate your first deck'}</h2><p class="sub" style="margin-top:0">Builds 39 undated cards (13 weeks × Mon–Tue / Wed–Thu / Fri–Sat) from the tasks on the Rooms tab (${tasks.length} tasks, ${total} placements). You edit the cards before anything is printed.</p>
+      <label class="row" style="margin:8px 0"><input type="checkbox" id="light" ${wseg === 2 ? 'checked' : ''} style="width:20px;height:20px"><span class="sub">Keep Fri–Sat cards lighter (4 tasks when there is room)${wseg != null ? `. Your ${SEGNAME[wseg]} cards are the ones you finish least.` : ''}</span></label>
+      ${rs.length ? `<label class="row" style="margin:8px 0"><input type="checkbox" id="boost" checked style="width:20px;height:20px"><span class="sub">Give extra attention to rooms under 60% last cycle: <b>${rs.map((r) => `${esc(r.room)} (${Math.round(r.coverage * 100)}%)`).join(', ')}</b></span></label>` : ''}
+      <div class="row"><button class="primary" id="gen" ${tasks.length ? '' : 'disabled'}>Preview a deck</button></div>${tasks.length ? '' : '<p class="sub">Add rooms and tasks on the Rooms tab first.</p>'}<div id="preview"></div></section>
     ${deck ? editorHtml(deck) : ''}
-    <section class="panel"><h2>Cycles</h2>${sets.length ? sets.map((x) => `<div class="entry"><span>${x.demo ? 'Sample cycle ' + Math.abs(x.n) + ' · starts ' + x.start_date : 'Cycle ' + x.n + ' · starts ' + x.start_date + ' · deck ' + esc(String(x.deck || '').replace('d', ''))}${x.n === sets[0].n && !x.demo ? ' <span class="tag home">current</span>' : ''}</span></div>`).join('') : '<div class="empty">No cycle running yet.</div>'}
+    <section class="panel"><h2>Cycles</h2>${sets.length ? sets.map((x) => { const done = cycleDone(x); return `<div class="entry"><div><div>${x.demo ? 'Sample cycle ' + Math.abs(x.n) : 'Cycle ' + x.n} · starts ${x.start_date}${x.demo ? '' : ' · deck ' + esc(String(x.deck || '').replace('d', ''))}${x.n === sets[0].n && !x.demo ? ' <span class="tag home">current</span>' : ''}</div><div class="sub">${done} tasks checked off</div></div>
+        <div class="row" style="gap:0"><button class="link" data-cyc-reset="${x.id}">Reset</button><button class="link danger" data-cyc-del="${x.id}">Delete</button></div></div>`; }).join('') : '<div class="empty">No cycle running yet.</div>'}
+      <p class="sub" style="margin:8px 0 0"><b>Reset</b> un-checks everything in a cycle and keeps its dates. <b>Delete</b> removes the cycle. Both also remove the check-offs they cover, and their XP, and you get an Undo.</p>
       ${S.decks.length ? `<div class="chart-title">Start a cycle</div><div class="row wrap"><select id="cyc-deck" style="flex:1 1 140px;width:auto">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${deck && d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>
         <div style="flex:1 1 150px"><input type="date" id="cyc-start" aria-label="First Monday" value="${nextMonday(sets.length ? addDaysIso(sets[0].cards[sets[0].cards.length - 1].end_date, 1) : today())}"></div><button class="primary" id="cyc-go">Start cycle</button></div>
         <p class="sub">Printed cards carry no dates, only their place in the cycle (like 07 / 39), so the same deck runs again and again. Start a cycle to put dates on it. Edits to a deck flow into its newest cycle and keep your check-offs.</p>` : '<p class="sub">Create a deck first.</p>'}</section>
-    <details class="panel" id="lib"><summary><h2 style="margin:0">House tasks</h2><span class="sub">the task list decks are built from</span></summary>
-      <p class="sub">${total} placements per cycle. ${total > 195 ? `<b>${total - 195} over 195</b>: some cards would need a 6th task.` : total < 117 ? 'Under 117 leaves some cards with fewer than 3.' : 'Fits 3 to 5 per card.'} Changing this list does not change decks you already made.</p>
-      ${active.map((c) => `<div class="chore" data-id="${c.id}"><input data-chore="name" value="${esc(c.name)}" aria-label="Task name"><div class="row"><input data-chore="room" value="${esc(c.room)}" aria-label="Room">${freqSelect(c.per_quarter)}<button class="link danger" data-rm="${c.id}" aria-label="Remove">✕</button></div></div>`).join('')}
-      <div class="chore"><input id="nc-name" placeholder="New task"><div class="row"><input id="nc-room" placeholder="Room">${freqSelect(13, 'nc-freq')}<button class="sec" id="nc-add">Add</button></div></div></details>
-    <datalist id="tasklib">${active.map((c) => `<option value="${esc(c.name)}">`).join('')}</datalist><datalist id="rooms">${[...new Set(active.map((c) => c.room))].map((r) => `<option value="${esc(r)}">`).join('')}</datalist>`;
-  $('#gen').onclick = () => generate(active, rs);
+    <datalist id="tasklib">${tasks.map((x) => `<option value="${esc(x.name)} · ${esc(x.room)}">`).join('')}</datalist><datalist id="rooms">${[...new Set(tasks.map((x) => x.room))].map((r) => `<option value="${esc(r)}">`).join('')}</datalist>`;
+  $('#gen').onclick = () => generate(tasks, rs);
   $('#cyc-go')?.addEventListener('click', () => { const d = S.decks.find((x) => x.id === $('#cyc-deck').value); if (d) startCycle(d, $('#cyc-start').value).catch((e) => toast(e.message)); });
-  view.querySelectorAll('.chore[data-id]').forEach((el) => el.querySelectorAll('[data-chore]').forEach((f) => (f.onchange = async () => {
-    const c = S.chores.find((x) => x.id === el.dataset.id); const upd = { name: $('[data-chore=name]', el).value.trim() || c.name, room: $('[data-chore=room]', el).value.trim() || 'General', per_quarter: +$('select', el).value };
-    await queue(() => col('chores').doc(c.id).update(upd)); await ensureCategory('home', upd.name); toast('Saved');
-  })));
-  view.querySelectorAll('[data-rm]').forEach((b) => (b.onclick = () => confirmDialog('Remove this task from future decks? Existing decks keep it.', async () => { await queue(() => col('chores').doc(b.dataset.rm).update({ active: false })); })));
-  $('#nc-add').onclick = async () => { const name = $('#nc-name').value.trim(); if (!name) return; await queue(() => col('chores').doc().set({ name, room: $('#nc-room').value.trim() || 'General', per_quarter: +$('#nc-freq').value, active: true })); await ensureCategory('home', name); };
+  view.querySelectorAll('[data-cyc-reset]').forEach((b) => (b.onclick = () => { const x = S.sets.find((y) => y.id === b.dataset.cycReset), n = cycleDone(x); confirmDialog(`Reset ${x.demo ? 'this sample cycle' : 'cycle ' + x.n}? This un-checks ${n} task${n === 1 ? '' : 's'} and removes those check-offs and their XP. The dates stay.`, async () => { const bk = await wipeCycle(x, false); toastAction('Cycle reset.', 'Undo', () => restoreCycle(bk).then(() => go('cards', { keep: true }))); go('cards', { keep: true }); }); }));
+  view.querySelectorAll('[data-cyc-del]').forEach((b) => (b.onclick = () => { const x = S.sets.find((y) => y.id === b.dataset.cycDel), n = cycleDone(x); confirmDialog(`Delete ${x.demo ? 'this sample cycle' : 'cycle ' + x.n}? This removes the cycle and its ${n} check-off${n === 1 ? '' : 's'} with their XP. Your decks and other cycles stay.`, async () => { const bk = await wipeCycle(x, true); toastAction('Cycle deleted.', 'Undo', () => restoreCycle(bk).then(() => go('cards', { keep: true }))); go('cards', { keep: true }); }); }));
   if (deck) bindEditor(deck);
+}
+const cycleDone = (x) => x.cards.reduce((a, c) => a + c.items.filter((i) => i.done).length, 0);
+async function wipeCycle(set, remove) {
+  const ids = new Set(); set.cards.forEach((c) => c.items.forEach((i) => i.entry_id && ids.add(i.entry_id)));
+  const entries = S.entries.filter((e) => ids.has(e.id)).map((e) => structuredClone(e)), backupSet = structuredClone(set), copy = structuredClone(set);
+  copy.cards.forEach((c) => { c.cleared = false; c.cleared_date = null; c.items.forEach((i) => { i.done = false; i.done_at = null; i.entry_id = null; }); });
+  S.entries = S.entries.filter((e) => !ids.has(e.id)); S.sets = remove ? S.sets.filter((x) => x.id !== set.id) : S.sets.map((x) => (x.id === set.id ? copy : x));
+  await pool([...entries.map((e) => () => col('entries').doc(e.id).delete()), () => (remove ? col('cardsets').doc(set.id).delete() : col('cardsets').doc(set.id).set(stripId(copy)))], 8);
+  return { backupSet, entries };
+}
+async function restoreCycle(bk) {
+  S.sets = [...S.sets.filter((x) => x.id !== bk.backupSet.id), bk.backupSet]; S.entries = [...S.entries, ...bk.entries];
+  await pool([() => col('cardsets').doc(bk.backupSet.id).set(stripId(bk.backupSet)), ...bk.entries.map((e) => () => col('entries').doc(e.id).set(stripId(e)))], 8);
 }
 
 // ---------------------------------------------------------------- deck editor
@@ -959,8 +998,8 @@ function bindEditor(deck0) {
     else if (t.matches('[data-rev]')) edit((d) => { find(d, t).c.reviewed = t.checked; });
   });
   const addTask = (art) => {
-    const inp = $('[data-add]', art), name = inp.value.trim(); if (!name) return; const lib = S.chores.find((c) => c.name.toLowerCase() === name.toLowerCase());
-    edit((d) => { const c = d.cards.find((x) => x.idx === +art.dataset.idx); c.items.push({ id: uid(), chore_id: lib?.id || null, name, room: lib?.room || 'General' }); c.reviewed = true; }, { render: true });
+    const inp = $('[data-add]', art), name = inp.value.trim(); if (!name) return; const insts = expandTasks(), low = name.toLowerCase(), lib = insts.find((x) => `${x.name} · ${x.room}`.toLowerCase() === low) || insts.find((x) => x.name.toLowerCase() === low);
+    edit((d) => { const c = d.cards.find((x) => x.idx === +art.dataset.idx); c.items.push({ id: uid(), chore_id: lib?.id || null, name: lib ? lib.name : name, room: lib?.room || 'General' }); c.reviewed = true; }, { render: true });
     $(`#card-${art.dataset.idx} [data-add]`)?.focus();
   };
   grid.addEventListener('click', (e) => {
@@ -1004,12 +1043,12 @@ function taskMenu(btn, edit, cur) {
 // ---------------------------------------------------------------- generate a new deck (a draft to edit, never a PDF)
 function generate(active, weak) {
   const boostRooms = $('#boost')?.checked ? weak.map((r) => r.room) : [];
-  preview = buildQuarter(active.map((c) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), today(), { boostRooms });
+  preview = buildQuarter(active.map((c) => ({ id: c.id, name: c.name, room: c.room, per_quarter: c.per_quarter })), today(), { boostRooms, softBySeg: $('#light')?.checked ? [5, 5, 4] : undefined });
   $('#preview').innerHTML = `${preview.warnings.map((w) => `<p class="warn">⚠ ${esc(w)}</p>`).join('')}<div class="chart-title">Tasks per card (39 cards)</div>
     <div class="strip">${preview.cards.map((c) => `<i style="height:${(c.items.length / 6) * 100}%" title="${c.items.length}"></i>`).join('')}</div>
     <div class="chart-title">Placements by room</div>${hbars(Object.entries(preview.roomCoverage).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), 'var(--home)')}
     ${preview.sixes ? `<p class="sub"><b>${preview.sixes} card${preview.sixes === 1 ? ' has' : 's have'} 6 tasks.</b> Your list adds up to ${preview.total} placements and 5 per card fits ${preview.softMax * 39}. To keep every card at 5 or fewer, remove or lower about ${preview.overBy} placements in House tasks, or fix it by hand in the deck.</p>` : '<p class="sub">Every card has 3 to 5 tasks.</p>'}
-    ${preview.boosted.length ? `<p class="sub">Extra attention this round: ${preview.boosted.map(esc).join(', ')}.</p>` : ''}<p class="sub">This makes a draft deck you can edit card by card. Nothing is printed yet, and your other decks stay as they are.</p>
+    ${(() => { if (!$('#light')?.checked) return ''; const fs = preview.cards.filter((c) => c.idx % 3 === 2), avg = fs.reduce((a, c) => a + c.items.length, 0) / fs.length; return avg <= 4.05 ? `<p class="sub">Fri–Sat cards average ${avg.toFixed(1)} tasks, lighter than the rest.</p>` : `<p class="sub">Fri–Sat cards still average ${avg.toFixed(1)} tasks: there isn't room to lighten them. Keeping them at 4 needs about ${preview.softMax * 39 - 13} placements or fewer, and you have ${preview.total}.</p>`; })()}${preview.boosted.length ? `<p class="sub">Extra attention this round: ${preview.boosted.map(esc).join(', ')}.</p>` : ''}<p class="sub">This makes a draft deck you can edit card by card. Nothing is printed yet, and your other decks stay as they are.</p>
     <div class="row"><button class="primary" id="make-deck">Create deck to edit</button></div>`;
   $('#make-deck').onclick = async () => {
     let n = Math.max(0, ...S.decks.map((d) => d.n)) + 1; while (S.decks.some((d) => d.id === `d${n}`) || S.sets.some((x) => x.deck === `d${n}`)) n++;
@@ -1061,6 +1100,149 @@ async function saveCardsFile(deck) {
   try { await downloads.save({ filename: `life-tracker-cards-deck-${deck.n}.pdf`, data: pdf }); toast('Saved. Open the PDF and print it at 100% scale, landscape, US Letter.'); } catch (e) { if (e.code !== 'declined') toast(e.message || 'Could not save the file.'); }
 }
 
+// ================================================================ Rooms, categories and tasks (where tasks are broken down into card items)
+const ROOM_TYPES = ['Kitchen', 'Bathroom', 'Bedroom', 'Living', 'Entry', 'Laundry', 'Garage', 'Office', 'Outdoor', 'Other'];
+const SCOPES = { room: 'Rooms', category: 'Category', house: 'Whole house' };
+const typeGuess = (n) => (/bath/i.test(n) ? 'Bathroom' : /bed/i.test(n) ? 'Bedroom' : /kitchen/i.test(n) ? 'Kitchen' : /living|family|lounge|den/i.test(n) ? 'Living' : /entry|hall|foyer|mud/i.test(n) ? 'Entry' : /laundry|utility/i.test(n) ? 'Laundry' : /garage/i.test(n) ? 'Garage' : /office|study/i.test(n) ? 'Office' : /yard|patio|garden|outdoor|porch|deck/i.test(n) ? 'Outdoor' : 'Other');
+const activeRooms = () => S.rooms.filter((r) => r.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
+const activeCats = () => S.taskcats.filter((c) => c.active !== false).sort((a, b) => a.name.localeCompare(b.name));
+const activeTpls = () => S.chores.filter((c) => c.active !== false).sort((a, b) => a.name.localeCompare(b.name));
+const CATALOG = {
+  Kitchen: [['Wipe counters & stove', 13], ['Clean sink', 7], ['Mop floor', 13], ['Clean microwave', 3], ['Clean fridge shelves', 3]],
+  Bathroom: [['Clean toilet', 13], ['Scrub sink & counter', 13], ['Clean shower/tub', 7], ['Wipe mirror', 7], ['Wash bath mat & towels', 6]],
+  Bedroom: [['Change bedding', 7], ['Dust surfaces', 7], ['Vacuum floor', 13], ['Declutter surfaces', 6]],
+  Living: [['Quick tidy', 39], ['Vacuum floor', 13], ['Dust surfaces', 7], ['Wipe electronics', 3]],
+  Entry: [['Tidy shoes & coats', 6], ['Sweep or vacuum entry', 7], ['Wipe door handles', 3]],
+  Laundry: [['Wash a load', 13], ['Clean lint trap', 6], ['Wipe washer & dryer', 3]],
+  Garage: [['Sweep floor', 3], ['Tidy storage', 3]], Office: [['Dust desk & electronics', 7], ['Declutter papers', 6]], Outdoor: [['Sweep porch', 7], ['Tidy outdoor area', 6]], Other: [],
+};
+const CAT_CATALOG = { plants: [['Water plants', 13], ['Prune & rotate plants', 3], ['Fertilize plants', 3]], pets: [['Wash pet bedding', 6], ['Clean pet food area', 13], ['Vacuum pet hair', 13]], car: [['Clear out car trash', 7], ['Vacuum car interior', 3], ['Wash car', 3]], outdoors: [['Water garden', 13], ['Weed beds', 6]] };
+const LOWER = { 39: 13, 13: 7, 7: 3, 6: 3, 3: 1 };
+const FREQ_NAME = { 39: 'every card', 13: 'weekly', 7: 'every 2 weeks', 6: 'twice a month', 3: 'monthly', 1: 'quarterly' };
+const freqName = (n) => FREQ_NAME[n] || `${n}× a cycle`;
+
+/** Breaks the task library into the individual items that go on cards: a room task becomes one item per room it applies to. */
+function expandTasks() {
+  const out = [];
+  for (const c of S.chores.filter((x) => x.active !== false)) {
+    if (c.scope === 'room') for (const rid of c.roomIds || []) { const r = S.rooms.find((x) => x.id === rid && x.active !== false); if (r) out.push({ id: `${c.id}:${r.id}`, tpl: c.id, name: c.name, room: r.name, per_quarter: c.per_quarter }); }
+    else if (c.scope === 'category') { const g = S.taskcats.find((x) => x.id === c.catId && x.active !== false); if (g) out.push({ id: c.id, tpl: c.id, name: c.name, room: g.name, per_quarter: c.per_quarter }); }
+    else out.push({ id: c.id, tpl: c.id, name: c.name, room: c.room || 'Whole house', per_quarter: c.per_quarter });
+  }
+  return out;
+}
+let migratingRooms = false;
+async function migrateRooms() { // older data kept a room name on each task; turn those into real rooms once
+  if (migratingRooms || !S.ready.rooms || !S.ready.chores || !S.ready.taskcats) return;
+  const legacy = S.chores.filter((c) => !c.scope); if (!legacy.length) return;
+  migratingRooms = true;
+  try {
+    const byName = Object.fromEntries(S.rooms.map((r) => [r.name, r.id]));
+    for (const nm of new Set(legacy.map((c) => c.room || 'General').filter((n) => n !== 'General'))) if (!byName[nm]) { const ref = col('rooms').doc(), doc = { name: nm, type: typeGuess(nm), active: true, order: S.rooms.length }; S.rooms = [...S.rooms, { id: ref.id, ...doc }]; byName[nm] = ref.id; await queue(() => ref.set(doc)); }
+    for (const c of legacy) { const nm = c.room || 'General', upd = nm === 'General' ? { scope: 'house', roomIds: [], catId: '' } : { scope: 'room', roomIds: [byName[nm]], catId: '' }; S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, ...upd } : x)); await queue(() => col('chores').doc(c.id).update(upd)); }
+  } finally { migratingRooms = false; }
+}
+
+// ---------------------------------------------------------------- recommendations
+function recommendations(inst, total) {
+  const dismissed = (() => { try { return JSON.parse(store.get('recdis', '[]')); } catch { return []; } })(), out = [], rooms = activeRooms(), cats = activeCats(), tpls = activeTpls();
+  const push = (r) => { if (!dismissed.includes(r.id)) out.push(r); };
+  const instOf = (t) => inst.filter((x) => x.tpl === t.id).length || 1;
+  // 1. workload: too many placements to keep cards at 3-5
+  if (total > 195) {
+    let over = total - 195; const all = tpls.filter((t) => LOWER[t.per_quarter]).map((t) => ({ t, save: (t.per_quarter - LOWER[t.per_quarter]) * instOf(t) }));
+    const cand = all.filter((c) => c.t.per_quarter < 39).length ? all.filter((c) => c.t.per_quarter < 39) : all; // keep the every-card tasks as the backbone unless nothing else can give
+    const pick = []; while (over > 0 && pick.length < 4) { const rest = cand.filter((c) => !pick.includes(c)), fits = rest.filter((c) => c.save <= over).sort((a, b) => b.save - a.save)[0], next = fits || rest.sort((a, b) => a.save - b.save)[0]; if (!next) break; pick.push(next); over -= next.save; }
+    push({ id: 'cap', title: `${total - 195} placements too many for 5 tasks a card`, why: `Your tasks add up to ${total} per cycle and 195 fits at 5 per card. Lowering the tasks below clears it, or you can accept a few 6-task cards.`, prio: 0 });
+    pick.forEach((c) => push({ id: `cap:${c.t.id}`, title: `Do “${c.t.name}” ${freqName(LOWER[c.t.per_quarter])} instead of ${freqName(c.t.per_quarter)}`, why: `Saves ${c.save} placements per cycle.`, label: 'Lower it', prio: 1, apply: () => queue(() => col('chores').doc(c.t.id).update({ per_quarter: LOWER[c.t.per_quarter] })) }));
+  } else if (total < 117 && inst.length) push({ id: 'low', title: 'Not enough tasks to fill the cards', why: `${total} placements; 39 cards need at least 117 to have 3 tasks each. Add a few of the suggestions below.`, prio: 0 });
+  // 2. tasks that need a place to apply
+  for (const t of tpls) { if (t.scope === 'room' && !(t.roomIds || []).some((id) => rooms.some((r) => r.id === id))) push({ id: `fix:${t.id}`, title: `“${t.name}” isn’t assigned to a room`, why: 'It won’t appear on any card until you tick the rooms it applies to, or switch it to a category or the whole house.', prio: 1 }); if (t.scope === 'category' && !cats.some((c) => c.id === t.catId)) push({ id: `fix:${t.id}`, title: `“${t.name}” has no category`, why: 'Pick a category for it below, or it won’t appear on any card.', prio: 1 }); }
+  // 3. empty rooms and common tasks that are missing
+  const room = (r) => r.name, hasTask = (r, name) => tpls.some((t) => t.scope === 'room' && (t.roomIds || []).includes(r.id) && t.name.toLowerCase() === name.toLowerCase());
+  for (const r of rooms) if (!inst.some((x) => x.room === room(r))) push({ id: `empty:${r.id}`, title: `${r.name} has no tasks yet`, why: 'Nothing on your cards touches this room.', prio: 2 });
+  if (total <= 190) for (const r of rooms) (CATALOG[r.type] || []).filter(([n]) => !hasTask(r, n)).slice(0, 2).forEach(([n, f]) => push({ id: `add:${r.id}:${n}`, title: `Add “${n}” to ${r.name}`, why: `Usually done ${freqName(f)} in a ${r.type.toLowerCase()}.`, label: 'Add it', prio: 4, apply: () => { const ex = tpls.find((t) => t.scope === 'room' && t.name.toLowerCase() === n.toLowerCase()); return queue(() => (ex ? col('chores').doc(ex.id).update({ roomIds: [...new Set([...(ex.roomIds || []), r.id])] }) : col('chores').doc().set({ name: n, scope: 'room', roomIds: [r.id], catId: '', per_quarter: f, active: true }))); } }));
+  if (total <= 190) for (const g of cats) (CAT_CATALOG[g.name.trim().toLowerCase()] || []).filter(([n]) => !tpls.some((t) => t.name.toLowerCase() === n.toLowerCase())).slice(0, 2).forEach(([n, f]) => push({ id: `addc:${g.id}:${n}`, title: `Add “${n}” to ${g.name}`, why: `Usually done ${freqName(f)}.`, label: 'Add it', prio: 4, apply: () => queue(() => col('chores').doc().set({ name: n, scope: 'category', catId: g.id, roomIds: [], per_quarter: f, active: true })) }));
+  // 4. what your own history says
+  const fin = cardRecords().filter((r) => r.finished);
+  if (rateOf(fin).planned >= 20) {
+    const stats = {}; fin.forEach((r) => r.items.forEach((i) => { (stats[i.name] ||= { planned: 0, done: 0 }).planned++; if (i.done) stats[i.name].done++; }));
+    Object.entries(stats).filter(([, v]) => v.planned >= 3 && v.done / v.planned <= 0.5).sort((a, b) => a[1].done / a[1].planned - b[1].done / b[1].planned).slice(0, 3).forEach(([n, v]) => { const t = tpls.find((x) => x.name === n); push({ id: `skip:${n}`, title: `“${n}” keeps getting skipped`, why: `Done ${v.done} of ${v.planned} times.${t && LOWER[t.per_quarter] ? ` Doing it ${freqName(LOWER[t.per_quarter])} may suit you better.` : ' Splitting it into smaller steps may help.'}`, label: t && LOWER[t.per_quarter] ? 'Lower it' : '', prio: 3, apply: t && LOWER[t.per_quarter] ? () => queue(() => col('chores').doc(t.id).update({ per_quarter: LOWER[t.per_quarter] })) : null }); });
+    const wseg = weakestSeg(); if (wseg != null) { const w = rateOf(fin.filter((r) => r.seg === wseg)); push({ id: `seg:${wseg}`, title: `${SEGNAME[wseg]} cards are your hardest`, why: `${pctS(w.rate)} done, against ${pctS(rateOf(fin).rate)} overall. When you generate the next deck, “Keep Fri–Sat lighter” is on for you${wseg === 2 ? '' : ' (it applies to Fri–Sat only)'}.`, prio: 3 }); }
+    const rooms2 = {}; fin.forEach((r) => r.items.forEach((i) => { const k = i.room || 'General'; (rooms2[k] ||= { planned: 0, done: 0 }).planned++; if (i.done) rooms2[k].done++; }));
+    Object.entries(rooms2).filter(([, v]) => v.planned >= 12 && v.done / v.planned < 0.5).slice(0, 2).forEach(([k, v]) => push({ id: `room:${k}`, title: `${k} is only ${pctS(v.done / v.planned)} done`, why: 'Fewer or smaller tasks there, or moving them to your stronger days, may help.', prio: 3 }));
+  }
+  return out.sort((a, b) => a.prio - b.prio).slice(0, 9);
+}
+
+// ---------------------------------------------------------------- the Rooms tab
+function tplHtml(c, rooms, cats, inst) {
+  const sc = c.scope || 'house', mine = inst.filter((x) => x.tpl === c.id), types = [...new Set(rooms.map((r) => r.type))];
+  const where = sc === 'room' ? (mine.map((x) => x.room).join(', ') || 'no rooms yet') : sc === 'category' ? (mine[0]?.room || 'no category yet') : 'Whole house';
+  return `<details class="tpl" data-id="${c.id}" ${ui.openTpl && ui.openTpl.has(c.id) ? 'open' : ''}><summary><span class="tpl-n">${esc(c.name)}</span><span class="sub tpl-s">${esc(where)} · ${freqName(c.per_quarter)}</span></summary><div class="tpl-body"><input data-f="name" value="${esc(c.name)}" aria-label="Task name">
+    <div class="seg mini" role="group" aria-label="Applies to">${Object.entries(SCOPES).map(([k, n]) => `<button data-scope="${k}" class="${sc === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+    ${sc === 'room' ? `<div class="chips2">${rooms.length ? rooms.map((r) => `<label class="chip"><input type="checkbox" data-room="${r.id}" ${(c.roomIds || []).includes(r.id) ? 'checked' : ''}>${esc(r.name)}</label>`).join('') : '<span class="sub">Add a room above first.</span>'}</div>
+      ${types.length > 1 ? `<div class="row wrap" style="gap:6px"><span class="sub">Select all:</span>${types.map((t) => `<button class="link" data-type="${t}">${t}s</button>`).join('')}</div>` : ''}`
+    : sc === 'category' ? `<select data-f="catId" aria-label="Category"><option value="">Choose a category…</option>${cats.map((g) => `<option value="${g.id}" ${c.catId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>` : '<div class="sub">Applies to the home as a whole.</div>'}
+    <div class="row wrap"><label class="sub" for="f-${c.id}">How often</label><select data-f="per_quarter" id="f-${c.id}" style="width:auto">${(PRESETS.some(([n]) => n === c.per_quarter) ? PRESETS : [...PRESETS, [c.per_quarter, `${c.per_quarter}× a cycle`]]).map(([n, l]) => `<option value="${n}" ${n === c.per_quarter ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="grow"></span><button class="link danger" data-tdel aria-label="Remove task">Remove</button></div>
+    <div class="sub">${mine.length ? `Becomes ${mine.length} card task${mine.length === 1 ? '' : 's'} (${mine.slice(0, 4).map((x) => esc(x.room)).join(', ')}${mine.length > 4 ? '…' : ''}) · ${mine.reduce((a, x) => a + Math.min(x.per_quarter, 39), 0)} placements a cycle` : 'Not on any card yet'}</div></div></details>`;
+}
+function renderRooms() {
+  const rooms = activeRooms(), cats = activeCats(), tpls = activeTpls(), inst = expandTasks(), total = inst.reduce((a, x) => a + Math.min(x.per_quarter, 39), 0), recs = recommendations(inst, total);
+  const byRoom = {}; inst.forEach((x) => (byRoom[x.room] = (byRoom[x.room] || 0) + Math.min(x.per_quarter, 39)));
+  const where = (name) => inst.filter((x) => x.room === name).length;
+  view.innerHTML = `<h1>Rooms</h1>
+    <section class="panel home"><h2>Task load</h2><div class="row"><b class="num" style="font-size:28px">${total}</b><span class="sub">placements per 13-week cycle · ${inst.length} card tasks from ${tpls.length} tasks, ${rooms.length} rooms, ${cats.length} categories</span></div>
+      <div class="bar"><i style="width:${Math.min(100, (total / 195) * 100)}%;${total > 195 ? 'background:var(--fit)' : ''}"></i></div>
+      <div class="sub">${total > 195 ? `<b>${total - 195} over.</b> 195 keeps every card at 5 tasks or fewer; above that some cards get a 6th.` : total < 117 ? 'Under 117 leaves some cards with fewer than 3 tasks.' : `Fits 3 to 5 tasks per card (${195 - total} spare).`}</div>
+      ${Object.keys(byRoom).length ? `<div class="chart-title">Placements by room or category</div>${hbars(Object.entries(byRoom).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), 'var(--home)')}` : ''}</section>
+    <section class="panel"><h2>Recommendations</h2>${recs.length ? recs.map((r) => `<div class="rec"><div class="grow"><div class="rec-t">${esc(r.title)}</div><div class="sub">${esc(r.why)}</div></div><div class="row" style="gap:4px">${r.apply ? `<button class="sec" data-rec="${r.id}">${esc(r.label || 'Apply')}</button>` : ''}<button class="link" data-recx="${r.id}">Dismiss</button></div></div>`).join('') : '<div class="empty">Nothing to suggest right now. As you add rooms, and as cards finish, suggestions show up here.</div>'}</section>
+    <div class="twocol"><section class="panel"><h2>Rooms</h2><p class="sub" style="margin-top:0">The spaces in your home. Have two bathrooms? Add both, then tick both on a task like Clean toilet.</p>
+        ${rooms.map((r) => `<div class="rrow" data-rid="${r.id}"><input data-rf="name" value="${esc(r.name)}" aria-label="Room name"><select data-rf="type" aria-label="Room type">${ROOM_TYPES.map((t) => `<option ${t === r.type ? 'selected' : ''}>${t}</option>`).join('')}</select><button class="link danger" data-rdel aria-label="Remove room">✕</button><span class="sub rinfo">${where(r.name)} tasks</span></div>`).join('') || '<div class="empty">No rooms yet.</div>'}
+        <div class="rrow"><input id="new-room-name" placeholder="New room, like Guest bath" aria-label="New room name"><select id="new-room-type" aria-label="New room type">${ROOM_TYPES.map((t) => `<option>${t}</option>`).join('')}</select><button class="sec" id="new-room">Add</button></div></section>
+      <section class="panel"><h2>Categories</h2><p class="sub" style="margin-top:0">For tasks about a thing, not a place: Plants, Pets, Car. They show up on cards under the category's name.</p>
+        ${cats.map((g) => `<div class="rrow" data-gid="${g.id}"><input data-gf="name" value="${esc(g.name)}" aria-label="Category name"><button class="link danger" data-gdel aria-label="Remove category">✕</button><span class="sub rinfo">${where(g.name)} tasks</span></div>`).join('') || '<div class="empty">No categories yet.</div>'}
+        <div class="rrow"><input id="new-cat-name" placeholder="New category, like Plants" aria-label="New category name"><button class="sec" id="new-cat">Add</button></div></section></div>
+    <section class="panel"><h2>Tasks</h2><p class="sub" style="margin-top:0">Each task says where it applies. A room task becomes one card item per room it covers, a category task becomes one item for the category, and a whole-house task becomes one item.</p>
+      <div class="tplgrid">${tpls.map((c) => tplHtml(c, rooms, cats, inst)).join('') || '<div class="empty">No tasks yet.</div>'}</div>
+      <div class="rrow" style="margin-top:12px"><input id="new-task-name" placeholder="New task, like Clean toilet" aria-label="New task name"><button class="sec" id="new-task">Add task</button></div></section>`;
+  bindRooms();
+}
+function bindRooms() {
+  const upd = (coll, id, patch) => queue(() => col(coll).doc(id).update(patch)).catch((e) => toast(e.message));
+  const upLocal = (key, id, patch) => { S[key] = S[key].map((x) => (x.id === id ? { ...x, ...patch } : x)); };
+  const confirmDel = (msg, fn) => confirmDialog(msg, fn);
+  // rooms
+  view.querySelectorAll('.rrow[data-rid]').forEach((row) => { const id = row.dataset.rid;
+    $('[data-rf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('rooms', id, { name: v }); upd('rooms', id, { name: v }); } };
+    $('[data-rf=type]', row).onchange = (e) => { upLocal('rooms', id, { type: e.target.value }); upd('rooms', id, { type: e.target.value }).then(() => go('rooms', { keep: true })); };
+    $('[data-rdel]', row).onclick = () => confirmDel('Remove this room? Tasks that applied to it stop appearing on new cards. Existing decks keep their cards.', async () => { upLocal('rooms', id, { active: false }); await upd('rooms', id, { active: false }); go('rooms', { keep: true }); }); });
+  $('#new-room').onclick = async () => { const name = $('#new-room-name').value.trim(); if (!name) return; const ref = col('rooms').doc(), doc = { name, type: $('#new-room-type').value, active: true, order: S.rooms.length }; S.rooms = [...S.rooms, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); go('rooms', { keep: true }); };
+  $('#new-room-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-room').click(); });
+  // categories
+  view.querySelectorAll('.rrow[data-gid]').forEach((row) => { const id = row.dataset.gid;
+    $('[data-gf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('taskcats', id, { name: v }); upd('taskcats', id, { name: v }); } };
+    $('[data-gdel]', row).onclick = () => confirmDel('Remove this category? Tasks in it stop appearing on new cards.', async () => { upLocal('taskcats', id, { active: false }); await upd('taskcats', id, { active: false }); go('rooms', { keep: true }); }); });
+  $('#new-cat').onclick = async () => { const name = $('#new-cat-name').value.trim(); if (!name) return; const ref = col('taskcats').doc(), doc = { name, active: true }; S.taskcats = [...S.taskcats, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); go('rooms', { keep: true }); };
+  $('#new-cat-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-cat').click(); });
+  // tasks
+  view.querySelectorAll('.tpl').forEach((el) => { const id = el.dataset.id, tpl = () => S.chores.find((c) => c.id === id);
+    el.addEventListener('toggle', () => { (ui.openTpl ||= new Set())[el.open ? 'add' : 'delete'](id); });
+    $('[data-f=name]', el).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('chores', id, { name: v }); upd('chores', id, { name: v }).then(() => go('rooms', { keep: true })); ensureCategory('home', v); } };
+    $('[data-f=per_quarter]', el).onchange = (e) => { const v = +e.target.value; upLocal('chores', id, { per_quarter: v }); upd('chores', id, { per_quarter: v }).then(() => go('rooms', { keep: true })); };
+    $('[data-f=catId]', el)?.addEventListener('change', (e) => { upLocal('chores', id, { catId: e.target.value }); upd('chores', id, { catId: e.target.value }).then(() => go('rooms', { keep: true })); });
+    el.querySelectorAll('[data-scope]').forEach((b) => (b.onclick = () => { const patch = { scope: b.dataset.scope }; upLocal('chores', id, patch); upd('chores', id, patch).then(() => go('rooms', { keep: true })); }));
+    el.querySelectorAll('[data-room]').forEach((cb) => (cb.onchange = () => { const ids = [...el.querySelectorAll('[data-room]:checked')].map((x) => x.dataset.room); upLocal('chores', id, { roomIds: ids }); upd('chores', id, { roomIds: ids }).then(() => go('rooms', { keep: true })); }));
+    el.querySelectorAll('[data-type]').forEach((b) => (b.onclick = () => { const ids = [...new Set([...(tpl().roomIds || []), ...activeRooms().filter((r) => r.type === b.dataset.type).map((r) => r.id)])]; upLocal('chores', id, { roomIds: ids }); upd('chores', id, { roomIds: ids }).then(() => go('rooms', { keep: true })); }));
+    $('[data-tdel]', el).onclick = () => confirmDel(`Remove “${tpl().name}”? It stops appearing on new cards. Existing decks keep it.`, async () => { upLocal('chores', id, { active: false }); await upd('chores', id, { active: false }); go('rooms', { keep: true }); }); });
+  $('#new-task').onclick = async () => { const name = $('#new-task-name').value.trim(); if (!name) return; const ref = col('chores').doc(), doc = { name, scope: 'house', roomIds: [], catId: '', per_quarter: 13, active: true }; S.chores = [...S.chores, { id: ref.id, ...doc }]; (ui.openTpl ||= new Set()).add(ref.id); await queue(() => ref.set(doc)); await ensureCategory('home', name); go('rooms', { keep: true }); toast('Added. Choose where it applies and how often.'); };
+  $('#new-task-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-task').click(); });
+  // recommendations
+  const recs = recommendations(expandTasks(), expandTasks().reduce((a, x) => a + Math.min(x.per_quarter, 39), 0));
+  view.querySelectorAll('[data-rec]').forEach((b) => (b.onclick = async () => { const r = recs.find((x) => x.id === b.dataset.rec); if (!r?.apply) return; b.disabled = true; try { await r.apply(); toast('Done'); go('rooms', { keep: true }); } catch (e) { toast(e.message); b.disabled = false; } }));
+  view.querySelectorAll('[data-recx]').forEach((b) => (b.onclick = () => { let d = []; try { d = JSON.parse(store.get('recdis', '[]')); } catch {} store.set('recdis', JSON.stringify([...d, b.dataset.recx])); go('rooms', { keep: true }); }));
+}
+
 // ================================================================ More
 function renderMore() {
   const cats = S.cats.slice().sort((a, b) => a.goal.localeCompare(b.goal) || a.name.localeCompare(b.name));
@@ -1083,7 +1265,7 @@ function renderMore() {
   view.querySelectorAll('[data-dismiss]').forEach((b) => (b.onclick = async () => { await queue(() => col('suggestions').doc(b.dataset.dismiss).delete()); }));
   view.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => confirmDialog('Delete this entry? Its XP is removed too.', () => removeEntry(b.dataset.del))));
   $('#m-go').onclick = () => { const d = $('#m-drop').value, k = $('#m-keep').value; if (d !== k) confirmDialog('Merge these? This cannot be undone.', () => mergeCategories(k, d)); };
-  $('#export').onclick = async () => { try { await downloads.save({ filename: `life-tracker-${today()}.json`, data: JSON.stringify({ exported_at: new Date().toISOString(), entries: S.entries, categories: S.cats, chores: S.chores, cardsets: S.sets, shields: S.shields, settings: S.settings }, null, 2) }); toast('Saved'); } catch (e) { if (e.code !== 'declined') toast(e.message); } };
+  $('#export').onclick = async () => { try { await downloads.save({ filename: `life-tracker-${today()}.json`, data: JSON.stringify({ exported_at: new Date().toISOString(), entries: S.entries, categories: S.cats, chores: S.chores, rooms: S.rooms, taskcats: S.taskcats, decks: S.decks, cardsets: S.sets, shields: S.shields, settings: S.settings }, null, 2) }); toast('Saved'); } catch (e) { if (e.code !== 'declined') toast(e.message); } };
 }
 
 // ================================================================ quick add sheet + photo
@@ -1124,7 +1306,7 @@ async function handlePhoto(file) {
 // ================================================================ boot
 if (!db) { view.innerHTML = '<div class="panel"><h2>Storage isn’t available here</h2><p>Open this page in the Claude app or on claude.ai while signed in, so it can keep your data.</p></div>'; return; }
 $('#fab').hidden = false;
-listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('shields', 'shields'); listen('suggestions', 'sugg');
+listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('rooms', 'rooms'); listen('taskcats', 'taskcats'); listen('shields', 'shields'); listen('suggestions', 'sugg');
 db.doc('settings/main').onSnapshot((d) => { if (d.exists) S.settings = { fitness_weekly_target: Number(d.data().fitness_weekly_target) || 3 }; schedule(); }, () => {});
 const hash = (location.hash || '').slice(1);
 go(tabs[hash] ? hash : 'today');
