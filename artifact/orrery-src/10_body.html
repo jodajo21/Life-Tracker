@@ -1,0 +1,35 @@
+<div id="stage">
+  <div id="deskBox"><section id="desk" class="dev" aria-label="Desktop concept">
+    <canvas id="dc"></canvas>
+    <header class="bar">
+      <div class="mark"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1"><circle cx="11" cy="11" r="9.5" opacity=".35"/><ellipse cx="11" cy="11" rx="9.5" ry="3.8" transform="rotate(-24 11 11)" opacity=".8"/><circle cx="11" cy="11" r="2" fill="#e3a24a" stroke="none"/><circle cx="18.4" cy="7.6" r="1.4" fill="#efe6d4" stroke="none"/></svg>Orrery</div>
+      <nav class="crumbs" id="crumbs" aria-label="Zoom level"></nav>
+      <div class="grow"></div>
+      <div class="sw" id="swRows" role="group" aria-label="Group by"><button data-r="rooms" class="on">Rooms</button><button data-r="pairs">Day pairs</button></div>
+      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Terrain</button><button data-m="1">Constellation</button></div>
+      <button class="tog" id="tgPlan"><i></i>Planning</button><button class="tog v on" id="tgFc"><i></i>Forecast</button><button class="tog" id="tgCmp"><i></i>Last year</button>
+    </header>
+    <div class="strip" id="strip">
+      <canvas id="core" width="118" height="118"></canvas>
+      <div class="ro" id="roC"><span class="lab">Completion</span><div class="v"><span></span><small>%</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roK"><span class="lab">Consistency</span><div class="v"><span></span><small>/100</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roM"><span class="lab">Momentum</span><div class="v"><span></span><small>pts/wk</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roF"><span class="lab">Friction</span><div class="v"><span></span><small>/100</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roS"><span class="lab">On-track run</span><div class="v"><span></span><small>cards</small></div><canvas></canvas><span class="d"></span></div>
+    </div>
+    <div class="cap" id="cap"></div>
+    <div class="tip" id="tip"></div>
+    <aside class="rt">
+      <div class="sec focus" id="intel"><div class="lab"><span>Intelligence</span><b id="sigN"></b></div><div id="focusBox"></div></div>
+      <div class="sec" id="sigSec" style="border-bottom:0;padding-top:4px;flex:1;min-height:0;overflow:hidden"><ul class="sig" id="sigList"></ul><ol class="steps" id="steps" hidden></ol></div>
+      <div class="sec"><div class="lab"><span id="attnLab">Needs attention</span><span id="attnCount" class="num"></span></div><ul class="attn" id="attn"></ul></div>
+      <div class="sec ask"><div class="askrow"><input id="ask" placeholder="Ask about what you’re looking at" autocomplete="off"><span class="k">⌘K</span></div><div class="chips" id="askChips"></div><div id="answer"></div></div>
+    </aside>
+    <footer class="foot">
+      <div class="legend"><div class="lab">How to read this</div><ul id="legend"></ul></div>
+      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div></div>
+    </footer>
+    <button class="btn tour" id="tourBtn">▶ Watch the story</button>
+  </section></div>
+  <div id="phoneBox"><section id="phone" class="dev" aria-label="iPhone concept"></section></div>
+</div>

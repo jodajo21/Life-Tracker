@@ -1,0 +1,942 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orrery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a calm instrument. One living landscape fills the frame; everything else is typography on hairlines.
+   Colour has jobs: warm ramp = health (ember→copper→amber→gold), verdigris = what the AI knows or predicts, ivory = structure, steel = dormant. */
+:root {
+  color-scheme: dark;
+  --obsidian: #07080a; --charcoal: #0e1012; --graphite: #1a1d21; --line: rgba(239, 230, 212, 0.1); --line2: rgba(239, 230, 212, 0.2);
+  --ivory: #efe6d4; --dim: #b3aa98; --muted: #8a8372; --amber: #e3a24a; --copper: #c8794a; --ember: #d2562a; --verd: #6fb0a3; --steel: #8d9aa8;
+  --disp: "Fraunces", Georgia, serif; --ui: "Instrument Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--obsidian); margin: 0; }
+body { color: var(--ivory); font: 13px/1.45 var(--ui); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+button:focus-visible, input:focus-visible { outline: 1px solid var(--amber); outline-offset: 3px; }
+canvas { display: block; }
+#stage { position: relative; width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 36px; padding-block: 18px; }
+.dev { position: relative; flex: none; background: var(--obsidian); overflow: hidden; transform-origin: top left; }
+#deskBox, #phoneBox { position: relative; flex: none; }
+#desk { width: 1440px; height: 900px; border: 1px solid var(--line); box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.6); border-radius: 14px; }
+#phone { width: 390px; height: 844px; border-radius: 52px; border: 1px solid var(--line2); box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.9), 0 0 0 9px #101214, 0 0 0 10px var(--line); }
+.lab { font: 500 10px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.hair { border-top: 1px solid var(--line); }
+
+/* ---------- desktop ---------- */
+#dc { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bar { position: absolute; left: 0; right: 0; top: 0; height: 52px; display: flex; align-items: center; gap: 22px; padding: 0 28px; border-bottom: 1px solid var(--line); background: linear-gradient(rgba(7, 8, 10, 0.85), rgba(7, 8, 10, 0.4)); z-index: 5; }
+.mark { display: flex; align-items: center; gap: 10px; font: 400 19px var(--disp); letter-spacing: 0.04em; }
+.crumbs { display: flex; align-items: center; gap: 2px; font: 500 11px var(--mono); letter-spacing: 0.06em; color: var(--muted); min-width: 0; }
+.crumbs button { padding: 4px 7px; color: var(--dim); border-radius: 2px; text-transform: uppercase; } .crumbs button:hover { color: var(--ivory); } .crumbs button.on { color: var(--amber); } .crumbs i { color: var(--muted); font-style: normal; opacity: 0.5; }
+.sw { display: flex; gap: 0; border: 1px solid var(--line2); border-radius: 2px; } .sw button { padding: 5px 11px; font: 500 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); } .sw button.on { color: var(--obsidian); background: var(--ivory); } .sw button:not(.on):hover { color: var(--ivory); }
+.tog { font: 500 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 7px; padding: 5px 2px; } .tog i { width: 7px; height: 7px; border: 1px solid var(--muted); border-radius: 50%; } .tog.on { color: var(--ivory); } .tog.on i { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px var(--amber); } .tog.v.on i { background: var(--verd); border-color: var(--verd); box-shadow: 0 0 8px var(--verd); }
+.grow { flex: 1; min-width: 0; }
+.strip { position: absolute; left: 28px; width: 1048px; top: 62px; height: 118px; display: flex; align-items: stretch; z-index: 4; pointer-events: none; }
+.strip > * { pointer-events: auto; }
+#core { width: 118px; height: 118px; flex: none; }
+.ro { flex: 1; padding: 6px 18px 0; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ro .v { font: 300 33px/1 var(--disp); letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 3px; } .ro .v small { font: 500 11px var(--mono); color: var(--muted); letter-spacing: 0; }
+.ro canvas { width: 100%; height: 26px; margin-top: 2px; } .ro .d { font: 500 10px var(--mono); color: var(--muted); } .ro .d.up { color: var(--amber); } .ro .d.dn { color: var(--ember); }
+.rt { position: absolute; right: 0; top: 52px; bottom: 0; width: 340px; border-left: 1px solid var(--line); background: linear-gradient(90deg, rgba(7, 8, 10, 0.55), rgba(7, 8, 10, 0.9)); display: flex; flex-direction: column; z-index: 4; }
+.sec { padding: 18px 24px 14px; border-bottom: 1px solid var(--line); } .sec .lab { display: flex; justify-content: space-between; margin-bottom: 12px; } .sec .lab b { color: var(--verd); font-weight: 500; }
+.focus h3 { margin: 0 0 8px; font: 400 21px/1.2 var(--disp); letter-spacing: -0.005em; text-wrap: balance; } .focus p { margin: 0 0 14px; color: var(--dim); font-size: 12.5px; line-height: 1.55; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 13px; border: 1px solid var(--line2); border-radius: 2px; font: 600 10.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ivory); transition: border-color .2s, background .2s; } .btn:hover { border-color: var(--amber); background: rgba(227, 162, 74, 0.08); } .btn.pri { border-color: rgba(227, 162, 74, 0.7); color: var(--amber); } .btn.v { border-color: rgba(111, 176, 163, 0.6); color: var(--verd); } .btn.v:hover { background: rgba(111, 176, 163, 0.1); border-color: var(--verd); }
+.sig { list-style: none; margin: 0; padding: 0; } .sig li { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); cursor: pointer; } .sig li:hover .t { color: var(--amber); } .sig li.on .t { color: var(--amber); } .sig canvas { width: 34px; height: 22px; } .sig .t { font: 500 12.5px var(--ui); color: var(--ivory); transition: color .2s; } .sig .m { font: 500 9.5px var(--mono); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.steps { list-style: none; margin: 0; padding: 0; } .steps li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); cursor: pointer; opacity: 0.45; transition: opacity .3s; } .steps li.on { opacity: 1; } .steps li.done { opacity: 0.7; } .steps .n { font: 500 10px var(--mono); color: var(--verd); padding-top: 2px; } .steps .c { color: var(--ivory); font-size: 12px; line-height: 1.4; } .steps .c small { display: block; color: var(--muted); font: 500 10px var(--mono); margin-top: 3px; letter-spacing: 0.04em; }
+.prog { height: 1px; background: var(--line); margin: 4px 0 6px; position: relative; } .prog i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--verd); box-shadow: 0 0 8px var(--verd); }
+.attn { list-style: none; margin: 0; padding: 0; } .attn li { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); cursor: pointer; } .attn .t { font-size: 12.5px; } .attn .r { font: 500 9.5px var(--mono); letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; } .attn canvas { width: 20px; height: 20px; } .attn li.done .t { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(138, 131, 114, 0.5); } .attn li:hover .t { color: var(--amber); }
+.ask { margin-top: auto; border-bottom: 0; } .askrow { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line2); padding-bottom: 9px; } .askrow input { flex: 1; background: none; border: 0; color: var(--ivory); font: 400 13.5px var(--ui); } .askrow input::placeholder { color: var(--muted); } .askrow .k { font: 500 10px var(--mono); color: var(--muted); border: 1px solid var(--line2); padding: 2px 5px; border-radius: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; } .chips button { font: 500 10px var(--mono); letter-spacing: 0.06em; padding: 4px 8px; border: 1px solid var(--line); border-radius: 2px; color: var(--dim); } .chips button:hover { color: var(--ivory); border-color: var(--line2); }
+#answer { margin-top: 12px; color: var(--ivory); font-size: 12.5px; line-height: 1.55; } #answer .lead { color: var(--verd); font: 500 10px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; display: block; margin-bottom: 4px; } .shim { height: 9px; border-radius: 2px; margin: 7px 0; background: linear-gradient(90deg, var(--line), rgba(111, 176, 163, 0.3), var(--line)); background-size: 200% 100%; animation: shim 1.3s linear infinite; } @keyframes shim { to { background-position: -200% 0; } }
+.foot { position: absolute; left: 0; right: 340px; bottom: 0; height: 108px; z-index: 4; display: flex; gap: 0; padding: 0 28px; }
+.legend { width: 340px; padding-top: 14px; flex: none; } .legend ul { list-style: none; margin: 7px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; } .legend li { display: grid; grid-template-columns: 26px 1fr; gap: 7px; align-items: center; color: var(--dim); font-size: 10.5px; white-space: nowrap; } .legend canvas { width: 26px; height: 14px; }
+.scrub { flex: 1; padding: 14px 0 0 24px; position: relative; } #mm { width: 100%; height: 46px; cursor: ew-resize; touch-action: none; }
+.scale { display: flex; justify-content: space-between; margin-top: 7px; }
+.scale button { font: 500 10px var(--mono); letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; padding: 2px 6px; } .scale button:hover { color: var(--ivory); } .scale button.on { color: var(--amber); }
+.tour { position: absolute; left: 420px; top: 10px; z-index: 6; padding: 6px 11px; } .cap { position: absolute; left: 150px; width: 926px; bottom: 146px; text-align: center; z-index: 6; pointer-events: none; font: 300 22px var(--disp); letter-spacing: 0.01em; color: var(--ivory); opacity: 0; transition: opacity .7s; text-shadow: 0 2px 30px #000; } .cap.on { opacity: 1; }
+.tip { position: absolute; z-index: 7; pointer-events: none; min-width: 190px; max-width: 250px; padding: 10px 12px; background: rgba(14, 16, 18, 0.94); border: 1px solid var(--line2); opacity: 0; transition: opacity .15s; } .tip.on { opacity: 1; } .tip b { display: block; font: 500 13px var(--ui); margin-bottom: 2px; } .tip .s { color: var(--muted); font: 500 10px var(--mono); letter-spacing: .06em; text-transform: uppercase; } .tip .r { margin-top: 7px; display: flex; justify-content: space-between; font: 500 11px var(--mono); color: var(--dim); }
+@media (prefers-reduced-motion: reduce) { .shim { animation: none; } }
+.playing .focus p, .playing #focusBox > div:last-child { display: none; } .playing .focus h3 { font-size: 17px; margin-bottom: 0; } .playing.sec { padding-bottom: 8px; }
+.cap { background: radial-gradient(ellipse at 50% 100%, rgba(7,8,10,.92), rgba(7,8,10,0) 70%); padding: 18px 0 8px; }
+/* ---------- iPhone portal ---------- */
+#phone { --top: 54px; --bot: 26px; display: flex; flex-direction: column; background: radial-gradient(120% 60% at 50% 0%, #14100c 0%, var(--obsidian) 55%); }
+#phone .sb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font: 600 14px var(--ui); z-index: 8; pointer-events: none; }
+#phone .island { position: absolute; left: 50%; top: 11px; width: 110px; height: 30px; margin-left: -55px; background: #000; border-radius: 20px; z-index: 9; }
+.m-head { padding: calc(var(--top) + 2px) 22px 0; display: flex; align-items: center; justify-content: space-between; flex: none; }
+.m-head .mark { font-size: 17px; } .m-head .when { font: 500 10px var(--mono); letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+.m-head canvas { width: 46px; height: 46px; }
+.m-say { padding: 6px 22px 0; flex: none; } .m-say h2 { margin: 0; font: 300 25px/1.18 var(--disp); letter-spacing: -0.01em; text-wrap: balance; } .m-say h2 em { font-style: normal; color: var(--amber); } .m-say p { margin: 6px 0 0; font: 500 10px var(--mono); letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+.m-hero { position: relative; flex: none; margin-top: 2px; touch-action: pan-y; } .m-hero canvas { width: 100%; display: block; } .m-hero .hint { position: absolute; left: 22px; bottom: 6px; font: 500 9px var(--mono); letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; pointer-events: none; }
+.m-time { flex: none; padding: 0 22px; } .m-time canvas { width: 100%; height: 44px; touch-action: none; cursor: ew-resize; } .m-time .row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.m-time .rng { font: 500 10px var(--mono); letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; } .m-time .ch { display: flex; gap: 2px; } .m-time .ch button { font: 500 10px var(--mono); letter-spacing: 0.08em; color: var(--muted); padding: 5px 7px; border-radius: 2px; text-transform: uppercase; } .m-time .ch button.on { color: var(--obsidian); background: var(--ivory); }
+.m-low { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 22px 96px; scrollbar-width: none; -webkit-overflow-scrolling: touch; } .m-low::-webkit-scrollbar { display: none; }
+.m-ai { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 13px 0 14px; position: relative; }
+.m-ai .lab { color: var(--verd); display: flex; justify-content: space-between; margin-bottom: 7px; } .m-ai h3 { margin: 0 0 4px; font: 400 18px/1.25 var(--disp); text-wrap: balance; } .m-ai p { margin: 0 0 11px; color: var(--dim); font-size: 12.5px; line-height: 1.5; }
+.m-ai .btns { display: flex; gap: 8px; } .m-ai .btn { padding: 8px 12px; }
+.m-sec { margin-top: 14px; } .m-sec .lab { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.m-today { list-style: none; margin: 0; padding: 0; } .m-today li { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); cursor: pointer; -webkit-tap-highlight-color: transparent; } .m-today canvas { width: 26px; height: 26px; } .m-today .t { font-size: 14px; } .m-today .r { font: 500 9.5px var(--mono); letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; } .m-today li.done .t { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(138, 131, 114, 0.5); }
+.m-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 18px calc(var(--bot) + 6px); background: linear-gradient(rgba(7, 8, 10, 0), rgba(7, 8, 10, 0.94) 38%); z-index: 6; display: flex; gap: 10px; }
+.m-pill { flex: 1; display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 16px; border: 1px solid var(--line2); border-radius: 23px; background: rgba(14, 16, 18, 0.9); color: var(--dim); font: 400 14px var(--ui); text-align: left; } .m-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--verd); box-shadow: 0 0 10px var(--verd); animation: bre 2.6s ease-in-out infinite; } @keyframes bre { 50% { opacity: 0.35; } }
+.m-ex { width: 46px; height: 46px; border: 1px solid var(--line2); border-radius: 50%; background: rgba(14, 16, 18, 0.9); display: grid; place-items: center; } .m-ex svg { display: block; }
+.m-sheet { position: absolute; inset: 0; z-index: 10; pointer-events: none; } .m-sheet .veil { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.55); opacity: 0; transition: opacity .35s; } .m-sheet .pan { position: absolute; left: 0; right: 0; bottom: 0; top: 150px; background: #0b0c0e; border-top: 1px solid var(--line2); border-radius: 22px 22px 0 0; transform: translateY(105%); transition: transform .5s cubic-bezier(.2, .8, .2, 1); display: flex; flex-direction: column; box-shadow: 0 -30px 60px rgba(0, 0, 0, 0.6); }
+.m-sheet.open { pointer-events: auto; } .m-sheet.open .veil { opacity: 1; } .m-sheet.open .pan { transform: none; }
+.m-sheet .grab { width: 38px; height: 4px; border-radius: 2px; background: var(--line2); margin: 8px auto 4px; flex: none; } .m-sheet .sh { padding: 4px 22px 0; flex: none; display: flex; justify-content: space-between; align-items: center; } .m-sheet .sh button { font: 500 10px var(--mono); letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; padding: 6px 0; }
+.m-sheet canvas.t { width: 100%; display: block; flex: none; } .m-sheet .sb2 { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 22px calc(var(--bot) + 14px); scrollbar-width: none; } .m-sheet .sb2::-webkit-scrollbar { display: none; }
+.m-sheet .cap2 { font: 300 21px/1.28 var(--disp); margin: 6px 0 14px; text-wrap: balance; min-height: 80px; transition: opacity .3s; } .m-sheet .dots { display: flex; gap: 6px; margin-bottom: 14px; } .m-sheet .dots i { height: 2px; flex: 1; background: var(--line2); border-radius: 1px; } .m-sheet .dots i.on { background: var(--verd); box-shadow: 0 0 8px var(--verd); } .m-sheet .nav { display: flex; gap: 8px; }
+.m-sheet input { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line2); color: var(--ivory); font: 400 17px var(--ui); padding: 10px 0; outline: 0; } .m-sheet .chips { margin: 12px 0; } .m-sheet #mAns { color: var(--ivory); font-size: 14px; line-height: 1.55; margin-top: 8px; }
+html.mobile #deskBox { display: none; } html.mobile #stage { padding: 0; min-height: 100dvh; display: block; } html.mobile #phoneBox { width: 100% !important; height: 100dvh !important; margin: 0 !important; } html.mobile #phone { width: 100%; height: 100dvh; max-width: 520px; margin: 0 auto; border-radius: 0; border: 0; box-shadow: none; transform: none !important; --top: max(14px, env(safe-area-inset-top)); --bot: max(14px, env(safe-area-inset-bottom)); } html.mobile #phone .sb, html.mobile #phone .island { display: none; }
+@media (prefers-reduced-motion: reduce) { .m-pill i { animation: none; } }
+
+</style>
+
+<body>
+<div id="stage">
+  <div id="deskBox"><section id="desk" class="dev" aria-label="Desktop concept">
+    <canvas id="dc"></canvas>
+    <header class="bar">
+      <div class="mark"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1"><circle cx="11" cy="11" r="9.5" opacity=".35"/><ellipse cx="11" cy="11" rx="9.5" ry="3.8" transform="rotate(-24 11 11)" opacity=".8"/><circle cx="11" cy="11" r="2" fill="#e3a24a" stroke="none"/><circle cx="18.4" cy="7.6" r="1.4" fill="#efe6d4" stroke="none"/></svg>Orrery</div>
+      <nav class="crumbs" id="crumbs" aria-label="Zoom level"></nav>
+      <div class="grow"></div>
+      <div class="sw" id="swRows" role="group" aria-label="Group by"><button data-r="rooms" class="on">Rooms</button><button data-r="pairs">Day pairs</button></div>
+      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Terrain</button><button data-m="1">Constellation</button></div>
+      <button class="tog" id="tgPlan"><i></i>Planning</button><button class="tog v on" id="tgFc"><i></i>Forecast</button><button class="tog" id="tgCmp"><i></i>Last year</button>
+    </header>
+    <div class="strip" id="strip">
+      <canvas id="core" width="118" height="118"></canvas>
+      <div class="ro" id="roC"><span class="lab">Completion</span><div class="v"><span></span><small>%</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roK"><span class="lab">Consistency</span><div class="v"><span></span><small>/100</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roM"><span class="lab">Momentum</span><div class="v"><span></span><small>pts/wk</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roF"><span class="lab">Friction</span><div class="v"><span></span><small>/100</small></div><canvas></canvas><span class="d"></span></div>
+      <div class="ro" id="roS"><span class="lab">On-track run</span><div class="v"><span></span><small>cards</small></div><canvas></canvas><span class="d"></span></div>
+    </div>
+    <div class="cap" id="cap"></div>
+    <div class="tip" id="tip"></div>
+    <aside class="rt">
+      <div class="sec focus" id="intel"><div class="lab"><span>Intelligence</span><b id="sigN"></b></div><div id="focusBox"></div></div>
+      <div class="sec" id="sigSec" style="border-bottom:0;padding-top:4px;flex:1;min-height:0;overflow:hidden"><ul class="sig" id="sigList"></ul><ol class="steps" id="steps" hidden></ol></div>
+      <div class="sec"><div class="lab"><span id="attnLab">Needs attention</span><span id="attnCount" class="num"></span></div><ul class="attn" id="attn"></ul></div>
+      <div class="sec ask"><div class="askrow"><input id="ask" placeholder="Ask about what you’re looking at" autocomplete="off"><span class="k">⌘K</span></div><div class="chips" id="askChips"></div><div id="answer"></div></div>
+    </aside>
+    <footer class="foot">
+      <div class="legend"><div class="lab">How to read this</div><ul id="legend"></ul></div>
+      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div></div>
+    </footer>
+    <button class="btn tour" id="tourBtn">▶ Watch the story</button>
+  </section></div>
+  <div id="phoneBox"><section id="phone" class="dev" aria-label="iPhone concept"></section></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+// ================================================================ DATA: three years of sample household behavior, and the analysis on top of it
+const DAY = 864e5;
+const pad2 = (n) => String(n).padStart(2, '0');
+const isoOf = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mondayOf = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (t) => t * t * (3 - 2 * t);
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const gauss = (r) => { let u = 0; while (!u) u = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * r()); };
+
+const NOW = new Date();
+const TODAY_D = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+const WEEKS = 156, CYC = 13, NCARDS = WEEKS * 3, FC_WEEKS = 8, FC_CARDS = FC_WEEKS * 3;
+const START = addD(mondayOf(TODAY_D), -(WEEKS - 1) * 7);
+const dayIdx = (d) => Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - START) / DAY);
+const dateAt = (day) => addD(START, Math.floor(day));
+const NOW_DAY = (NOW - START) / DAY;
+const cardDay = (c) => Math.floor(c / 3) * 7 + (c % 3) * 2;               // first day of card c
+const dayToCard = (d) => (d / 7) * 3;                                      // fractional card position
+const cardToDay = (c) => (c / 3) * 7;
+const NOW_CARD = Math.floor(NOW_DAY / 7) * 3 + Math.min(2, Math.floor(((NOW_DAY % 7)) / 2));
+const SEGS = ['Mon–Tue', 'Wed–Thu', 'Fri–Sat'];
+
+// ---- holidays (landmarks)
+function nthWd(y, m, wd, n) { if (n > 0) { const off = (wd - new Date(y, m, 1).getDay() + 7) % 7; return new Date(y, m, 1 + off + 7 * (n - 1)); } const last = new Date(y, m + 1, 0); return new Date(y, m, last.getDate() - ((last.getDay() - wd + 7) % 7)); }
+function easterD(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451); return new Date(y, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1); }
+const HOLIDAYS = [];
+for (let y = START.getFullYear(); y <= NOW.getFullYear() + 1; y++) {
+  [['New Year', new Date(y, 0, 1), 1, .16, 1.2], ['MLK Day', nthWd(y, 0, 1, 3), 0, .14, 1.2], ['Easter', easterD(y), 1, .2, 1.6], ['Memorial Day', nthWd(y, 4, 1, -1), 1, .22, 1.6], ['July 4th', new Date(y, 6, 4), 2, .32, 2.2], ['Labor Day', nthWd(y, 8, 1, 1), 0, .2, 1.4],
+    ['Thanksgiving', nthWd(y, 10, 4, 4), 3, .55, 5], ['Christmas', new Date(y, 11, 25), 3, .5, 6]].forEach(([name, d, rank, depth, width]) => HOLIDAYS.push({ name, date: d, day: dayIdx(d), rank, depth, width }));
+}
+HOLIDAYS.sort((a, b) => a.day - b.day);
+
+// ---- the household
+const ROOMS = [
+  { id: 'kitchen', name: 'Kitchen' }, { id: 'laundry', name: 'Laundry' }, { id: 'bath', name: 'Bathrooms' }, { id: 'bed', name: 'Bedrooms' },
+  { id: 'living', name: 'Living room' }, { id: 'entry', name: 'Entry' }, { id: 'garage', name: 'Garage' }, { id: 'plants', name: 'Plants' },
+];
+const roomIdx = Object.fromEntries(ROOMS.map((r, i) => [r.id, i]));
+const T = (room, name, f, effort, base) => ({ room, name, f, effort, base });
+const TASKS = [
+  T('kitchen', 'Kitchen reset', 39, 1, .95), T('kitchen', 'Wipe the stove top', 13, 1, .9), T('kitchen', 'Clean one shelf', 7, 2, .8), T('kitchen', 'Mop the floor', 6, 2, .82), T('kitchen', 'Wipe appliances', 3, 1, .8), T('kitchen', 'Clean fridge shelves', 3, 2, .7), T('kitchen', 'Clean the oven', 1, 3, .55),
+  T('laundry', 'Wash a load', 13, 1, .9), T('laundry', 'Fold and put away', 7, 1, .82), T('laundry', 'Wash sheets', 6, 2, .76), T('laundry', 'Clean lint trap', 3, 1, .86), T('laundry', 'Wipe washer and dryer', 1, 1, .66),
+  T('bath', 'Clean toilets', 13, 1, .9), T('bath', 'Scrub sink and counter', 7, 1, .86), T('bath', 'Clean the shower', 3, 3, .76), T('bath', 'Wipe mirrors', 3, 1, .82), T('bath', 'Wash bath mats', 3, 1, .72),
+  T('bed', 'Change bedding', 6, 2, .8), T('bed', 'Vacuum floors', 6, 2, .78), T('bed', 'Dust surfaces', 3, 1, .7), T('bed', 'Declutter one surface', 3, 1, .66),
+  T('living', 'Quick tidy', 7, 1, .92), T('living', 'Vacuum floors', 7, 2, .8), T('living', 'Dust surfaces', 3, 1, .68), T('living', 'Wipe electronics', 1, 1, .62),
+  T('entry', 'Tidy shoes and coats', 6, 1, .84), T('entry', 'Sweep the entry', 3, 1, .76),
+  T('garage', 'Sweep the floor', 1, 2, .6), T('garage', 'Tidy storage', 1, 2, .5), T('garage', 'Wash trash cans', 1, 2, .46),
+  T('plants', 'Water the plants', 13, 1, .87), T('plants', 'Prune and rotate', 1, 1, .62),
+].map((t, i) => ({ ...t, id: i, ri: roomIdx[t.room] }));
+
+// one 39-card cycle: spread every task evenly, never more than five a card
+function placeCycle() {
+  const load = Array(39).fill(0), slots = Array.from({ length: 39 }, () => []);
+  [...TASKS].sort((a, b) => b.f - a.f).forEach((t, ti) => {
+    const phase = (ti * 0.37) % 1;
+    for (let k = 0; k < t.f; k++) {
+      const ideal = Math.floor(((k + phase) * 39) / t.f) % 39; let best = -1, bs = 1e9;
+      for (let d = 0; d < 39; d++) { for (const s of d ? [ideal - d, ideal + d] : [ideal]) { const sl = ((s % 39) + 39) % 39; if (slots[sl].includes(t) || load[sl] >= 5) continue; const sc = load[sl] + d * 0.6; if (sc < bs) { bs = sc; best = sl; } } if (best >= 0 && d >= Math.max(1, Math.floor(39 / t.f / 2))) break; }
+      if (best >= 0) { slots[best].push(t); load[best]++; }
+    }
+  });
+  return slots;
+}
+const CYCLE_SLOTS = placeCycle();
+
+// ---- the simulated behavior
+const R = rng(20261019);
+const PLANNED = Array.from({ length: WEEKS + 2 }, () => R() < 0.55);             // did a Thursday-afternoon planning session happen this week?
+const SLUMP = new Set(); for (let y = 0; y < 3; y++) for (let k = 0; k < 3; k++) SLUMP.add(Math.min(WEEKS - 12, Math.floor(y * 52 + 4 + R() * 46)));  // never in the last few weeks
+function holFactor(day) { let f = 1; for (const h of HOLIDAYS) { const d = day - h.day; if (d < -14 || d > 14) continue; const c = h.rank === 3 ? -3 : 0; f *= 1 - h.depth * Math.exp(-(((d - c) / h.width) ** 2)); } return f; }
+function seasonF(date) { const m = date.getMonth(); return m >= 5 && m <= 7 ? 0.94 : m <= 1 ? 0.96 : 1; }
+const HOUR = { kitchen: [8, 1.6, 19], laundry: [18, 2, 18], bath: [10, 2, 10], bed: [9.5, 2, 9.5], living: [17, 2, 17], entry: [17.5, 1, 17.5], garage: [11, 2, 11], plants: [7.5, 1, 7.5] };
+const CARDS = [];
+for (let c = 0; c < NCARDS; c++) CARDS.push({ c, w: Math.floor(c / 3), seg: c % 3, day: cardDay(c), tasks: [] });
+for (let cy = 0; cy < WEEKS / CYC; cy++) CYCLE_SLOTS.forEach((ts, slot) => { const card = CARDS[cy * 39 + slot]; ts.forEach((t) => card.tasks.push({ t, done: false, hour: 0 })); });
+const CR = rng(777), COUPLE = { laundry: 'A', bed: 'A', kitchen: 'B', plants: 'B' }, CZ = { A: Array.from({ length: WEEKS + 2 }, () => clamp(gauss(CR), -2, 2)), B: Array.from({ length: WEEKS + 2 }, () => clamp(gauss(CR), -2, 2)) };
+const lateFri = (w) => clamp((w - (WEEKS - 78)) / 78, 0, 1);
+function prob(t, card) {
+  const { w, seg, day } = card, date = dateAt(day);
+  let p = t.base * 1.04 * (0.92 + 0.1 * (w / (WEEKS - 1)));
+  p *= [1.07, 1, 0.95][seg];
+  if (seg === 2) { p *= 1 - 0.18 * lateFri(w) * (t.room === 'kitchen' || t.room === 'laundry' ? 1.45 : 0.55); p *= PLANNED[w] ? 1.15 : 0.96; }
+  p *= holFactor(day) * seasonF(date) * (SLUMP.has(w) ? 0.4 : 1);
+  if (COUPLE[t.room]) p *= 1 + (COUPLE[t.room] === 'A' ? 0.13 : 0.06) * CZ[COUPLE[t.room]][w];   // rooms that move together
+  return clamp(p, 0.04, 0.985);
+}
+for (const card of CARDS) {
+  const past = card.day + 1 < NOW_DAY;
+  for (const x of card.tasks) {
+    if (!past) { x.done = false; x.open = true; continue; }
+    x.done = R() < prob(x.t, card);
+    if (x.done) { const [m, sd, e] = HOUR[x.t.room]; x.hour = clamp(gauss(R) * sd + (R() < 0.35 ? e + 2 : m) + (card.seg === 2 ? 1.4 : 0), 5, 23.5); }
+  }
+  card.finished = past; card.planned = card.tasks.length; card.done = card.tasks.filter((x) => x.done).length;
+}
+const CURRENT = CARDS[NOW_CARD];
+
+// ---- series: per row, per card, a value and a weight (how many tasks stand behind it)
+function buildRows(kind) {
+  const rows = kind === 'rooms' ? ROOMS.map((r, i) => ({ id: r.id, name: r.name, i })) : SEGS.map((n, i) => ({ id: 'seg' + i, name: n, i }));
+  for (const row of rows) { row.v = new Float32Array(NCARDS + FC_CARDS); row.w = new Float32Array(NCARDS + FC_CARDS); row.fc = false; }
+  for (const card of CARDS) { if (!card.finished) continue; for (const x of card.tasks) { const ri = kind === 'rooms' ? x.t.ri : card.seg, row = rows[ri]; row.w[card.c] += 1; row.v[card.c] += x.done ? 1 : 0; } }
+  for (const row of rows) for (let c = 0; c < NCARDS; c++) if (row.w[c]) row.v[c] /= row.w[c];
+  return rows;
+}
+const ROWSETS = { rooms: buildRows('rooms'), pairs: buildRows('pairs') };
+const PRIOR = 0.72;
+// kernel-smoothed value, weight and instability at fractional card position x
+function sampleRow(row, x, sigma) {
+  const k = Math.ceil(sigma * 3), i0 = Math.max(0, Math.floor(x) - k), i1 = Math.min(row.w.length - 1, Math.ceil(x) + k);
+  let sw = 0, sv = 0, sv2 = 0;
+  for (let i = i0; i <= i1; i++) { const wt = row.w[i]; if (!wt) continue; const kk = Math.exp(-(((i - x) / sigma) ** 2) / 2) * (row.fc && i >= NCARDS ? 0.5 : 1) * wt; sw += kk; sv += kk * row.v[i]; sv2 += kk * row.v[i] * row.v[i]; }
+  if (sw < 1e-4) return { v: PRIOR, w: 0, u: 0 };
+  const m = sv / sw, shrink = sw / (sw + 0.6);                               // thin evidence is pulled toward the household norm
+  return { v: lerp(PRIOR, m, shrink), w: sw, u: clamp(Math.sqrt(Math.max(0, sv2 / sw - m * m)) / 0.34, 0, 1) };
+}
+
+// ---- headline numbers
+const weeklyAll = [];
+for (let w = 0; w < WEEKS; w++) { let p = 0, d = 0; for (let s = 0; s < 3; s++) { const c = CARDS[w * 3 + s]; if (c.finished) { p += c.planned; d += c.done; } } weeklyAll.push(p ? d / p : null); }
+const lastFin = weeklyAll.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0).pop();
+const mean = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+const stdev = (a) => { const m = mean(a); return Math.sqrt(mean(a.map((x) => (x - m) ** 2))); };
+function slope(a) { const n = a.length, mx = (n - 1) / 2, my = mean(a); let num = 0, den = 0; a.forEach((y, i) => { num += (i - mx) * (y - my); den += (i - mx) ** 2; }); return den ? num / den : 0; }
+function rateIn(c0, c1, filter) { let p = 0, d = 0; for (let c = Math.max(0, c0); c <= Math.min(NCARDS - 1, c1); c++) { const card = CARDS[c]; if (!card.finished) continue; for (const x of card.tasks) { if (filter && !filter(x, card)) continue; p++; if (x.done) d++; } } return { p, d, r: p ? d / p : null }; }
+function windowStats(c0, c1) {                                               // everything the constellation needs about a period
+  const rooms = ROOMS.map(() => ({ p: 0, d: 0, weeks: {} })), tasks = TASKS.map(() => ({ p: 0, d: 0, run: 0, best: 0, miss: 0, seq: [] }));
+  for (let c = Math.max(0, Math.floor(c0)); c <= Math.min(NCARDS - 1, Math.ceil(c1)); c++) { const card = CARDS[c]; if (!card.finished) continue; for (const x of card.tasks) { const rm = rooms[x.t.ri], tk = tasks[x.t.id]; rm.p++; tk.p++; (rm.weeks[card.w] ||= { p: 0, d: 0 }).p++; if (x.done) { rm.d++; tk.d++; rm.weeks[card.w].d++; tk.run++; tk.best = Math.max(tk.best, tk.run); } else tk.run = 0; tk.seq.push(x.done ? 1 : 0); } }
+  rooms.forEach((rm) => { const wk = Object.keys(rm.weeks).sort((a, b) => a - b).map((k) => rm.weeks[k].d / rm.weeks[k].p); rm.rate = rm.p ? rm.d / rm.p : null; rm.sd = wk.length > 2 ? stdev(wk) : 0; rm.trend = wk.length > 3 ? slope(wk) : 0; });
+  tasks.forEach((tk) => { tk.rate = tk.p ? tk.d / tk.p : null; tk.sd = tk.seq.length > 3 ? stdev(tk.seq) : 0; });
+  return { rooms, tasks };
+}
+const L8 = (n) => Math.max(0, lastFin - n + 1);
+const HEAD = (() => {
+  const w4 = weeklyAll.slice(L8(4), lastFin + 1).filter((v) => v != null), w12 = weeklyAll.slice(L8(12), lastFin + 1).filter((v) => v != null), w6 = weeklyAll.slice(L8(6), lastFin + 1).filter((v) => v != null);
+  const med = (a) => { const b = [...a].sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }, mad = (a) => med(a.map((x) => Math.abs(x - med(a)))) * 1.4826;
+  const completion = mean(w4), consistency = clamp(1 - (0.5 * mad(w12) + 0.5 * stdev(w12)) / 0.24, 0, 1), momentum = clamp(slope(w6) * 100, -9, 9);       // points per week; consistency is robust to one bad week
+  const ws = windowStats(L8(8) * 3, lastFin * 3 + 2), fr = mean(ws.tasks.filter((t) => t.p >= 3).map((t, i) => (1 - t.rate) * (1 + TASKS[i].effort * 0.25))) || 0;
+  const friction = clamp(fr / 0.95, 0, 1);
+  const health = Math.round(100 * (0.5 * completion + 0.2 * consistency + 0.15 * clamp(0.5 + momentum / 8, 0, 1) + 0.15 * (1 - friction)));
+  let streak = 0; for (let c = NOW_CARD - 1; c >= 0 && CARDS[c].finished && CARDS[c].done / CARDS[c].planned >= 0.6; c--) streak++;
+  let best = 0, run = 0; for (const c of CARDS) { if (c.finished && c.done / c.planned >= 0.6) { run++; best = Math.max(best, run); } else if (c.finished) run = 0; }
+  return { completion, consistency, momentum, friction, health, streak, best, spark: { completion: weeklyAll.slice(L8(14), lastFin + 1), consistency: weeklyAll.slice(L8(14), lastFin + 1).map((_, i, a) => clamp(1 - stdev(a.slice(Math.max(0, i - 4), i + 1)) / 0.2, 0, 1)), momentum: weeklyAll.slice(L8(14), lastFin + 1).map((_, i, a) => slope(a.slice(Math.max(0, i - 4), i + 1)) * 100), friction: weeklyAll.slice(L8(14), lastFin + 1).map((v) => 1 - v) } };
+})();
+// time-of-day: when things actually get done, recent six months vs the six before
+const HOURS = (() => { const recent = Array(24).fill(0), prior = Array(24).fill(0); for (const card of CARDS) for (const x of card.tasks) if (x.done) { const h = Math.floor(x.hour); if (card.c >= NOW_CARD - 78) recent[h]++; else if (card.c >= NOW_CARD - 156) prior[h]++; } return { recent, prior }; })();
+
+// ---- forecast: what the next weeks probably look like, from the recent level and what happened at this time last year
+function buildForecast() {
+  for (const kind of ['rooms', 'pairs']) for (const row of ROWSETS[kind]) {
+    const tail = []; for (let c = NOW_CARD - 24; c < NOW_CARD; c++) if (row.w[c]) tail.push(row.v[c]);
+    const level = tail.length ? mean(tail) : PRIOR, sd = tail.length > 3 ? stdev(tail) : 0.12;
+    const lastYr = (c) => sampleRow(row, c - 156, 2.2).v, ref = mean(Array.from({ length: 24 }, (_, i) => lastYr(NOW_CARD - 24 + i)));
+    row.fc = true; row.fcStart = NOW_CARD; row.band = new Float32Array(NCARDS + FC_CARDS);
+    for (let c = NOW_CARD; c < NCARDS + FC_CARDS; c++) { const ratio = clamp(lastYr(c) / Math.max(0.3, ref), 0.5, 1.08), d = c - NOW_CARD; row.v[c] = clamp(level * ratio, 0.2, 0.99); row.w[c] = 1.2; row.band[c] = Math.min(0.22, sd * 0.9 * (1 + d / 18)); }
+  }
+}
+
+// ================================================================ RENDERING CORE: tweens, palette, atmosphere, and the TERRAIN (time as landscape)
+class Tw { constructor(v, k = 5) { this.v = v; this.t = v; this.k = k; } step(dt) { this.v += (this.t - this.v) * (1 - Math.exp(-this.k * dt)); return this.v; } to(t, hard) { this.t = t; if (hard) this.v = t; return this; } }
+const INK = { obsidian: '#07080a', charcoal: '#0e1012', graphite: '#1a1d21', ivory: [239, 230, 212], dim: [179, 170, 152], muted: [138, 131, 114], ember: [210, 86, 42], copper: [200, 121, 74], amber: [227, 162, 74], verd: [111, 176, 163], steel: [141, 154, 168] };
+const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+const RAMP = [[0.35, [162, 74, 40]], [0.58, [194, 90, 43]], [0.78, [217, 136, 70]], [0.92, [238, 182, 92]]];   // validated warm ramp: ember → copper → amber → gold
+const GLINT = [247, 235, 203], ASH = [138, 127, 114];
+function heat(v) { if (v <= RAMP[0][0]) return RAMP[0][1]; for (let i = 1; i < RAMP.length; i++) if (v <= RAMP[i][0]) return mixc(RAMP[i - 1][1], RAMP[i][1], (v - RAMP[i - 1][0]) / (RAMP[i][0] - RAMP[i - 1][0])); return RAMP[RAMP.length - 1][1]; }
+// value, momentum (-1..1) and instability (0..1) → one colour
+function tone(v, m = 0, u = 0) { let c = heat(v); c = m < 0 ? mixc(c, RAMP[0][1], -m * 0.35) : mixc(c, GLINT, m * 0.22); c = mixc(c, ASH, u * 0.5); return c; }
+const FONT = { ui: '"Instrument Sans", system-ui, sans-serif', mono: '"IBM Plex Mono", ui-monospace, Menlo, monospace', disp: '"Fraunces", Georgia, serif' };
+function glowSprite(rgb, size = 64) { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'), gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); gr.addColorStop(0, rgba(rgb, 1)); gr.addColorStop(0.18, rgba(rgb, 0.55)); gr.addColorStop(0.5, rgba(rgb, 0.12)); gr.addColorStop(1, rgba(rgb, 0)); g.fillStyle = gr; g.fillRect(0, 0, size, size); return c; }
+const SPR = { amber: glowSprite(INK.amber), ember: glowSprite(INK.ember), verd: glowSprite(INK.verd), ivory: glowSprite(INK.ivory), copper: glowSprite(INK.copper) };
+const hash1 = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const noise1 = (x) => { const i = Math.floor(x), f = x - i; return lerp(hash1(i), hash1(i + 1), smooth(f)) * 2 - 1; };
+
+// ---- view state: everything a scene needs to know about where it is looking. Tweened so every change flows.
+function makeState(kind) {
+  const rows = ROWSETS.rooms.length;
+  return {
+    kind, t0: new Tw(NOW_DAY - 7 * 52, 4.5), t1: new Tw(NOW_DAY + 7 * 6, 4.5), mode: new Tw(0, 3), rowsKind: 'rooms',
+    rowA: Array.from({ length: 8 }, () => new Tw(1, 5)), spot: new Tw(0, 3), band: { a: new Tw(0, 5), b: new Tw(0, 5), s: new Tw(0, 3.5), label: '' },
+    fc: new Tw(0.55, 3), plan: new Tw(0, 3), compare: new Tw(0, 3), links: [], marks: [], focusRoom: -1, hover: null, hoverRow: -1, callouts: [], ripples: [], pulse: new Tw(0, 8),
+    groupA: new Tw(0, 4), clusterFocus: -1, zoomC: new Tw(0, 3.5), cEmph: Array.from({ length: 8 }, () => new Tw(1, 5)), cLinks: [], dtp: 0,
+  };
+}
+function stepState(st, dt) { for (const k of ['t0', 't1', 'mode', 'spot', 'fc', 'plan', 'compare', 'pulse', 'groupA', 'zoomC']) st[k].step(dt); st.band.a.step(dt); st.band.b.step(dt); st.band.s.step(dt); st.rowA.forEach((t) => t.step(dt)); st.cEmph.forEach((t) => t.step(dt)); st.links.forEach((l) => l.p.step(dt)); st.cLinks.forEach((l) => l.p.step(dt)); st.callouts.forEach((c) => c.a.step(dt)); st.ripples = st.ripples.filter((r) => CLK.t - r.t0 < 3.2); }
+const CLK = { t: 0, dt: 0.016 };
+const levelOf = (st) => { const d = st.t1.v - st.t0.v; return d > 420 ? 'Life' : d > 190 ? 'Year' : d > 70 ? 'Season' : d > 24 ? 'Month' : d > 8 ? 'Week' : 'Day'; };
+
+// ---- atmosphere: obsidian ground, copper horizon glow, drifting dust that moves slower the further away it sits
+const DUST = Array.from({ length: 70 }, (_, i) => ({ x: hash1(i * 3.1), y: hash1(i * 7.7), z: 0.2 + hash1(i * 5.3) * 0.8, s: 0.4 + hash1(i * 2.9) * 1.4, ph: hash1(i * 9.1) * 6.28 }));
+function drawAtmos(g, W, H, t, strength = 1) {
+  g.fillStyle = INK.obsidian; g.fillRect(0, 0, W, H);
+  let gr = g.createRadialGradient(W * 0.46, H * 1.05, 0, W * 0.46, H * 1.05, Math.max(W, H) * 0.85); gr.addColorStop(0, rgba(INK.copper, 0.13 * strength)); gr.addColorStop(0.45, rgba(INK.ember, 0.04 * strength)); gr.addColorStop(1, 'rgba(7,8,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  gr = g.createRadialGradient(W * 0.7, -H * 0.1, 0, W * 0.7, -H * 0.1, H * 0.9); gr.addColorStop(0, rgba(INK.verd, 0.045 * strength)); gr.addColorStop(1, 'rgba(7,8,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'lighter';
+  for (const p of DUST) { const x = ((p.x + t * 0.004 * p.z + Math.sin(t * 0.07 + p.ph) * 0.01) % 1) * W, y = ((p.y - t * 0.0025 * p.z) % 1 + 1) % 1 * H, a = (0.05 + 0.09 * p.z) * (0.6 + 0.4 * Math.sin(t * 0.6 + p.ph)) * strength; g.globalAlpha = a; const s = p.s * (0.5 + p.z) * 7; g.drawImage(SPR.copper, x - s / 2, y - s / 2, s, s); }
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+}
+
+// ---- time axis helpers
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function axisTicks(t0, t1) {
+  const span = t1 - t0, out = [];
+  if (span > 420) { for (let d = Math.floor(t0 / 30) * 30; d <= t1; d += 5) { const dt = dateAt(d); if (dt.getDate() <= 5 && dt.getMonth() % 3 === 0 && !out.some((o) => o.d > d - 40 && o.d <= d)) out.push({ d: dayIdx(new Date(dt.getFullYear(), dt.getMonth(), 1)), l: `${MON[dt.getMonth()]} ’${String(dt.getFullYear()).slice(2)}`, major: dt.getMonth() === 0 }); } }
+  else if (span > 100) { for (let d = Math.floor(t0) - 31; d <= t1 + 31; d += 3) { const dt = dateAt(d), f = dayIdx(new Date(dt.getFullYear(), dt.getMonth(), 1)); if (!out.some((o) => o.d === f)) out.push({ d: f, l: dt.getMonth() === 0 ? `${MON[0]} ’${String(dt.getFullYear()).slice(2)}` : MON[dt.getMonth()], major: dt.getMonth() === 0 }); } }
+  else if (span > 26) { for (let d = Math.floor(t0 / 7) * 7; d <= t1; d += 7) { const dt = dateAt(d); out.push({ d, l: `${MON[dt.getMonth()]} ${dt.getDate()}`, major: dt.getDate() <= 7 }); } }
+  else { const step = span > 14 ? 2 : 1; for (let d = Math.floor(t0); d <= t1; d += step) { const dt = dateAt(d); out.push({ d, l: span > 9 ? `${dt.getDate()}` : `${WD[dt.getDay()]} ${dt.getDate()}`, major: dt.getDay() === 1 }); } }
+  return out;
+}
+const seasonOfMonth = (m) => (m === 11 || m <= 1 ? 0 : m <= 4 ? 1 : m <= 7 ? 2 : 3);      // winter, spring, summer, autumn
+const SEASON = [{ n: 'Winter', c: INK.steel }, { n: 'Spring', c: INK.verd }, { n: 'Summer', c: INK.amber }, { n: 'Autumn', c: INK.copper }];
+
+// ---- the TERRAIN. rows are ridges; height = completion; hue = momentum; fragmentation = instability; thickness/opacity = how much evidence; particles flow with momentum.
+const PARTS = Array.from({ length: 8 }, (_, r) => Array.from({ length: 34 }, (_, i) => ({ u: hash1(r * 91 + i * 13), sp: 0.5 + hash1(r * 17 + i * 3) * 1, jit: hash1(r * 5 + i * 41) })));
+function terrainGeom(st, rect, rows) { // shared geometry so hit-testing and drawing agree
+  const R = rows.length, sp = rect.h / (R + 1.5), A = sp * (R > 4 ? 2.5 : 2.3);
+  return { R, sp, A, base: (i) => rect.y + rect.h - 14 - i * sp - (R > 4 ? 0 : sp * 0.15), xOf: (day) => rect.x + ((day - st.t0.v) / (st.t1.v - st.t0.v)) * rect.w, dayOf: (x) => st.t0.v + ((x - rect.x) / rect.w) * (st.t1.v - st.t0.v) };
+}
+const fh = (v) => { let x = clamp((v - 0.3) / 0.7, 0, 1.3); if (x > 0.8) x = 0.8 + (x - 0.8) * 0.35; return Math.pow(x, 1.2); };
+function sampleRowAt(row, day, sigma) { return sampleRow(row, dayToCard(day), sigma); }
+function drawTerrain(g, st, rect, o = {}) {
+  const rows = ROWSETS[st.rowsKind], geo = terrainGeom(st, rect, rows), { R, sp, A } = geo, t0 = st.t0.v, t1 = st.t1.v, span = t1 - t0, mini = !!o.mini;
+  const N = clamp(Math.round(rect.w / (mini ? 3 : 3.4)), 50, 340), cards = dayToCard(span), sigma = Math.max(st.rowsKind === 'pairs' ? 2.2 : 0.85, Math.min(6, cards / 60), (cards / N) * 1.25), alpha = o.alpha ?? 1;
+  g.save(); g.globalAlpha = alpha;
+  // ---- seasons: faint tint along the ground so the year reads as a place
+  if (!mini) {
+    const y0 = rect.y + rect.h + 4;
+    for (let d = Math.floor(t0) - 31; d <= t1 + 31; d += 15) { const dt = dateAt(d), mS = dayIdx(new Date(dt.getFullYear(), dt.getMonth(), 1)), mE = dayIdx(new Date(dt.getFullYear(), dt.getMonth() + 1, 1)); if (mS < d - 14 && d > Math.floor(t0) - 31) { /* dedupe by month start */ } }
+    const seen = new Set();
+    for (let d = Math.floor(t0) - 32; d <= t1 + 32; d += 10) { const dt = dateAt(d), key = dt.getFullYear() * 12 + dt.getMonth(); if (seen.has(key)) continue; seen.add(key); const mS = dayIdx(new Date(dt.getFullYear(), dt.getMonth(), 1)), mE = dayIdx(new Date(dt.getFullYear(), dt.getMonth() + 1, 1)), xa = clamp(geo.xOf(mS), rect.x, rect.x + rect.w), xb = clamp(geo.xOf(mE), rect.x, rect.x + rect.w); if (xb <= xa) continue; const se = SEASON[seasonOfMonth(dt.getMonth())]; const gr = g.createLinearGradient(0, rect.y + rect.h * 0.35, 0, rect.y + rect.h + 6); gr.addColorStop(0, rgba(se.c, 0)); gr.addColorStop(1, rgba(se.c, 0.075)); g.fillStyle = gr; g.fillRect(xa, rect.y + rect.h * 0.35, xb - xa, rect.h * 0.65 + 6); }
+  }
+  // ---- cycle boundaries
+  if (!mini) { g.setLineDash([2, 5]); g.lineWidth = 1; for (let cy = 0; cy <= WEEKS / CYC; cy++) { const d = cy * 91, x = geo.xOf(d); if (x < rect.x || x > rect.x + rect.w) continue; g.strokeStyle = rgba(INK.ivory, 0.07); g.beginPath(); g.moveTo(x, rect.y); g.lineTo(x, rect.y + rect.h); g.stroke(); if (span < 600 && rect.w > 500) { g.fillStyle = rgba(INK.muted, 0.8); g.font = `500 9px ${FONT.mono}`; g.textAlign = 'left'; if (Math.abs(x - geo.xOf(NOW_DAY)) > 90) g.fillText(`CYCLE ${cy + 1}`, x + 5, rect.y + 2); } } g.setLineDash([]); }
+  // ---- ridges, back to front
+  const pts = [];
+  for (let ri = R - 1; ri >= 0; ri--) {
+    const row = rows[ri], ra = (mini ? 1 : st.rowA[ri]?.v ?? 1), base = geo.base(ri), xs = new Float32Array(N), ys = new Float32Array(N), vs = new Float32Array(N), ms = new Float32Array(N), us = new Float32Array(N), ws = new Float32Array(N);
+    for (let k = 0; k < N; k++) { const day = t0 + (span * k) / (N - 1), s = sampleRowAt(row, day, sigma); xs[k] = rect.x + (rect.w * k) / (N - 1); vs[k] = s.v; us[k] = s.u; ws[k] = clamp(s.w / 5, 0.25, 1); }
+    const mh = Math.max(2, Math.round(N / 28));
+    for (let k = 0; k < N; k++) { ms[k] = clamp((vs[Math.min(N - 1, k + mh)] - vs[Math.max(0, k - mh)]) * 5, -1, 1); const jit = us[k] > 0.28 ? noise1(xs[k] * 0.09 + CLK.t * 1.6 + ri * 7) * (us[k] - 0.2) * 7 : 0; ys[k] = base - A * fh(vs[k]) + jit; }
+    pts[ri] = { xs, ys, vs, ms, us, base };
+    // the fill occludes rows behind; its top edge carries a faint gradient so ridges read as solid ground
+    const nowK = Math.min(N - 1, Math.max(0, Math.round(((NOW_DAY - t0) / span) * (N - 1)))), futureK = NOW_DAY > t0 && NOW_DAY < t1 ? nowK : N;
+    g.beginPath(); g.moveTo(xs[0], base + 12); for (let k = 0; k < Math.min(N, futureK + 1); k++) g.lineTo(xs[k], ys[k]); g.lineTo(xs[Math.min(N - 1, futureK)], base + 12); g.closePath();
+    const fillTop = Math.min(...ys.subarray(0, Math.max(1, Math.min(N, futureK)))), gr = g.createLinearGradient(0, fillTop, 0, base + 12), mood = tone(mean(Array.from(vs)), 0, 0);
+    gr.addColorStop(0, `rgba(${mood[0] | 0},${mood[1] | 0},${mood[2] | 0},${0.2 * ra})`); gr.addColorStop(0.55, 'rgba(10,11,13,0.93)'); gr.addColorStop(1, 'rgba(7,8,10,0.98)'); g.fillStyle = gr; g.fill();
+    if (!mini && ra > 0.3) { // topographic contours inside the ridge
+      g.save(); g.clip(); g.lineWidth = 1; for (const f of [0.28, 0.5, 0.72]) { g.strokeStyle = rgba(INK.ivory, 0.045 * ra); g.beginPath(); const yy = base - A * f; g.moveTo(rect.x, yy); g.lineTo(rect.x + rect.w, yy); g.stroke(); } g.restore();
+    }
+    // the line itself, segment by segment: hue = health + momentum, dash = instability, weight = evidence
+    g.lineCap = 'round';
+    for (let k = 1; k < Math.min(N, futureK + 1); k++) {
+      const u = us[k], frag = u > 0.55 && hash1(k * 1.7 + ri * 31 + Math.floor(CLK.t * 2.5)) < (u - 0.5) * 0.9; if (frag) continue;
+      const c = tone(vs[k], ms[k], u), peak = vs[k] > 0.9 ? 0.25 : 0; g.strokeStyle = rgba(mixc(c, GLINT, peak), (mini ? 0.9 : 0.5 + 0.5 * ws[k]) * ra); g.lineWidth = (mini ? 1.3 : 0.9 + 1.5 * ws[k]) * (ri === st.hoverRow ? 1.25 : 1);
+      g.beginPath(); g.moveTo(xs[k - 1], ys[k - 1]); g.lineTo(xs[k], ys[k]); g.stroke();
+    }
+    // sparks shed by unstable stretches: the field visibly coming apart
+    if (!mini && ra > 0.3) { g.globalCompositeOperation = 'lighter'; for (let k = 4; k < Math.min(N, futureK + 1); k += 5) { if (us[k] < 0.42) continue; const n = hash1(k * 3.3 + ri), ph = (CLK.t * 0.35 + n * 5) % 1, x = xs[k] + noise1(k + CLK.t) * 6, y = ys[k] - ph * 26 * us[k]; g.globalAlpha = (1 - ph) * 0.5 * ra * us[k]; g.drawImage(SPR.ember, x - 4, y - 4, 8, 8); } g.globalAlpha = alpha; g.globalCompositeOperation = 'source-over'; }
+    // forecast: the same ridge continued, dashed and verdigris, with an uncertainty fan
+    if (!mini && row.fc && NOW_DAY < t1 + 1) {
+      const k0 = Math.max(0, futureK), fa = st.fc.v * ra;
+      if (k0 < N - 1) { g.beginPath(); for (let k = k0; k < N; k++) { const bnd = (row.band[Math.min(row.band.length - 1, Math.round(dayToCard(t0 + (span * k) / (N - 1))))] || 0.1), y = base - A * fh(vs[k] + bnd); k === k0 ? g.moveTo(xs[k], y) : g.lineTo(xs[k], y); } for (let k = N - 1; k >= k0; k--) { const bnd = (row.band[Math.min(row.band.length - 1, Math.round(dayToCard(t0 + (span * k) / (N - 1))))] || 0.1), y = base - A * fh(vs[k] - bnd); g.lineTo(xs[k], y); } g.closePath(); g.fillStyle = rgba(INK.verd, 0.12 * fa); g.fill();
+        g.setLineDash([3, 4]); g.lineWidth = 1.3; g.strokeStyle = rgba(INK.verd, 0.85 * fa); g.beginPath(); for (let k = Math.max(0, k0 - 1); k < N; k++) k === Math.max(0, k0 - 1) ? g.moveTo(xs[k], ys[k]) : g.lineTo(xs[k], ys[k]); g.stroke(); g.setLineDash([]); }
+    }
+  }
+  // ---- particles ride the ridges: faster where momentum is up, scattered where it is unstable
+  if (!mini) {
+    g.globalCompositeOperation = 'lighter';
+    for (let ri = 0; ri < R; ri++) { const p = pts[ri], ra = st.rowA[ri]?.v ?? 1; if (ra < 0.25 || !p) continue; const n = 14 + Math.round(18 * clamp(mean(Array.from(p.vs.filter((_, k) => k % 8 === 0))) , 0.3, 1));
+      for (let i = 0; i < n; i++) { const q = PARTS[ri][i], k = Math.floor(clamp(((q.u + CLK.t * 0.03 * q.sp * (1 + p.ms[Math.floor(q.u * (N - 1))] * 0.9)) % 1) * (N - 1), 0, N - 2)), u = p.us[k], x = p.xs[k] + noise1(CLK.t * 2 + i) * u * 5, y = p.ys[k] + noise1(CLK.t * 1.5 + i * 3) * u * 8 - 1; if (NOW_DAY > t0 && NOW_DAY < t1 && x > geo.xOf(NOW_DAY)) continue; g.globalAlpha = (0.18 + 0.5 * (1 - u)) * ra * alpha; const c = p.vs[k] > 0.75 ? SPR.amber : SPR.ember, s = 7 + 4 * q.jit; g.drawImage(c, x - s / 2, y - s / 2, s, s); } }
+    g.globalAlpha = alpha; g.globalCompositeOperation = 'source-over';
+  }
+  st._pts = pts; st._geo = geo; st._N = N;
+  g.restore();
+  return geo;
+}
+
+// ================================================================ TERRAIN OVERLAYS: landmarks, spotlight, links, callouts, scan line
+const txt = (g, s, x, y, o = {}) => { g.font = o.font || `500 10px ${FONT.mono}`; g.textAlign = o.align || 'left'; g.textBaseline = o.base || 'alphabetic'; if (o.ls) g.letterSpacing = o.ls; g.fillStyle = o.color || rgba(INK.dim, o.a ?? 1); g.fillText(s, x, y); if (o.ls) g.letterSpacing = '0px'; };
+function rowY(st, rect, rowI, day) { const p = st._pts && st._pts[rowI]; if (!p) return rect.y + rect.h / 2; const k = clamp(Math.round(((day - st.t0.v) / (st.t1.v - st.t0.v)) * (st._N - 1)), 0, st._N - 1); return p.ys[k]; }
+function drawTerrainOverlay(g, st, rect, o = {}) {
+  const geo = st._geo; if (!geo) return; const t0 = st.t0.v, t1 = st.t1.v, span = t1 - t0, mini = !!o.mini, al = o.alpha ?? 1; g.save(); g.globalAlpha = al;
+  const px = (d) => geo.xOf(d), inX = (x) => x >= rect.x - 1 && x <= rect.x + rect.w + 1;
+  // ---- landmarks: holidays stand as thin pins on the ground
+  let lastLab = null; if (!mini) for (const h of HOLIDAYS) { const x = px(h.day); if (!inX(x)) continue; const major = h.rank >= 2, show = span < 130 || major || (span < 280 && h.rank >= 1); if (!show) continue; const gr = g.createLinearGradient(0, rect.y - 6, 0, rect.y + rect.h); gr.addColorStop(0, rgba(INK.ivory, major ? 0.34 : 0.2)); gr.addColorStop(1, rgba(INK.ivory, 0)); g.strokeStyle = gr; g.lineWidth = 1; g.beginPath(); g.moveTo(x, rect.y - 6); g.lineTo(x, rect.y + rect.h); g.stroke();
+    g.fillStyle = rgba(INK.ivory, major ? 0.9 : 0.6); g.beginPath(); g.moveTo(x, rect.y - 12); g.lineTo(x + 3.5, rect.y - 8); g.lineTo(x, rect.y - 4); g.lineTo(x - 3.5, rect.y - 8); g.closePath(); g.fill(); if (rect.w > 500 && (major || span < 130) && !(st.band.s.v > 0.4 && Math.abs(x - (px(st.band.a.v) + px(st.band.b.v)) / 2) < 110) && !(lastLab !== null && x - lastLab < 92)) { lastLab = x; txt(g, h.name.toUpperCase(), x + 7, rect.y - 5, { font: `500 9px ${FONT.mono}`, color: rgba(INK.ivory, major ? 0.78 : 0.5), ls: '0.8px' }); } }
+  // ---- planning ritual: the Thursday sessions, as a row of small marks under the ground
+  if (!mini && st.plan.v > 0.02 && span < 560) { const y = rect.y + rect.h + 9; for (let w = 0; w < WEEKS; w++) { const d = w * 7 + 3.5, x = px(d); if (!inX(x)) continue; const on = PLANNED[w]; g.fillStyle = on ? rgba(INK.verd, 0.95 * st.plan.v) : 'rgba(0,0,0,0)'; g.strokeStyle = rgba(INK.verd, (on ? 0.9 : 0.35) * st.plan.v); g.lineWidth = 1; g.beginPath(); g.arc(x, y, on ? 3 : 2.3, 0, 6.283); on ? g.fill() : g.stroke(); } txt(g, 'THURSDAY PLANNING', rect.x, y + 16, { font: `500 8.5px ${FONT.mono}`, color: rgba(INK.verd, 0.85 * st.plan.v), ls: '1px' }); }
+  // ---- now
+  if (NOW_DAY > t0 && NOW_DAY < t1) { const x = px(NOW_DAY), pu = 0.5 + 0.5 * Math.sin(CLK.t * 2.4); const gr = g.createLinearGradient(0, rect.y - 14, 0, rect.y + rect.h); gr.addColorStop(0, rgba(INK.amber, 0.9)); gr.addColorStop(1, rgba(INK.amber, 0.06)); g.strokeStyle = gr; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, rect.y - 14); g.lineTo(x, rect.y + rect.h); g.stroke(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = al * (0.5 + 0.5 * pu); g.drawImage(SPR.amber, x - 11, rect.y - 25, 22, 22); g.globalAlpha = al; g.globalCompositeOperation = 'source-over'; if (!mini) txt(g, 'TODAY', x + (x > rect.x + rect.w - 70 ? -8 : 8), rect.y - 18, { color: rgba(INK.amber, 0.95), font: `600 9px ${FONT.mono}`, ls: '1.2px', align: x > rect.x + rect.w - 70 ? 'right' : 'left' }); if (!mini && x < rect.x + rect.w - 60 && st.fc.v > 0.2) txt(g, 'LIKELY →', x + 8, rect.y + 8, { color: rgba(INK.verd, 0.95 * st.fc.v), font: `500 9px ${FONT.mono}`, ls: '1.2px' }); }
+  // ---- AI links: arcs that connect cause to effect, with energy running along them
+  for (const l of st.links) { const a = l.p.v; if (a < 0.02) continue; const ax = px(l.a.day), ay = l.a.row === 'plan' ? rect.y + rect.h + 9 : rowY(st, rect, l.a.row, l.a.day), bx = px(l.b.day), by = rowY(st, rect, l.b.row, l.b.day); if (!inX(ax) && !inX(bx)) continue; const cx = (ax + bx) / 2, cy = Math.min(ay, by) - 34 - Math.abs(bx - ax) * 0.1;
+    g.setLineDash([4, 4]); g.strokeStyle = rgba(INK.verd, 0.62 * a); g.lineWidth = 1.2; g.beginPath(); g.moveTo(ax, ay); g.quadraticCurveTo(cx, cy, bx, by); g.stroke(); g.setLineDash([]);
+    g.globalCompositeOperation = 'lighter'; for (let i = 0; i < 4; i++) { const t = (CLK.t * 0.4 + i / 4) % 1, x = (1 - t) ** 2 * ax + 2 * (1 - t) * t * cx + t * t * bx, y = (1 - t) ** 2 * ay + 2 * (1 - t) * t * cy + t * t * by; g.globalAlpha = al * a * 0.9; g.drawImage(SPR.verd, x - 6, y - 6, 12, 12); } g.globalAlpha = al; g.globalCompositeOperation = 'source-over';
+    g.fillStyle = rgba(INK.verd, a); g.beginPath(); g.arc(bx, by, 3, 0, 6.283); g.fill(); }
+  // ---- anomalies: places where the field was disturbed
+  if (!mini) for (const m of st.marks) { const x = px(m.day); if (!inX(x)) continue; const y = rowY(st, rect, m.row, m.day), ph = (CLK.t * 0.8 + m.day * 0.13) % 1, a = (m.a?.v ?? 1); g.strokeStyle = rgba(INK.ember, (1 - ph) * 0.8 * a); g.lineWidth = 1; g.beginPath(); g.arc(x, y, 4 + ph * 14, 0, 6.283); g.stroke(); g.fillStyle = rgba(INK.ember, 0.95 * a); g.beginPath(); g.arc(x, y, 2.6, 0, 6.283); g.fill(); }
+  // ---- spotlight band: everything outside falls away; the region of interest is lit from within
+  const bs = st.band.s.v; if (bs > 0.01) { const xa = clamp(px(st.band.a.v), rect.x, rect.x + rect.w), xb = clamp(px(st.band.b.v), rect.x, rect.x + rect.w), y0 = rect.y - 26, y1 = rect.y + rect.h + 34;
+    g.fillStyle = `rgba(7,8,10,${0.64 * bs})`; g.fillRect(rect.x - 60, y0, xa - rect.x + 60, y1 - y0); g.fillRect(xb, y0, rect.x + rect.w - xb + 60, y1 - y0);
+    if (xb > xa) { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, rgba(INK.amber, 0.0)); gr.addColorStop(0.5, rgba(INK.amber, 0.06 * bs * (0.8 + 0.2 * Math.sin(CLK.t * 1.6)))); gr.addColorStop(1, rgba(INK.amber, 0)); g.fillStyle = gr; g.fillRect(xa, y0, xb - xa, y1 - y0);
+      for (const x of [xa, xb]) { const e = g.createLinearGradient(0, y0, 0, y1); e.addColorStop(0, rgba(INK.amber, 0)); e.addColorStop(0.3, rgba(INK.amber, 0.85 * bs)); e.addColorStop(0.7, rgba(INK.amber, 0.85 * bs)); e.addColorStop(1, rgba(INK.amber, 0)); g.strokeStyle = e; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke(); }
+      if (st.band.label) txt(g, st.band.label.toUpperCase(), (xa + xb) / 2, y0 + 12, { align: 'center', color: rgba(INK.amber, bs), font: `600 9.5px ${FONT.mono}`, ls: '1.6px' }); } }
+  // ---- axis
+  if (!mini) { const ay = rect.y + rect.h + (st.plan.v > 0.05 ? 40 : 22); g.strokeStyle = rgba(INK.ivory, 0.1); g.lineWidth = 1; g.beginPath(); g.moveTo(rect.x, ay - 12); g.lineTo(rect.x + rect.w, ay - 12); g.stroke(); let lastX = -99;
+    for (const tk of axisTicks(t0, t1)) { const x = px(tk.d); if (x < rect.x - 2 || x > rect.x + rect.w + 2) continue; g.strokeStyle = rgba(INK.ivory, tk.major ? 0.3 : 0.16); g.beginPath(); g.moveTo(x, ay - 12); g.lineTo(x, ay - (tk.major ? 5 : 8)); g.stroke(); if (x - lastX > 40) { txt(g, tk.l, x + 3, ay + 1, { color: rgba(tk.major ? INK.dim : INK.muted, 1), font: `500 9.5px ${FONT.mono}` }); lastX = x; } }
+    if (span > 120) { const seen = new Set(); for (let d = Math.floor(t0) - 40; d <= t1 + 40; d += 12) { const dt = dateAt(d), key = dt.getFullYear() * 4 + seasonOfMonth(dt.getMonth()) + (dt.getMonth() === 11 ? 0 : 0), s = seasonOfMonth(dt.getMonth()); if (seen.has(`${dt.getFullYear()}-${s}-${dt.getMonth() >= 11 ? 'x' : ''}`)) continue; seen.add(`${dt.getFullYear()}-${s}-${dt.getMonth() >= 11 ? 'x' : ''}`); const mid = [1, 4, 7, 10][s] ; const sx = geo.xOf(dayIdx(new Date(dt.getFullYear(), s === 0 && dt.getMonth() === 11 ? 12 : mid, 1))); if (sx > rect.x + 40 && sx < rect.x + rect.w - 40) txt(g, SEASON[s].n.toUpperCase(), sx, ay + 14, { align: 'center', color: rgba(SEASON[s].c, 0.7), font: `500 8.5px ${FONT.mono}`, ls: '1.6px' }); } } }
+  // ---- row labels, set right against the ground they describe
+  if (!mini) { const rows = ROWSETS[st.rowsKind]; rows.forEach((row, i) => { const y = geo.base(i), ra = st.rowA[i]?.v ?? 1, last = sampleRowAt(row, clamp(NOW_DAY - 3, t0, t1), 2.5), mo = clamp((sampleRowAt(row, NOW_DAY - 2, 2.5).v - sampleRowAt(row, NOW_DAY - 24, 2.5).v) * 5, -1, 1), hot = st.hoverRow === i || st.focusRoom === i;
+    if (rect.w < 500) { const nm = row.name.replace('Living room', 'Living').replace('Bathrooms', 'Baths').replace('Bedrooms', 'Beds').toUpperCase(); txt(g, nm, rect.x - 8, y - 2, { align: 'right', color: rgba(hot ? INK.ivory : INK.dim, (0.5 + 0.5 * ra)), font: `600 8.5px ${FONT.ui}`, ls: '1px' }); txt(g, `${Math.round(last.v * 100)}`, rect.x - 8, y + 8, { align: 'right', color: rgba(tone(last.v, mo, 0), 0.9 * ra), font: `500 8.5px ${FONT.mono}` }); return; }
+    txt(g, row.name.toUpperCase(), rect.x - 14, y - 6, { align: 'right', color: rgba(hot ? INK.ivory : INK.dim, (0.5 + 0.5 * ra) * (hot ? 1 : 0.85)), font: `600 10px ${FONT.ui}`, ls: '1.4px' });
+    txt(g, `${Math.round(last.v * 100)}`, rect.x - 40, y + 7, { align: 'right', color: rgba(tone(last.v, mo, 0), 0.95 * ra), font: `500 11px ${FONT.mono}` }); txt(g, mo > 0.15 ? '▲' : mo < -0.15 ? '▼' : '–', rect.x - 14, y + 7, { align: 'right', color: rgba(tone(last.v, mo, 0), 0.8 * ra), font: `500 8px ${FONT.mono}` }); g.strokeStyle = rgba(INK.ivory, 0.05 * ra); g.beginPath(); g.moveTo(rect.x - 10, y); g.lineTo(rect.x + 4, y); g.stroke(); }); }
+  // ---- callouts the AI placed on the data itself
+  for (const c of st.callouts) { const a = c.a.v; if (a < 0.02) continue; const x = px(c.day); if (!inX(x)) continue; const y = c.row == null ? rect.y + rect.h * c.fy : rowY(st, rect, c.row, c.day) + (c.dy || 0), sd = (c.side || 1) > 0 ? (x + 26 + 130 > rect.x + rect.w + (rect.w < 500 ? -6 : 40) ? -1 : 1) : (x - 26 - 130 < rect.x - 60 ? 1 : -1), tx = x + sd * 26, ty = y - 30; g.strokeStyle = rgba(INK[c.color || 'amber'], 0.7 * a); g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(tx, ty); g.lineTo(tx + sd * 8, ty); g.stroke(); g.fillStyle = rgba(INK[c.color || 'amber'], a); g.beginPath(); g.arc(x, y, 2.6, 0, 6.283); g.fill();
+    const al2 = sd > 0 ? 'left' : 'right', tx2 = tx + sd * 12; txt(g, c.text, tx2, ty - 1, { align: al2, color: rgba(INK.ivory, a), font: `600 12px ${FONT.ui}` }); if (c.sub) txt(g, c.sub, tx2, ty + 12, { align: al2, color: rgba(INK.dim, 0.9 * a), font: `500 10px ${FONT.mono}` }); }
+  // ---- scan line: hover reads the instrument at any moment
+  if (!mini && st.hover && st.hover.x >= rect.x && st.hover.x <= rect.x + rect.w && st.hover.y >= rect.y - 30 && st.hover.y <= rect.y + rect.h + 50) { const x = st.hover.x, day = geo.dayOf(x), dt = dateAt(day); g.strokeStyle = rgba(INK.ivory, 0.35); g.lineWidth = 1; g.beginPath(); g.moveTo(x, rect.y - 6); g.lineTo(x, rect.y + rect.h); g.stroke(); const rows = ROWSETS[st.rowsKind], sg = Math.max(0.85, (dayToCard(span) / st._N) * 1.25); let best = -1, bd = 1e9;
+    rows.forEach((row, i) => { const s = sampleRowAt(row, day, sg), y = rowY(st, rect, i, day); const ra = st.rowA[i]?.v ?? 1; if (Math.abs(y - st.hover.y) < bd) { bd = Math.abs(y - st.hover.y); best = i; } g.fillStyle = rgba(tone(s.v, 0, s.u), 0.95 * ra); g.beginPath(); g.arc(x, y, 3, 0, 6.283); g.fill(); const right = x < rect.x + rect.w - 70; txt(g, `${Math.round(s.v * 100)}%`, x + (right ? 8 : -8), y + 3.5, { align: right ? 'left' : 'right', color: rgba(INK.ivory, 0.92 * ra), font: `500 10px ${FONT.mono}` }); });
+    st.hoverRow = best; const label = `${WD[dt.getDay()]} ${dt.getDate()} ${MON[dt.getMonth()]} ’${String(dt.getFullYear()).slice(2)}${day > NOW_DAY ? ' · forecast' : ''}`; const w = g.measureText(label).width + 16; g.fillStyle = 'rgba(14,16,18,0.92)'; g.fillRect(clamp(x - w / 2, rect.x, rect.x + rect.w - w), rect.y + rect.h + 22, w, 18); txt(g, label, clamp(x - w / 2, rect.x, rect.x + rect.w - w) + 8, rect.y + rect.h + 34, { color: rgba(INK.ivory, 1), font: `500 10px ${FONT.mono}` });
+    for (const h of HOLIDAYS) if (Math.abs(h.day - day) < Math.max(1.2, span / 90)) txt(g, h.name, x, rect.y - 24, { align: 'center', color: rgba(INK.ivory, 0.9), font: `600 11px ${FONT.ui}` }); } else if (!mini) st.hoverRow = -1;
+  g.restore();
+}
+// ---- the whole-life silhouette, used as a scrubber
+const MMC = {};
+function drawMinimap(g, st, rect) {
+  const rows = ROWSETS.rooms, N = Math.round(rect.w / 3); let ys = MMC[N]; if (!ys) { ys = MMC[N] = [];
+  for (let k = 0; k < N; k++) { const day = (WEEKS * 7 + FC_WEEKS * 7) * (k / (N - 1)); let v = 0, wsum = 0; for (const row of rows) { const s = sampleRowAt(row, day, 3.2); v += s.v * (s.w + 0.2); wsum += s.w + 0.2; } ys.push(v / wsum); } }
+  const x0 = (k) => rect.x + (rect.w * k) / (N - 1), yy = (v) => rect.y + rect.h - 3 - (rect.h - 8) * fh(v), nowK = Math.round((NOW_DAY / (WEEKS * 7 + FC_WEEKS * 7)) * (N - 1));
+  g.beginPath(); g.moveTo(rect.x, rect.y + rect.h); for (let k = 0; k <= nowK; k++) g.lineTo(x0(k), yy(ys[k])); g.lineTo(x0(nowK), rect.y + rect.h); g.closePath(); const gr = g.createLinearGradient(0, rect.y, 0, rect.y + rect.h); gr.addColorStop(0, rgba(INK.amber, 0.3)); gr.addColorStop(1, rgba(INK.amber, 0.02)); g.fillStyle = gr; g.fill();
+  g.lineWidth = 1.1; for (let k = 1; k <= nowK; k++) { g.strokeStyle = rgba(tone(ys[k], clamp((ys[k] - ys[k - 1]) * 40, -1, 1), 0), 0.9); g.beginPath(); g.moveTo(x0(k - 1), yy(ys[k - 1])); g.lineTo(x0(k), yy(ys[k])); g.stroke(); }
+  g.setLineDash([2, 3]); g.strokeStyle = rgba(INK.verd, 0.8); g.beginPath(); for (let k = nowK; k < N; k++) k === nowK ? g.moveTo(x0(k), yy(ys[k])) : g.lineTo(x0(k), yy(ys[k])); g.stroke(); g.setLineDash([]);
+  for (const h of HOLIDAYS) if (h.rank >= 2 && h.day > 0 && h.day < WEEKS * 7 + 50) { const x = rect.x + (h.day / (WEEKS * 7 + FC_WEEKS * 7)) * rect.w; g.fillStyle = rgba(INK.ivory, 0.55); g.fillRect(x - 0.5, rect.y + rect.h - 6, 1, 6); }
+  const tot = WEEKS * 7 + FC_WEEKS * 7, xa = rect.x + (clamp(st.t0.v, 0, tot) / tot) * rect.w, xb = rect.x + (clamp(st.t1.v, 0, tot) / tot) * rect.w; g.fillStyle = rgba(INK.ivory, 0.06); g.fillRect(xa, rect.y - 2, Math.max(4, xb - xa), rect.h + 4); g.strokeStyle = rgba(INK.ivory, 0.55); g.lineWidth = 1; g.strokeRect(xa + 0.5, rect.y - 1.5, Math.max(4, xb - xa) - 1, rect.h + 3);
+}
+
+// ================================================================ CONSTELLATION: rooms as orbital systems, tasks as bodies
+const CL_POS = [[0.30, 0.52], [0.55, 0.26], [0.58, 0.70], [0.80, 0.46], [0.12, 0.27], [0.12, 0.80], [0.90, 0.84], [0.36, 0.89]];
+const BANDS = (f) => (f >= 26 ? 0 : f >= 12 ? 1 : f >= 6 ? 2 : f >= 3 ? 3 : 4);
+const CONST = ROOMS.map((room, ri) => {
+  const tasks = TASKS.filter((t) => t.ri === ri).sort((a, b) => b.f - a.f), bands = {}; tasks.forEach((t) => (bands[BANDS(t.f)] ||= []).push(t));
+  const keys = Object.keys(bands).map(Number).sort((a, b) => a - b), load = tasks.reduce((a, t) => a + t.f, 0);
+  return { ri, room, tasks, bands: keys.map((k, i) => ({ k, i, n: keys.length, tasks: bands[k] })), load };
+});
+const MAXLOAD = Math.max(...CONST.map((c) => c.load));
+// correlations between rooms' weekly rates, from the data itself
+const CORR = (() => {
+  const wk = ROOMS.map((_, ri) => { const a = []; for (let w = Math.max(0, lastFin - 70); w <= lastFin; w++) { let p = 0, d = 0; for (let s = 0; s < 3; s++) { const c = CARDS[w * 3 + s]; for (const x of c.tasks) if (x.t.ri === ri && c.finished) { p++; if (x.done) d++; } } a.push(p ? d / p : null); } return a; }), out = [];
+  const all = wk[0].map((_, i) => mean(wk.map((r) => r[i]).filter((v) => v != null)));
+  const resid = wk.map((r) => r.map((v, i) => (v == null ? null : v - all[i])));
+  for (let i = 0; i < ROOMS.length; i++) for (let j = i + 1; j < ROOMS.length; j++) { const pairs = resid[i].map((v, k) => [v, resid[j][k]]).filter((p) => p[0] != null && p[1] != null); if (pairs.length < 30) continue; const ma = mean(pairs.map((p) => p[0])), mb = mean(pairs.map((p) => p[1])); let num = 0, da = 0, db = 0; pairs.forEach(([a, b]) => { num += (a - ma) * (b - mb); da += (a - ma) ** 2; db += (b - mb) ** 2; }); out.push({ a: i, b: j, r: num / Math.sqrt(da * db || 1) }); }
+  return out.sort((x, y) => y.r - x.r).slice(0, 5);
+})();
+
+function constStats(st) { // what the window says about each room and task, smoothed so colour and order glide as the window moves
+  let c0 = clamp(dayToCard(st.t0.v), 0, NOW_CARD), c1 = clamp(dayToCard(st.t1.v), 0, NOW_CARD); if (c1 - c0 < 6) c0 = Math.max(0, c1 - 6);
+  const key = `${Math.round(c0 / 2)}-${Math.round(c1 / 2)}`; if (st._ck !== key) { st._ck = key; st._cw = windowStats(c0, c1); }
+  const w = st._cw; st._nv ||= {}; st._ro ||= {};
+  CONST.forEach((cl) => { const rm = w.rooms[cl.ri]; const ro = (st._ro[cl.ri] ||= { rate: new Tw(0.7, 3), order: new Tw(0.6, 2.2), trend: new Tw(0, 3) }); ro.rate.to(rm.rate ?? 0.7); ro.trend.to(clamp(rm.trend * 8, -1, 1)); ro.order.to(clamp(0.2 + 0.85 * (1 - clamp(rm.sd / 0.2, 0, 1)) - clamp(-rm.trend * 5, 0, 0.45), 0.04, 1)); ro.rate.step(CLK.dt); ro.order.step(CLK.dt); ro.trend.step(CLK.dt);
+    cl.tasks.forEach((t) => { const tk = w.tasks[t.id], nv = (st._nv[t.id] ||= { rate: new Tw(0.7, 3), sd: new Tw(0, 3) }); nv.rate.to(tk.rate ?? 0.7); nv.sd.to(tk.sd); nv.rate.step(CLK.dt); nv.sd.step(CLK.dt); }); });
+  return w;
+}
+function constLayout(st, rect) {
+  const Rmax = Math.min(rect.w, rect.h) * 0.19, f = st.clusterFocus, zc = st.zoomC.v, out = [];
+  const raw = CONST.map((cl, i) => ({ x: rect.x + CL_POS[i][0] * rect.w, y: rect.y + CL_POS[i][1] * rect.h, r: Rmax * Math.sqrt(cl.load / MAXLOAD) * 0.92 + Rmax * 0.12 }));
+  const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+  const S = f >= 0 ? 1 + ((Math.min(rect.w, rect.h) * 0.43) / raw[f].r - 1) * zc : 1, fx = f >= 0 ? lerp(cx, raw[f].x, zc) : cx, fy = f >= 0 ? lerp(cy, raw[f].y, zc) : cy;
+  raw.forEach((p, i) => out.push({ x: cx + (p.x - fx) * S, y: cy + (p.y - fy) * S, r: p.r * S, a: f >= 0 && i !== f ? lerp(1, 0.1, zc) : 1 }));
+  return out;
+}
+function drawConst(g, st, rect, o = {}) {
+  const alpha = o.alpha ?? 1, small = rect.w < 520, w = constStats(st), L = constLayout(st, rect), t = CLK.t, dueIds = new Set(CURRENT.tasks.filter((x) => x.open).map((x) => x.t.id)); g.save(); g.globalAlpha = alpha; st._cl = []; st._nodes = [];
+  const sc = st.clusterFocus >= 0 ? 1 + st.zoomC.v * 0.9 : 1;
+  for (const l of st.cLinks) { const p = l.p.v; if (p < 0.02) continue; const A = L[l.a], B = L[l.b], mx = (A.x + B.x) / 2 + (B.y - A.y) * 0.18, my = (A.y + B.y) / 2 - (B.x - A.x) * 0.18, al = Math.min(A.a, B.a);
+    g.setLineDash(l.dash ? [3, 5] : []); g.strokeStyle = rgba(INK.verd, (0.18 + 0.5 * l.s) * p * al); g.lineWidth = 0.8 + 1.8 * l.s; g.beginPath(); g.moveTo(A.x, A.y); g.quadraticCurveTo(mx, my, B.x, B.y); g.stroke(); g.setLineDash([]);
+    g.globalCompositeOperation = 'lighter'; const n = 3 + Math.round(l.s * 6); for (let i = 0; i < n; i++) { const u = (t * (0.07 + 0.12 * l.s) + i / n) % 1, x = (1 - u) ** 2 * A.x + 2 * (1 - u) * u * mx + u * u * B.x, y = (1 - u) ** 2 * A.y + 2 * (1 - u) * u * my + u * u * B.y; g.globalAlpha = alpha * p * al * 0.85; g.drawImage(SPR.verd, x - 5, y - 5, 10, 10); } g.globalAlpha = alpha; g.globalCompositeOperation = 'source-over'; }
+  CONST.forEach((cl, ci) => {
+    const P = L[ci], em = st.cEmph[ci].v * P.a; if (em < 0.03) return; const ro = st._ro[cl.ri], rate = ro.rate.v, order = ro.order.v, trend = ro.trend.v, col = tone(rate, trend, 1 - order), focus = st.clusterFocus === ci;
+    st._cl.push({ i: ci, x: P.x, y: P.y, r: P.r }); g.globalAlpha = alpha * em;
+    const fr = P.r * 1.55, gr = g.createRadialGradient(P.x, P.y, 0, P.x, P.y, fr); gr.addColorStop(0, rgba(col, 0.2 * (0.5 + rate))); gr.addColorStop(0.55, rgba(col, 0.045)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr; g.beginPath(); g.arc(P.x, P.y, fr, 0, 6.283); g.fill();
+    cl.bands.forEach((b) => { const rb = P.r * (b.n === 1 ? 0.7 : 0.3 + 0.7 * (b.i / (b.n - 1))); g.lineWidth = 0.8; g.strokeStyle = rgba(INK.ivory, 0.1 + 0.08 * order);
+      if (order > 0.7) { g.beginPath(); g.arc(P.x, P.y, rb, 0, 6.283); g.stroke(); } else { const segs = 14, gap = (1 - order) * 0.75; for (let s = 0; s < segs; s++) { const a0 = (s / segs) * 6.283 + t * 0.03 * (b.i + 1), keep = hash1(s * 13.1 + ci * 5 + b.i * 17 + Math.floor(t * 0.5)) > gap * 0.55; if (!keep) continue; g.beginPath(); g.arc(P.x, P.y, rb + noise1(s + t * 0.8 + ci) * (1 - order) * 3, a0, a0 + (6.283 / segs) * 0.82); g.stroke(); } } });
+    if (order < 0.5) { g.globalCompositeOperation = 'lighter'; const nF = Math.round((0.5 - order) * 44); for (let i = 0; i < nF; i++) { const ph = (t * 0.12 + hash1(i * 3.3 + ci * 9)) % 1, ang = hash1(i * 7.1 + ci) * 6.283 + t * 0.06, rr = P.r * (0.95 + 0.7 * ph), x = P.x + Math.cos(ang) * rr + noise1(t + i) * 4, y = P.y + Math.sin(ang) * rr + noise1(t * 1.2 + i * 2) * 4; g.globalAlpha = alpha * em * (1 - ph) * 0.55; g.drawImage(SPR.ember, x - 4, y - 4, 8, 8); } g.globalAlpha = alpha * em; g.globalCompositeOperation = 'source-over'; }
+    const cr = Math.max(5, P.r * 0.17); g.strokeStyle = rgba(INK.ivory, 0.12); g.lineWidth = 1.4; g.beginPath(); g.arc(P.x, P.y, cr + 4, 0, 6.283); g.stroke(); g.strokeStyle = rgba(col, 0.95); g.lineWidth = 2; g.lineCap = 'round'; g.beginPath(); g.arc(P.x, P.y, cr + 4, -1.5708, -1.5708 + 6.283 * clamp(rate, 0.02, 1)); g.stroke();
+    g.globalCompositeOperation = 'lighter'; const pu = 0.85 + 0.15 * Math.sin(t * (1.2 + order) + ci); g.drawImage(SPR.amber, P.x - cr * 2.4 * pu, P.y - cr * 2.4 * pu, cr * 4.8 * pu, cr * 4.8 * pu); g.globalCompositeOperation = 'source-over'; g.fillStyle = rgba(mixc(col, GLINT, 0.55), 1); g.beginPath(); g.arc(P.x, P.y, cr * 0.42, 0, 6.283); g.fill();
+    cl.bands.forEach((b) => b.tasks.forEach((tk, j) => {
+      const rb = P.r * (b.n === 1 ? 0.7 : 0.3 + 0.7 * (b.i / (b.n - 1))), fn = Math.log2(tk.f + 1) / Math.log2(40), om = (0.1 + 0.5 * fn) * (ci % 2 ? 1 : -1), ordered = (j / b.tasks.length) * 6.283 + b.i * 1.1, free = hash1(tk.id * 3.7) * 6.283, nv = st._nv[tk.id], wob = nv.sd.v * 1.1;
+      const ang = om * t + lerp(free, ordered, order) + noise1(t * 0.6 + tk.id) * wob * (1 - order * 0.6), rr = rb + noise1(t * 0.8 + tk.id * 2) * wob * P.r * 0.07;
+      let x = P.x + Math.cos(ang) * rr, y = P.y + Math.sin(ang) * rr, boost = 0;
+      for (const rp of st.ripples) { const age = t - rp.t0, R = age * 260 * Math.max(0.7, sc), d = Math.hypot(x - rp.x, y - rp.y), wv = Math.exp(-(((d - R) / 30) ** 2)) * (1 - age / 3.2) * rp.s; if (wv > 0.001) { x += ((x - rp.x) / (d || 1)) * wv * 9; y += ((y - rp.y) / (d || 1)) * wv * 9; boost += wv; } }
+      const v = nv.rate.v, c = tone(v, 0, nv.sd.v * 1.3), rn = (2.2 + tk.effort * 1.05) * Math.min(1.8, Math.max(0.8, sc)) * (small ? 0.85 : 1) * (1 + boost * 0.6), due = dueIds.has(tk.id), miss = v < 0.5;
+      st._nodes.push({ id: tk.id, ci, x, y, rn: Math.max(rn + 4, 9) });
+      g.globalCompositeOperation = 'lighter'; g.globalAlpha = alpha * em * (0.4 + 0.5 * v + boost); g.drawImage(v > 0.75 ? SPR.amber : SPR.ember, x - rn * 3.2, y - rn * 3.2, rn * 6.4, rn * 6.4); g.globalCompositeOperation = 'source-over'; g.globalAlpha = alpha * em;
+      if (miss) { g.strokeStyle = rgba(c, 0.9); g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, rn, 0, 6.283); g.stroke(); const ph = (t * 0.33 + tk.id * 0.21) % 1; g.strokeStyle = rgba(INK.ember, (1 - ph) * 0.35); g.lineWidth = 1; g.beginPath(); g.arc(x, y, rn + ph * 18, 0, 6.283); g.stroke(); } else { g.fillStyle = rgba(mixc(c, GLINT, boost * 0.6 + (v > 0.92 ? 0.25 : 0)), 1); g.beginPath(); g.arc(x, y, rn, 0, 6.283); g.fill(); }
+      if (due) { const ph = (t * 0.85 + tk.id * 0.13) % 1; g.strokeStyle = rgba(INK.amber, (1 - ph) * 0.9); g.lineWidth = 1.4; g.beginPath(); g.arc(x, y, rn + 2 + ph * 11, 0, 6.283); g.stroke(); g.strokeStyle = rgba(INK.amber, 0.95); g.lineWidth = 1; g.beginPath(); g.arc(x, y, rn + 3, 0, 6.283); g.stroke(); }
+      if ((focus && st.zoomC.v > 0.55) || st.hoverTask === tk.id) { const ox = Math.cos(ang) * (rn + 8), oy = Math.sin(ang) * (rn + 8); txt(g, tk.name, x + ox, y + oy + 3, { align: Math.cos(ang) >= 0 ? 'left' : 'right', color: rgba(INK.ivory, 0.92 * (focus && st.hoverTask !== tk.id ? Math.min(1, (st.zoomC.v - 0.5) * 3) : 1)), font: `500 ${small ? 9.5 : 11}px ${FONT.ui}` }); }
+    }));
+    const showName = true; if (showName) { txt(g, cl.room.name.toUpperCase(), P.x, P.y + P.r + (small ? 13 : 17), { align: 'center', color: rgba(INK.ivory, 0.92), font: `600 ${small ? 8.5 : 10}px ${FONT.ui}`, ls: '1.4px' }); txt(g, `${Math.round(rate * 100)}%  ${trend > 0.15 ? '▲' : trend < -0.15 ? '▼' : '–'}`, P.x, P.y + P.r + (small ? 23 : 31), { align: 'center', color: rgba(col, 1), font: `500 ${small ? 8.5 : 10.5}px ${FONT.mono}` }); }
+    g.globalAlpha = alpha;
+  });
+  for (const rp of st.ripples) { const age = t - rp.t0, R = age * 260 * Math.max(0.7, sc), a = (1 - age / 3.2) * rp.s; g.strokeStyle = rgba(INK.amber, a * 0.55); g.lineWidth = 1.5; g.beginPath(); g.arc(rp.x, rp.y, R, 0, 6.283); g.stroke(); g.strokeStyle = rgba(INK.ivory, a * 0.18); g.lineWidth = 1; g.beginPath(); g.arc(rp.x, rp.y, R * 0.82, 0, 6.283); g.stroke(); }
+  g.restore();
+}
+function constHit(st, x, y) {
+  let best = null, bd = 1e9; for (const n of st._nodes || []) { const d = Math.hypot(n.x - x, n.y - y); if (d < n.rn && d < bd) { bd = d; best = { kind: 'task', id: n.id, ci: n.ci, x: n.x, y: n.y }; } } if (best) return best;
+  for (const c of st._cl || []) { const d = Math.hypot(c.x - x, c.y - y); if (d < c.r * 1.15 && d < bd) { bd = d; best = { kind: 'cluster', i: c.i, x: c.x, y: c.y }; } } return best;
+}
+
+// ================================================================ DIRECTOR: what the system has noticed, and how the picture re-forms to explain it
+const pct = (v) => Math.round(v * 100);
+const N0 = NOW_CARD, rm = (name) => roomIdx[name];
+const INS = {};
+// -- Friday erosion: first two cycles of the last six vs the most recent two
+INS.fri = (() => {
+  const a0 = N0 - 233, a1 = N0 - 156, b0 = N0 - 77, b1 = N0, seg2 = (x, c) => c.seg === 2;
+  const r1 = rateIn(a0, a1, seg2).r, r2 = rateIn(b0, b1, seg2).r, others1 = rateIn(a0, a1, (x, c) => c.seg !== 2).r, others2 = rateIn(b0, b1, (x, c) => c.seg !== 2).r;
+  const drops = ROOMS.map((r, i) => { const f = (x, c) => c.seg === 2 && x.t.ri === i, p = rateIn(b0, b1, f).p; return { i, name: r.name, drop: rateIn(a0, a1, f).r - rateIn(b0, b1, f).r, p }; }).filter((d) => d.p > 6).sort((x, y) => y.drop * y.p - x.drop * x.p);
+  return { r1, r2, change: (r2 - r1) / r1, others: others2 - others1, drops, top: drops.slice(0, 2) };
+})();
+// -- Thursday planning: Fri–Sat completion on weeks that had a Thursday planning session vs those that did not
+INS.plan = (() => { const f = (on) => rateIn(N0 - 233, N0, (x, c) => c.seg === 2 && PLANNED[c.w] === on).r; return { yes: f(true), no: f(false) }; })();
+// -- Holiday: the last Thanksgiving, measured against the weeks before it
+INS.hol = (() => {
+  const h = [...HOLIDAYS].reverse().find((x) => x.name === 'Thanksgiving' && x.day < NOW_DAY - 10), c0 = dayToCard(h.day), at = (k) => rateIn(Math.round(c0 + (k * 3) / 7) - 1, Math.round(c0 + (k * 3) / 7) + 1).r;
+  const base = rateIn(Math.round(c0 - 18), Math.round(c0 - 6)).r; let onset = -9, rec = 6;
+  for (let k = -25; k <= 0; k++) if (at(k) < base - 0.14 && at(k + 2) < base - 0.1) { onset = k; break; }
+  let low = 1, kLow = 0; for (let k = -10; k <= 8; k++) if (at(k) < low) { low = at(k); kLow = k; }
+  for (let k = Math.max(1, kLow + 1); k <= 24; k++) if (at(k) >= base - 0.1 && at(k + 2) >= base - 0.1) { rec = k; break; }
+  rec = Math.max(rec, 4);
+  const nextH = HOLIDAYS.find((x) => x.name === 'Thanksgiving' && x.day > NOW_DAY);
+  return { h, base, onset, rec, low, next: nextH, nextIn: nextH ? Math.round(nextH.day - NOW_DAY) : null };
+})();
+INS.pair = CORR[0];
+INS.tasks = (() => { const w = windowStats(N0 - 90, N0), ts = TASKS.map((t, i) => ({ t, r: w.tasks[i].rate, p: w.tasks[i].p })).filter((x) => x.p >= 4); ts.sort((a, b) => a.r - b.r); return { worst: ts.slice(0, 3), best: ts.filter((x) => x.t.f >= 12).slice(-2).reverse() }; })();
+INS.fcast = (() => { const d = INS.hol.next ? INS.hol.next.day : NOW_DAY + 30; const v = mean(ROWSETS.rooms.map((r) => sampleRowAt(r, d - 3, 2.2).v)); return { day: d, v }; })();
+
+// -- choreography helpers
+const dayWin = (a, b) => ({ a, b });
+function stepsFor(id) {
+  const D0 = NOW_DAY, I = INS;
+  if (id === 'fri') return [
+    { cap: 'Three rhythms, one week. Mon–Tue and Wed–Thu hold steady…', win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [1, 1, 1], band: [D0 - 7 * 78 + 7 * 2, D0 - 7 * 78 + 7 * 28, 'Earlier'], },
+    { cap: `…but Fri–Sat has slid ${Math.abs(Math.round(I.fri.change * 100))}% — from ${pct(I.fri.r1)}% to ${pct(I.fri.r2)}%.`, win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], band: [D0 - 7 * 26, D0, 'Last 2 cycles'], callouts: [{ day: D0 - 7 * 8, row: 2, side: -1, color: 'ember', text: `Fri–Sat ${pct(I.fri.r2)}%`, sub: `was ${pct(I.fri.r1)}% two years ago` }] },
+    { cap: `Rooms break it down: ${I.fri.top.map((d) => d.name).join(' and ')} account for most of the loss.`, win: [D0 - 7 * 40, D0 + 14], rows: 'rooms', emph: ROOMS.map((r, i) => (I.fri.top.some((d) => d.i === i) ? 1 : 0.18)), band: [D0 - 7 * 26, D0, 'Fri–Sat only'], callouts: I.fri.top.map((d, k) => ({ day: D0 - 7 * (10 + k * 5), row: d.i, side: k ? 1 : -1, color: 'ember', text: d.name, sub: `−${Math.round(d.drop * 100)} pts on Fri–Sat` })) },
+    { cap: `Weeks with a Thursday planning session finish Fri–Sat at ${pct(I.plan.yes)}%. Without: ${pct(I.plan.no)}%.`, win: [D0 - 7 * 52, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], plan: 1, band: [D0 - 7 * 52, D0, 'Planning marks, below'], links: planLinks(), },
+    { cap: 'So the next move is small: protect Thursday afternoon. Forecast shows the effect.', win: [D0 - 7 * 26, D0 + 56], rows: 'pairs', emph: [0.4, 0.4, 1], plan: 1, fc: 1, band: [D0, D0 + 56, 'Next 8 weeks'] },
+  ];
+  if (id === 'hol') return [
+    { cap: `${I.hol.h.name}. Look at the ground in the weeks around it.`, win: [I.hol.h.day - 56, I.hol.h.day + 42], rows: 'rooms', emph: ROOMS.map(() => 1), band: [I.hol.h.day - 56, I.hol.h.day + 42, 'The season'] },
+    { cap: `Household routines start slipping ${Math.abs(I.hol.onset)} days before — down to ${pct(I.hol.low)}% from a ${pct(I.hol.base)}% norm.`, win: [I.hol.h.day - 42, I.hol.h.day + 28], rows: 'rooms', emph: ROOMS.map(() => 1), band: [I.hol.h.day + I.hol.onset, I.hol.h.day, 'Slipping'], callouts: [{ day: I.hol.h.day + I.hol.onset, fy: 0.25, side: -1, color: 'ember', text: `Onset −${Math.abs(I.hol.onset)}d`, sub: 'first rooms to dip' }] },
+    { cap: `Recovery takes about ${I.hol.rec} days after. Same pattern repeated at Christmas.`, win: [I.hol.h.day - 28, I.hol.h.day + 42], rows: 'rooms', emph: ROOMS.map(() => 1), band: [I.hol.h.day, I.hol.h.day + I.hol.rec, 'Recovering'], callouts: [{ day: I.hol.h.day + I.hol.rec, fy: 0.3, side: 1, color: 'amber', text: `Back by +${I.hol.rec}d` }] },
+    { cap: `Next one is ${I.hol.nextIn} days out — the forecast already shows it. A lighter card that week would hold the line.`, win: [NOW_DAY - 21, NOW_DAY + 56], rows: 'rooms', emph: ROOMS.map(() => 1), fc: 1, band: [I.hol.next.day - 9, I.hol.next.day + 6, 'Expected dip'] },
+  ];
+  if (id === 'pair') return [
+    { cap: `${ROOMS[I.pair.a].name} and ${ROOMS[I.pair.b].name} rise and fall together.`, mode: 1, win: [D0 - 7 * 70, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1) }] },
+    { cap: 'When one is done, the other usually is. Plan them as a single block.', mode: 1, win: [D0 - 7 * 26, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1), dash: true }], focus: -1 },
+  ];
+  if (id === 'tasks') return [
+    { cap: 'Every task, orbiting its room. Hollow bodies are what keeps getting missed.', mode: 1, win: [D0 - 91, D0], emph: ROOMS.map(() => 1) },
+    ...I.tasks.worst.slice(0, 1).map((x) => ({ cap: `“${x.t.name}” — done ${pct(x.r)}% of the time this quarter.`, mode: 1, win: [D0 - 91, D0], emph: ROOMS.map((r, i) => (i === x.t.ri ? 1 : 0.22)), focus: x.t.ri })),
+  ];
+  return [];
+}
+function planLinks() {
+  const w1 = [], w0 = []; for (let w = WEEKS - 40; w < WEEKS - 1; w++) (PLANNED[w] ? w1 : w0).push(w);
+  const pick = (arr, k) => arr.filter((w, i) => i % Math.ceil(arr.length / k) === 0).slice(0, k);
+  return pick(w1, 3).map((w) => ({ a: { day: w * 7 + 3.5, row: 'plan' }, b: { day: w * 7 + 5, row: 2 } }));
+}
+const INSIGHTS = [
+  { id: 'fri', tag: 'Pattern', title: `Friday–Saturday is slipping`, short: 'Fri–Sat completion', body: `Mon–Tue and Wed–Thu hold; Fri–Sat has lost ${Math.abs(Math.round(INS.fri.change * 100))}% over two years — mostly ${INS.fri.top.map((d) => d.name.toLowerCase()).join(' and ')}.`, conf: 0.86, hue: 'ember', get steps() { return stepsFor('fri'); } },
+  { id: 'hol', tag: 'Seasonal', title: `Routines dip ${Math.abs(INS.hol.onset)} days before Thanksgiving`, short: 'Holiday dip', body: `Every year, household routines slip ${Math.abs(INS.hol.onset)} days ahead and return ${INS.hol.rec} days after. The next one is ${INS.hol.nextIn} days away.`, conf: 0.9, hue: 'copper', get steps() { return stepsFor('hol'); } },
+  { id: 'plan', tag: 'Cause', title: 'Thursday planning protects the weekend', short: 'Planning effect', body: `Fri–Sat finishes at ${pct(INS.plan.yes)}% after a planning session, ${pct(INS.plan.no)}% without one.`, conf: 0.78, hue: 'verd', get steps() { return stepsFor('fri').slice(3).concat([]); } },
+  { id: 'pair', tag: 'Link', title: `${ROOMS[INS.pair.a].name} & ${ROOMS[INS.pair.b].name} move together`, short: 'Coupled rooms', body: `Their weekly completion rises and falls in step (r = ${INS.pair.r.toFixed(2)}). Two tasks, one habit.`, conf: 0.7, hue: 'verd', get steps() { return stepsFor('pair'); } },
+  { id: 'tasks', tag: 'Friction', title: `“${INS.tasks.worst[0].t.name}” keeps getting missed`, short: 'Stubborn task', body: `${pct(INS.tasks.worst[0].r)}% this quarter — the one routine that resists you most.`, conf: 0.8, hue: 'ember', get steps() { return stepsFor('tasks'); } },
+];
+
+// ---- apply a step to a view state: the picture reforms; nothing jumps
+const clearOld = (st) => { st.links.forEach((l) => l.p.to(0)); st.callouts.forEach((c) => c.a.to(0)); st.cLinks.forEach((l) => l.p.to(0)); st.marks.forEach((m) => m.a && m.a.to(0)); };
+function applyStep(st, s) {
+  clearOld(st);
+  if (s.win) { st.t0.to(s.win[0]); st.t1.to(s.win[1]); }
+  if (s.rows && s.rows !== st.rowsKind) { st.rowsKind = s.rows; }
+  st.mode.to(s.mode || 0); st.plan.to(s.plan || 0); st.fc.to(s.fc ?? 0.55);
+  const em = s.emph || ROOMS.map(() => 1); em.forEach((v, i) => { st.rowA[i] && st.rowA[i].to(v); st.cEmph[i] && st.cEmph[i].to(v); });
+  for (let i = em.length; i < 8; i++) { st.rowA[i].to(s.rows === 'pairs' ? 0 : 1); }
+  if (s.band) { st.band.a.to(s.band[0]); st.band.b.to(s.band[1]); st.band.s.to(1); st.band.label = s.band[2] || ''; } else st.band.s.to(0);
+  (s.links || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.links.push(o); });
+  (s.callouts || []).forEach((c) => { const o = { ...c, a: new Tw(0, 3) }; o.a.to(1); st.callouts.push(o); });
+  (s.cLinks || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.cLinks.push(o); });
+  st.marks = []; st.clusterFocus = s.focus ?? -1; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0);
+}
+function resetView(st) { applyStep(st, { win: [NOW_DAY - 7 * 52, NOW_DAY + 7 * 6], rows: st.rowsKind, emph: ROOMS.map(() => 1), mode: st.mode.t }); st.band.s.to(0); }
+const prune = (st) => { st.links = st.links.filter((l) => l.p.t > 0 || l.p.v > 0.02); st.callouts = st.callouts.filter((c) => c.a.t > 0 || c.a.v > 0.02); st.cLinks = st.cLinks.filter((l) => l.p.t > 0 || l.p.v > 0.02); };
+
+// ---- Ask: answers are composed from the same computed facts the picture uses
+function answerFor(q) {
+  q = q.toLowerCase(); const m = (...w) => w.some((x) => q.includes(x));
+  if (m('friday', 'fri', 'weekend', 'saturday')) return { id: 'fri', text: `Fri–Sat is the weak spot: ${pct(INS.fri.r2)}% now against ${pct(INS.fri.r1)}% two years ago, while Mon–Thu is only ${Math.abs(INS.fri.others * 100).toFixed(0)} pts ${INS.fri.others < 0 ? 'lower' : 'higher'}. ${INS.fri.top.map((d) => d.name).join(' and ')} carry most of it.` };
+  if (m('thanks', 'holiday', 'christmas', 'season', 'november')) return { id: 'hol', text: `Holidays pull you under for about ${Math.abs(INS.hol.onset) + INS.hol.rec} days. Thanksgiving: down from ${pct(INS.hol.base)}% to ${pct(INS.hol.low)}%, starting ${Math.abs(INS.hol.onset)} days ahead. The next is ${INS.hol.nextIn} days away.` };
+  if (m('plan', 'thursday', 'why', 'cause')) return { id: 'plan', text: `Thursday planning is the lever: Fri–Sat lands at ${pct(INS.plan.yes)}% when you plan, ${pct(INS.plan.no)}% when you don’t.` };
+  if (m('miss', 'skip', 'hard', 'worst', 'task')) return { id: 'tasks', text: `Most missed this quarter: ${INS.tasks.worst.map((x) => `${x.t.name} (${pct(x.r)}%)`).join(', ')}.` };
+  if (m('laundry', 'bed', 'together', 'link', 'connect', 'correl')) return { id: 'pair', text: `${ROOMS[INS.pair.a].name} and ${ROOMS[INS.pair.b].name} move together (r = ${INS.pair.r.toFixed(2)}) — a good pairing to batch.` };
+  return { id: 'fri', text: `Overall ${pct(HEAD.completion)}% over the last four weeks, health ${HEAD.health}. The single biggest thing to look at: Fri–Sat completion.` };
+}
+
+// ================================================================ DESKTOP: render loop, interaction, instruments
+buildForecast();
+const $ = (s, r = document) => r.querySelector(s);
+const DW = 1440, DH = 900, TR = { x: 150, y: 196, w: 926, h: 552 };
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+function fit(cv, w, h) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); return g; }
+const D = { st: makeState('desk'), cv: $('#dc'), mmRect: null };
+D.g = fit(D.cv, DW, DH);
+const coreCv = $('#core'), coreG = fit(coreCv, 118, 118);
+D.mmCv = $('#mm'); D.mmG = null;
+
+function drawCore(g, t, size = 118) {
+  const k = size / 118; g.save(); g.scale(k, k); g.clearRect(0, 0, 118, 118); const cx = 59, cy = 59, vals = [HEAD.completion, HEAD.consistency, clamp(0.5 + HEAD.momentum / 8, 0, 1)], R = [50, 40, 30], cols = [INK.amber, INK.copper, INK.verd];
+  g.lineCap = 'round';
+  vals.forEach((v, i) => { g.lineWidth = 2; g.strokeStyle = rgba(INK.ivory, 0.08); g.beginPath(); g.arc(cx, cy, R[i], 0, 6.283); g.stroke(); const a0 = -1.5708 + t * (0.05 + i * 0.03) * (i % 2 ? -1 : 1), len = v * 6.283 * Math.min(1, t / 1.2 + 0.001); g.lineWidth = 2.6; g.strokeStyle = rgba(cols[i], 0.95); g.shadowColor = rgba(cols[i], 0.8); g.shadowBlur = 8; g.beginPath(); g.arc(cx, cy, R[i], -1.5708, -1.5708 + len); g.stroke(); g.shadowBlur = 0; const ex = cx + Math.cos(-1.5708 + len) * R[i], ey = cy + Math.sin(-1.5708 + len) * R[i]; g.fillStyle = rgba(GLINT, 1); g.beginPath(); g.arc(ex, ey, 2, 0, 6.283); g.fill(); });
+  const pulse = 1 + 0.04 * Math.sin(t * 1.6); g.font = `300 30px ${FONT.disp}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = rgba(INK.ivory, 1); g.fillText(String(HEAD.health), cx, cy - 1);
+  g.font = `500 7.5px ${FONT.mono}`; g.letterSpacing = '1.5px'; g.fillStyle = rgba(INK.muted, 1); g.fillText('SYSTEM', cx, cy + 16); g.letterSpacing = '0px';
+  const gl = g.createRadialGradient(cx, cy, 4, cx, cy, 24 * pulse); gl.addColorStop(0, rgba(INK.amber, 0.18)); gl.addColorStop(1, rgba(INK.amber, 0)); g.fillStyle = gl; g.beginPath(); g.arc(cx, cy, 24 * pulse, 0, 6.283); g.fill(); g.restore();
+}
+function spark(cv, series, color, mark) { const g = fit(cv, cv.clientWidth || 140, 26), w = cv.clientWidth || 140, vs = series.filter((v) => v != null); if (vs.length < 2) return; const lo = Math.min(...vs), hi = Math.max(...vs), r = hi - lo || 1; g.strokeStyle = rgba(color, 0.95); g.lineWidth = 1.3; g.beginPath(); vs.forEach((v, i) => { const x = (i / (vs.length - 1)) * (w - 4) + 2, y = 22 - ((v - lo) / r) * 18; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); const lv = vs[vs.length - 1]; g.fillStyle = rgba(GLINT, 1); g.beginPath(); g.arc(w - 2, 22 - ((lv - lo) / r) * 18, 2.2, 0, 6.283); g.fill(); }
+function fillReadouts() {
+  const sp = HEAD.spark, set = (id, val, d, cls, series, col) => { const el = $(id); el.querySelector('.v span').textContent = val; const dd = el.querySelector('.d'); dd.textContent = d; dd.className = 'd ' + cls; spark(el.querySelector('canvas'), series, col); };
+  set('#roC', Math.round(HEAD.completion * 100), 'last 4 weeks', '', sp.completion, INK.amber);
+  set('#roK', Math.round(HEAD.consistency * 100), 'steadiness, 12 wks', '', sp.consistency, INK.copper);
+  set('#roM', (HEAD.momentum > 0 ? '+' : '') + HEAD.momentum.toFixed(1), HEAD.momentum >= 0 ? '▲ climbing' : '▼ slipping', HEAD.momentum >= 0 ? 'up' : 'dn', sp.momentum || sp.completion, INK.verd);
+  set('#roF', Math.round(HEAD.friction * 100), 'how hard tasks resist', '', sp.friction || sp.completion, INK.ember);
+  set('#roS', HEAD.streak, 'best ' + HEAD.best, '', sp.streak || sp.completion, INK.gold || INK.amber);
+}
+
+// ---- frame
+let last = performance.now(); CLK.t = 0;
+function scene(g, st, rect, alphaMode) {
+  const m = st.mode.v;
+  g.fillStyle = INK.obsidian; g.fillRect(0, 0, DW, DH); drawAtmos(g, DW, DH, CLK.t, 1);
+  if (m < 0.98) { drawTerrain(g, st, rect, { alpha: 1 - m }); drawTerrainOverlay(g, st, rect, { alpha: 1 - m }); }
+  if (m > 0.02) drawConst(g, st, rect, { alpha: m });
+}
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; CLK.dt = dt; CLK.t += dt; const st = D.st; stepState(st, dt);
+  const mob = document.documentElement.classList.contains('mobile'); if (!mob) scene(D.g, st, TR);
+  drawCore(coreG, CLK.t); if (typeof drawMobile === 'function') drawMobile(); prune(st); if ((crumbT += dt) > 0.25) { crumbT = 0; renderCrumbs2(); }
+  if (D.mmG) { D.mmG.clearRect(0, 0, 700, 46); drawMinimap(D.mmG, st, { x: 0, y: 0, w: 700, h: 46 }); }
+  requestAnimationFrame(frame);
+}
+fillReadouts();
+requestAnimationFrame(frame);
+// ---- stage: desktop and phone are logical sizes, scaled to fit whatever the window is
+let layoutStage = function () {
+  const vw = innerWidth, vh = innerHeight, both = vw >= 1100, gap = 44, pw = 390 + 20, ph = 844 + 20, totalW = DW + (both ? gap + pw : 0), totalH = Math.max(DH, ph);
+  const s = Math.min(1, (vw - 40) / totalW, (vh - 32) / totalH);
+  document.documentElement.classList.toggle('mobile', !both);
+  const db = $('#deskBox'), pb = $('#phoneBox');
+  db.style.width = DW * s + 'px'; db.style.height = DH * s + 'px'; $('#desk').style.transform = `scale(${s})`;
+  pb.style.width = (390 * s) + 'px'; pb.style.height = (844 * s) + 'px'; $('#phone').style.transform = `scale(${s})`; pb.style.margin = `0 ${10 * s}px`;
+  D.scale = s; D.rect = null;
+};
+addEventListener('resize', () => layoutStage()); layoutStage();
+
+// ================================================================ interaction + intelligence panel
+window.__O = { INS, INSIGHTS, D, HEAD };
+const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+const HUEC = { ember: INK.ember, copper: INK.copper, verd: INK.verd, amber: INK.amber };
+const stp = { cur: null, i: 0, timer: null, tour: false };
+const st = D.st;
+
+// -- crumbs & zoom ladder
+const LEVELS = [['Life', 1092], ['Year', 365], ['Season', 120], ['Month', 40], ['Week', 14], ['Day', 5]];
+function zoomTo(span, centre) { const c = centre ?? (st.t0.t + st.t1.t) / 2, lo = 0, hi = WEEKS * 7 + FC_WEEKS * 7; let a = c - span / 2, b = c + span / 2; if (a < lo) { b += lo - a; a = lo; } if (b > hi) { a -= b - hi; b = hi; } st.t0.to(Math.max(lo, a)); st.t1.to(Math.min(hi, b)); }
+function renderCrumbs() {
+  const lv = levelOf(st), cr = $('#crumbs'); const idx = LEVELS.findIndex((l) => l[0] === lv); cr.innerHTML = '';
+  LEVELS.forEach((l, i) => { if (i > idx) return; if (i) cr.appendChild(el('i', '', '/')); const b = el('button', i === idx ? 'on' : '', l[0]); b.onclick = () => { stopStory(); zoomTo(l[1] * (l[0] === 'Life' ? 1 : 1), l[0] === 'Life' ? (WEEKS * 7 + FC_WEEKS * 7) / 2 : null); }; cr.appendChild(b); });
+  const sc = $('#scale'); if (!sc.children.length) LEVELS.forEach((l) => { const b = el('button', '', l[0]); b.dataset.l = l[0]; b.onclick = () => { stopStory(); zoomTo(l[1], l[0] === 'Life' ? (WEEKS * 7 + FC_WEEKS * 7) / 2 : l[0] === 'Year' ? NOW_DAY - 100 : NOW_DAY - l[1] / 2.4); }; sc.appendChild(b); });
+  [...sc.children].forEach((b) => b.classList.toggle('on', b.dataset.l === lv));
+}
+// -- toggles
+const swR = $('#swRows'), swM = $('#swMode');
+swR.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...swR.children].forEach((x) => x.classList.toggle('on', x === b)); st.rowsKind = b.dataset.r; st.rowA.forEach((t, i) => t.to(st.rowsKind === 'pairs' && i > 2 ? 0 : 1, true)); };
+swM.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; stopStory(); setMode(+b.dataset.m); };
+function setMode(m) { [...swM.children].forEach((x) => x.classList.toggle('on', +x.dataset.m === m)); st.mode.to(m); if (!m) { st.clusterFocus = -1; st.zoomC.to(0); } }
+const tg = (id, key, onv = 1, offv = 0) => { const b = $(id); b.onclick = () => { b.classList.toggle('on'); st[key].to(b.classList.contains('on') ? onv : offv); }; };
+tg('#tgPlan', 'plan'); tg('#tgCmp', 'compare'); { const b = $('#tgFc'); b.onclick = () => { b.classList.toggle('on'); st.fc.to(b.classList.contains('on') ? 0.55 : 0); }; }
+
+// -- legend: each glyph is drawn with the same marks the picture uses
+const LEG = [
+  ['height', 'Height · completion', (g) => { g.strokeStyle = rgba(INK.amber, 0.95); g.beginPath(); g.moveTo(1, 12); g.quadraticCurveTo(7, -3, 13, 9); g.quadraticCurveTo(19, 3, 25, 11); g.stroke(); }],
+  ['hue', 'Colour · momentum', (g) => { const gr = g.createLinearGradient(0, 0, 26, 0); RAMP.forEach((r, i) => gr.addColorStop(i / 3, rgba(r[1]))); g.fillStyle = gr; g.fillRect(1, 5, 24, 3); }],
+  ['frag', 'Broken · unstable', (g) => { g.strokeStyle = rgba(INK.copper, 0.95); g.setLineDash([3, 2]); g.beginPath(); g.moveTo(1, 7); g.lineTo(25, 7); g.stroke(); g.setLineDash([]); }],
+  ['links', 'Teal · AI, forecast', (g) => { g.strokeStyle = rgba(INK.verd, 0.95); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(1, 11); g.quadraticCurveTo(13, -4, 25, 11); g.stroke(); g.setLineDash([]); }],
+  ['ring', 'Pulse · open now', (g) => { g.strokeStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(13, 7, 5, 0, 6.283); g.stroke(); g.fillStyle = rgba(INK.ember, 1); g.beginPath(); g.arc(13, 7, 2, 0, 6.283); g.fill(); }],
+];
+(() => { const ul = $('#legend'); LEG.forEach(([k, t, f]) => { const li = el('li'), c = el('canvas'); c.width = 52; c.height = 28; const g = c.getContext('2d'); g.scale(2, 2); g.lineWidth = 1.3; f(g); li.appendChild(c); li.appendChild(el('span', '', t)); ul.appendChild(li); }); })();
+
+// -- minimap scrub
+D.mmG = fit(D.mmCv, 700, 46); { const r = D.mmCv.getBoundingClientRect(); }
+let mmDrag = false;
+const mmDay = (e) => { const r = D.mmCv.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1) * (WEEKS * 7 + FC_WEEKS * 7); };
+D.mmCv.addEventListener('pointerdown', (e) => { stopStory(); mmDrag = true; D.mmCv.setPointerCapture(e.pointerId); zoomTo(st.t1.t - st.t0.t, mmDay(e)); });
+D.mmCv.addEventListener('pointermove', (e) => { if (mmDrag) zoomTo(st.t1.t - st.t0.t, mmDay(e)); });
+D.mmCv.addEventListener('pointerup', () => (mmDrag = false));
+
+// -- canvas gestures: wheel = zoom at cursor, drag = pan, move = scan line, click = focus
+const pos = (e) => { const r = D.cv.getBoundingClientRect(), s = D.scale || 1; return { x: (e.clientX - r.left) / s, y: (e.clientY - r.top) / s }; };
+let drag = null;
+D.cv.addEventListener('wheel', (e) => { e.preventDefault(); if (st.mode.t > 0.5) return; stopStory(); const p = pos(e), geo = st._geo; if (!geo) return; const d = geo.dayOf(p.x), k = Math.exp(e.deltaY * 0.0014), span = clamp((st.t1.t - st.t0.t) * k, 4, WEEKS * 7 + FC_WEEKS * 7), f = (p.x - TR.x) / TR.w; let a = d - span * f, b = a + span; const hi = WEEKS * 7 + FC_WEEKS * 7; if (a < 0) { b -= a; a = 0; } if (b > hi) { a -= b - hi; b = hi; } st.t0.to(Math.max(0, a)); st.t1.to(b); }, { passive: false });
+D.cv.addEventListener('pointerdown', (e) => { const p = pos(e); drag = { x: p.x, t0: st.t0.t, t1: st.t1.t, moved: false }; D.cv.setPointerCapture(e.pointerId); });
+D.cv.addEventListener('pointermove', (e) => {
+  const p = pos(e); st.hover = p;
+  if (drag && st.mode.t < 0.5) { const dx = p.x - drag.x; if (Math.abs(dx) > 3) { drag.moved = true; stopStory(); } if (drag.moved) { const dd = -(dx / TR.w) * (drag.t1 - drag.t0), hi = WEEKS * 7 + FC_WEEKS * 7, a = clamp(drag.t0 + dd, 0, hi - (drag.t1 - drag.t0)); st.t0.to(a, true); st.t1.to(a + drag.t1 - drag.t0, true); } }
+  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); st.hoverTask = h && h.kind === 'task' ? h.id : null; D.cv.style.cursor = h ? 'pointer' : 'default'; showTip(h, p); } else { D.cv.style.cursor = drag && drag.moved ? 'grabbing' : 'crosshair'; hideTip(); }
+});
+D.cv.addEventListener('pointerleave', () => { st.hover = null; st.hoverTask = null; hideTip(); });
+D.cv.addEventListener('pointerup', (e) => {
+  const p = pos(e), moved = drag && drag.moved; drag = null; if (moved) return;
+  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); if (h && h.kind === 'cluster') { st.clusterFocus = st.clusterFocus === h.i ? -1 : h.i; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0); st.cEmph.forEach((t, i) => t.to(st.clusterFocus < 0 || i === st.clusterFocus ? 1 : 0.35)); } else if (!h) { st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); }
+    else if (h && h.kind === 'task') st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.8 }); }
+  else if (st.hoverRow >= 0) { st.focusRoom = st.focusRoom === st.hoverRow ? -1 : st.hoverRow; st.rowA.forEach((t, i) => t.to(st.focusRoom < 0 || i === st.focusRoom ? 1 : 0.28)); }
+});
+const tip = $('#tip');
+function showTip(h, p) {
+  if (!h) return hideTip(); let html;
+  if (h.kind === 'task') { const t = TASKS[h.id], nv = st._nv && st._nv[h.id]; html = `<b>${t.name}</b><span class="s">${ROOMS[t.ri].name} · ${t.f}× per cycle</span><div class="r"><span>Done</span><span>${nv ? pct(nv.rate.v) : '–'}%</span></div><div class="r"><span>Effort</span><span>${'●'.repeat(t.effort)}${'○'.repeat(3 - t.effort)}</span></div>`; }
+  else { const ro = st._ro && st._ro[h.i]; html = `<b>${ROOMS[h.i].name}</b><span class="s">${CONST[h.i].tasks.length} routines</span><div class="r"><span>Completion</span><span>${ro ? pct(ro.rate.v) : '–'}%</span></div><div class="r"><span>Order</span><span>${ro ? pct(ro.order.v) : '–'}</span></div><div class="r"><span>Click</span><span>zoom in</span></div>`; }
+  tip.innerHTML = html; tip.style.left = Math.min(p.x + 16, DW - 600) + 'px'; tip.style.top = Math.max(60, p.y - 20) + 'px'; tip.classList.add('on');
+}
+const hideTip = () => tip.classList.remove('on');
+
+// -- intelligence panel
+function ring(cv, v, col) { const g = fit(cv, 34, 22); g.lineWidth = 2; g.strokeStyle = rgba(INK.ivory, 0.1); g.beginPath(); g.arc(11, 11, 8, 0, 6.283); g.stroke(); g.strokeStyle = rgba(col, 0.95); g.lineCap = 'round'; g.beginPath(); g.arc(11, 11, 8, -1.5708, -1.5708 + v * 6.283); g.stroke(); g.fillStyle = rgba(col, 1); g.beginPath(); g.arc(11, 11, 1.8, 0, 6.283); g.fill(); }
+let focusIns = INSIGHTS[0];
+function renderIntel() {
+  $('#sigN').textContent = INSIGHTS.length + ' observed';
+  const fb = $('#focusBox'); fb.innerHTML = ''; const f = focusIns;
+  fb.appendChild(el('div', 'focus', `<h3>${f.title}</h3><p>${f.body}</p>`));
+  const row = el('div', '', ''); row.style.cssText = 'display:flex;gap:8px;align-items:center'; const b = el('button', 'btn v', 'Show me why <span>→</span>'); b.onclick = () => playInsight(f); row.appendChild(b);
+  const cf = el('span', 'num', `${pct(f.conf)}% confidence`); cf.style.cssText = 'color:var(--muted);font-size:10.5px;margin-left:auto'; row.appendChild(cf); fb.appendChild(row);
+  const ul = $('#sigList'); ul.innerHTML = '';
+  INSIGHTS.forEach((s) => { if (s === f) return; const li = el('li'); const c = el('canvas'); li.appendChild(c); const d = el('div', '', `<div class="t">${s.short}</div><div class="m">${s.tag}</div>`); li.appendChild(d); li.appendChild(el('span', 'num', pct(s.conf))); li.lastChild.style.cssText = 'font-size:10.5px;color:var(--muted)'; li.onclick = () => { stopStory(); focusIns = s; renderIntel(); playInsight(s); }; ul.appendChild(li); ring(c, s.conf, HUEC[s.hue]); });
+}
+function renderSteps() {
+  const ol = $('#steps'); ol.innerHTML = ''; $('#intel').classList.toggle('playing', !!stp.cur); if (!stp.cur) { ol.hidden = true; $('#sigList').hidden = false; return; }
+  ol.hidden = false; $('#sigList').hidden = true; const prog = el('div', 'prog', '<i></i>'); ol.appendChild(prog);
+  stp.cur.steps.forEach((s, i) => { const li = el('li', i === stp.i ? 'on' : i < stp.i ? 'done' : '', `<span class="n">${String(i + 1).padStart(2, '0')}</span><span class="c">${s.cap}</span>`); li.onclick = () => { clearTimeout(stp.timer); goStep(i); }; ol.appendChild(li); });
+  $('#steps .prog i').style.width = ((stp.i + 1) / stp.cur.steps.length) * 100 + '%';
+}
+function playInsight(ins) { clearTimeout(stp.timer); stp.cur = ins; focusIns = ins; stp.tour = false; setModeSilent(); renderIntel(); goStep(0); }
+const setModeSilent = () => {};
+function goStep(i) {
+  const steps = stp.cur.steps; if (i >= steps.length) { stp.timer = setTimeout(stopStory, 6000); return; } stp.i = i; const s = steps[i];
+  setMode(s.mode || 0); if (s.rows) { [...swR.children].forEach((x) => x.classList.toggle('on', x.dataset.r === s.rows)); } applyStep(st, s);
+  $('#tgPlan').classList.toggle('on', !!s.plan); $('#tgFc').classList.toggle('on', (s.fc ?? 0.55) > 0);
+  const cap = $('#cap'); cap.style.opacity = 0; setTimeout(() => { cap.textContent = s.cap; cap.style.opacity = 1; }, 250);
+  renderSteps(); $('#tourBtn').textContent = '■ Stop'; stp.timer = setTimeout(() => goStep(i + 1), 6800);
+}
+function stopStory() { clearTimeout(stp.timer); if (!stp.cur && !stp.tour) return; stp.cur = null; stp.tour = false; $('#cap').style.opacity = 0; $('#tourBtn').textContent = '▶ Watch the story'; resetView(st); st.rowA.forEach((t, i) => t.to(st.rowsKind === 'pairs' && i > 2 ? 0 : 1)); st.focusRoom = -1; renderSteps(); }
+$('#cap').style.transition = 'opacity .5s';
+
+// -- the guided tour: Life → year → … → task, then the AI's first observation
+function tour() {
+  if (stp.cur || stp.tour) { stopStory(); return; } stp.tour = true; setMode(0); $('#tourBtn').textContent = '■ Stop';
+  const seq = [
+    [() => zoomTo(1092 + 56, (WEEKS * 7 + FC_WEEKS * 7) / 2), 'Life. Three years, every routine, as terrain: height is completion.', 5200],
+    [() => zoomTo(365, NOW_DAY - 150), 'A year. Seasons tint the ground. Holidays stand as landmarks.', 5200],
+    [() => { zoomTo(120, HOLIDAYS.find((h) => h.name === 'Thanksgiving' && h.day < NOW_DAY).day); }, 'A season. Around Thanksgiving, the whole household sags.', 5200],
+    [() => zoomTo(40, NOW_DAY - 14), 'A month. Each ripple is a day; broken lines are routines in doubt.', 4800],
+    [() => zoomTo(14, NOW_DAY - 4), 'A week. Three two-day cards; the pulse marks today.', 4800],
+    [() => { zoomTo(1092 + 56, (WEEKS * 7 + FC_WEEKS * 7) / 2); setMode(1); st.cEmph.forEach((t) => t.to(1)); }, 'Or as a system: rooms are orbits, tasks are bodies, order is how steady they hold.', 5600],
+    [() => { st.clusterFocus = 0; st.zoomC.to(1); st.cEmph.forEach((t, i) => t.to(i === 0 ? 1 : 0.35)); }, 'Down to a single room, then a single task.', 4800],
+    [() => { stp.tour = false; st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); setMode(0); playInsight(INSIGHTS[0]); }, '', 0],
+  ];
+  let i = 0; const next = () => { if (!stp.tour) return; const [fn, cap, ms] = seq[i++]; fn(); const c = $('#cap'); c.style.opacity = 0; setTimeout(() => { c.textContent = cap; c.style.opacity = cap ? 1 : 0; }, 250); if (ms) stp.timer = setTimeout(next, ms); }; next();
+}
+$('#tourBtn').onclick = tour;
+
+// -- needs attention: today's open items; completing one sends a physical ripple through the picture
+const ATT = CURRENT.tasks.filter((x) => x.open).map((x) => ({ t: x.t, done: false }));
+function renderAttn() {
+  const ul = $('#attn'); ul.innerHTML = ''; $('#attnCount').textContent = ATT.filter((a) => !a.done).length + ' open · card ' + String((NOW_CARD % 39) + 1).padStart(2, '0') + '/39';
+  ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''); const c = el('canvas'); const g = fit(c, 20, 20); g.lineWidth = 1.4; g.strokeStyle = rgba(a.done ? INK.amber : INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 6, 0, 6.283); g.stroke(); if (a.done) { g.beginPath(); g.moveTo(6.5, 10); g.lineTo(9, 12.5); g.lineTo(13.5, 7); g.stroke(); } else { g.fillStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 2, 0, 6.283); g.fill(); }
+    li.appendChild(c); li.appendChild(el('span', 't', a.t.name)); li.appendChild(el('span', 'r', ROOMS[a.t.ri].name)); li.onclick = () => completeTask(a); ul.appendChild(li); });
+  if (typeof renderMobAttn === 'function') renderMobAttn();
+}
+function completeTask(a) {
+  a.done = !a.done; renderAttn(); if (!a.done) return;
+  if (st.mode.t > 0.5) { const n = (st._nodes || []).find((n) => n.id === a.t.id); const cl = (st._cl || []).find((c) => c.i === a.t.ri); const o = n || cl; if (o) st.ripples.push({ x: o.x, y: o.y, t0: CLK.t, s: 1 }); }
+  else { const x = TR.x + TR.w * 0.78, y = (st._geo ? st._geo.base(a.t.ri) : TR.y + 300); st.ripples.push({ x: 0, y: 0, t0: -9, s: 0 }); st.pulseAt = { t0: CLK.t, x, y }; }
+}
+// -- ask
+const askIn = $('#ask'), ans = $('#answer');
+function ask(q) {
+  if (!q.trim()) return; stopStory(); ans.innerHTML = '<span class="lead">Reading your data</span><div class="shim" style="width:92%"></div><div class="shim" style="width:70%"></div>';
+  setTimeout(() => { const a = answerFor(q); ans.innerHTML = `<span class="lead">${INSIGHTS.find((i) => i.id === a.id)?.tag || 'Answer'} · on screen now</span>${a.text}`; const ins = INSIGHTS.find((i) => i.id === a.id); if (ins) { focusIns = ins; renderIntel(); playInsight(ins); } }, 900);
+}
+askIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { ask(askIn.value); } });
+addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); askIn.focus(); } if (e.key === 'Escape') stopStory(); });
+['Why is Friday dropping?', 'What happens at holidays?', 'What’s linked?', 'What do I keep missing?'].forEach((q) => { const b = el('button', '', q); b.onclick = () => { askIn.value = q; ask(q); }; $('#askChips').appendChild(b); });
+renderIntel(); renderAttn(); renderCrumbs(); resetView(st);
+let crumbT = 0; const _frame = frame;
+
+let lastLv = ''; function renderCrumbs2() { const lv = levelOf(st); if (lv !== lastLv) { lastLv = lv; renderCrumbs(); } }
+
+// ================================================================ MOBILE: a focused portal onto the same living system
+const P = { st: makeState('phone'), ss: makeState('sheet'), W: 390, HH: 250, span: 7 * 12, open: null, stepI: 0, timer: null };
+const ph = $('#phone');
+ph.innerHTML = `
+<div class="sb"><span>9:41</span><span>●●● ▮</span></div><div class="island"></div>
+<div class="m-head"><div class="mark"><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1"><circle cx="11" cy="11" r="9.5" opacity=".35"/><ellipse cx="11" cy="11" rx="9.5" ry="3.8" transform="rotate(-24 11 11)" opacity=".8"/><circle cx="11" cy="11" r="2" fill="#e3a24a" stroke="none"/></svg>Orrery</div><div class="when" id="mWhen"></div><canvas id="mCore"></canvas></div>
+<div class="m-say"><h2 id="mSay"></h2><p id="mSub"></p></div>
+<div class="m-hero" id="mHero"><canvas id="mHeroC"></canvas><span class="hint">Tap a room · swipe to move through time</span></div>
+<div class="m-time"><canvas id="mTime"></canvas><div class="row"><span class="rng" id="mRng"></span><div class="ch" id="mCh"><button data-s="28">4 wk</button><button data-s="84" class="on">12 wk</button><button data-s="365">Year</button><button data-s="1148">All</button></div></div></div>
+<div class="m-low" id="mLow">
+  <div class="m-ai"><div class="lab"><span class="lab" style="margin:0;color:var(--verd)">Observed</span><span class="num" id="mConf" style="font-size:10px;color:var(--muted)"></span></div><h3 id="mAiT"></h3><p id="mAiB"></p><div class="btns"><button class="btn v" id="mWhy">Show me why →</button><button class="btn" id="mNext">Next</button></div></div>
+  <div class="m-sec"><div class="lab"><span>Today · Mon–Tue</span><span class="num" id="mTodayN"></span></div><ul class="m-today" id="mToday"></ul></div>
+</div>
+<div class="m-bar"><button class="m-pill" id="mAsk"><i></i>Ask about what you see</button><button class="m-ex" id="mEx" aria-label="Explore the landscape"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1.2" stroke-linecap="round"><path d="M2 16 L7 9 L11 13 L15 5 L20 14"/><path d="M2 19.5H20" opacity=".4"/></svg></button></div>
+<div class="m-sheet" id="mSheet"><div class="veil" id="mVeil"></div><div class="pan"><div class="grab"></div><div class="sh"><span class="lab" id="mShT"></span><button id="mClose">Close</button></div><canvas class="t" id="mSheetC"></canvas><div class="sb2" id="mSb"></div></div></div>`;
+const mHeroC = $('#mHeroC'), mTimeC = $('#mTime'), mSheetC = $('#mSheetC'), mCoreC = $('#mCore');
+const M = { hg: null, tg: null, sg: null, cg: null, sh: 300 };
+function sizePhone() {
+  const w = Math.round(ph.clientWidth || 390), h = ph.clientHeight || 844; P.W = w; P.HH = clamp(Math.round(h * 0.285), 200, 280);
+  M.hg = fit(mHeroC, w, P.HH); mHeroC.style.height = P.HH + 'px'; M.tg = fit(mTimeC, w - 44, 44); M.sg = fit(mSheetC, w, M.sh); mSheetC.style.height = M.sh + 'px'; M.cg = fit(mCoreC, 46, 46);
+}
+const _ls = layoutStage; layoutStage = function () { _ls(); sizePhone(); }; // eslint-disable-line
+sizePhone();
+
+// ---- say: one sentence for the state of the system
+(() => {
+  const dow = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }); $('#mWhen').textContent = dow;
+  const worst = INSIGHTS[0]; const word = HEAD.health >= 80 ? 'Strong' : HEAD.health >= 68 ? 'Steady' : 'Strained';
+  $('#mSay').innerHTML = `${word}, with <em>one thing</em> slipping.`; $('#mSub').textContent = `Health ${HEAD.health} · ${pct(HEAD.completion)}% done · ${HEAD.streak}-card run`;
+})();
+// ---- observation card cycles through the insights
+let mi = 0;
+function renderMAi() { const f = INSIGHTS[mi % INSIGHTS.length]; $('#mAiT').textContent = f.title; $('#mAiB').textContent = f.body; $('#mConf').textContent = pct(f.conf) + '% confident'; }
+$('#mNext').onclick = () => { mi++; renderMAi(); }; renderMAi();
+// ---- today
+function renderMobAttn() {
+  const ul = $('#mToday'); if (!ul) return; ul.innerHTML = ''; $('#mTodayN').textContent = ATT.filter((a) => !a.done).length + ' open';
+  ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''), c = el('canvas'), g = fit(c, 26, 26); g.lineWidth = 1.5; g.strokeStyle = rgba(a.done ? INK.amber : INK.ember, 0.95); g.beginPath(); g.arc(13, 13, 8, 0, 6.283); g.stroke(); if (a.done) { g.fillStyle = rgba(INK.amber, 0.18); g.fill(); g.beginPath(); g.moveTo(9, 13); g.lineTo(12, 16); g.lineTo(17.5, 9.5); g.stroke(); } else { g.fillStyle = rgba(INK.ember, 0.95); g.beginPath(); g.arc(13, 13, 2.4, 0, 6.283); g.fill(); }
+    li.appendChild(c); li.appendChild(el('span', 't', a.t.name)); li.appendChild(el('span', 'r', ROOMS[a.t.ri].name));
+    li.onclick = () => { const was = a.done; completeTask(a); if (!was) { const n = (P.st._nodes || []).find((n) => n.id === a.t.id) || (P.st._cl || []).find((c) => c.i === a.t.ri); if (n) { P.st.ripples.push({ x: n.x, y: n.y, t0: CLK.t, s: 1 }); P.st.hoverTask = null; } if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) { /* no haptics */ } } };
+    ul.appendChild(li); });
+}
+renderMobAttn();
+
+// ---- time: the window slides; the hero constellation is always "this window"
+function setWin(span, centre) { const hi = WEEKS * 7 + FC_WEEKS * 7, end = clamp((centre ?? (P.st.t0.t + P.st.t1.t) / 2) + span / 2, span, hi); P.span = span; P.st.t0.to(end - span); P.st.t1.to(end); }
+P.st.mode.to(1, true); P.st.rowA.forEach((t) => t.to(1, true)); P.st.t0.to(NOW_DAY - 84, true); P.st.t1.to(NOW_DAY + 0.5, true);
+$('#mCh').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...$('#mCh').children].forEach((x) => x.classList.toggle('on', x === b)); const s = +b.dataset.s; setWin(Math.min(s, NOW_DAY), s >= 1148 ? NOW_DAY / 2 : NOW_DAY - s / 2 + 0.5 + (s < 100 ? 0 : 0)); };
+let tdrag = false;
+const tDay = (e) => { const r = mTimeC.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1) * (WEEKS * 7 + FC_WEEKS * 7); };
+mTimeC.addEventListener('pointerdown', (e) => { tdrag = true; mTimeC.setPointerCapture(e.pointerId); setWin(P.span, Math.min(tDay(e), NOW_DAY - P.span / 2 + P.span / 2)); });
+mTimeC.addEventListener('pointermove', (e) => { if (tdrag) setWin(P.span, tDay(e)); }); mTimeC.addEventListener('pointerup', () => (tdrag = false));
+// swipe on the hero steps through time by a quarter window
+let sw = null; const hero = $('#mHero');
+hero.addEventListener('pointerdown', (e) => { sw = { x: e.clientX, y: e.clientY, c: (P.st.t0.t + P.st.t1.t) / 2, moved: false }; });
+hero.addEventListener('pointermove', (e) => { if (!sw) return; const dx = e.clientX - sw.x; if (Math.abs(dx) > 10) { sw.moved = true; setWin(P.span, sw.c - (dx / P.W) * P.span * 1.2); } });
+hero.addEventListener('pointerup', (e) => { const s = sw; sw = null; if (!s || s.moved) return; const r = mHeroC.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top }, h = constHit(P.st, p.x, p.y);
+  if (h && h.kind === 'cluster') { P.st.clusterFocus = P.st.clusterFocus === h.i ? -1 : h.i; P.st.zoomC.to(P.st.clusterFocus >= 0 ? 1 : 0); P.st.cEmph.forEach((t, i) => t.to(P.st.clusterFocus < 0 || i === P.st.clusterFocus ? 1 : 0.3)); }
+  else if (h && h.kind === 'task') { P.st.hoverTask = P.st.hoverTask === h.id ? null : h.id; P.st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.8 }); }
+  else { P.st.clusterFocus = -1; P.st.zoomC.to(0); P.st.cEmph.forEach((t) => t.to(1)); P.st.hoverTask = null; } });
+
+// ---- sheet: why / ask / explore, all drawn on the same terrain
+const sheet = $('#mSheet'), sb = $('#mSb');
+function openSheet(kind, ins) {
+  P.open = kind; sheet.classList.add('open'); clearTimeout(P.timer); sb.innerHTML = ''; const ss = P.ss;
+  ss.mode.to(0, true); ss.rowsKind = 'rooms'; ss.t0.to(NOW_DAY - 7 * 52, true); ss.t1.to(NOW_DAY + 7 * 6, true); ss.rowA.forEach((t) => t.to(1, true)); ss.plan.to(0, true); ss.fc.to(0.55, true); ss.band.s.to(0, true); ss.links = []; ss.callouts = []; ss.cLinks = [];
+  if (kind === 'why') { P.ins = ins; $('#mShT').textContent = ins.tag + ' · ' + pct(ins.conf) + '% confident'; sb.innerHTML = '<div class="dots" id="mDots"></div><div class="cap2" id="mCap"></div><div class="nav"><button class="btn" id="mPrev">← Back</button><button class="btn v" id="mNx">Next →</button></div>'; $('#mPrev').onclick = () => stepM(P.stepI - 1); $('#mNx').onclick = () => stepM(P.stepI + 1); stepM(0); }
+  else if (kind === 'ask') { $('#mShT').textContent = 'Ask'; sb.innerHTML = '<input id="mQ" placeholder="Ask about what you’re looking at" autocomplete="off"><div class="chips" id="mChips"></div><div id="mAns"></div>'; ['Why is Friday dropping?', 'What happens at holidays?', 'What’s linked?', 'What do I keep missing?'].forEach((q) => { const b = el('button', '', q); b.onclick = () => askM(q); $('#mChips').appendChild(b); }); $('#mQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') askM(e.target.value); }); }
+  else { $('#mShT').textContent = 'The whole landscape'; sb.innerHTML = '<div class="cap2" style="font-size:17px;min-height:0">Height is completion, colour is momentum. Drag along the bar to move through three years.</div><div class="chips" id="mRows"><button class="on">Rooms</button><button>Day pairs</button></div>'; $('#mRows').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...$('#mRows').children].forEach((x) => x.classList.toggle('on', x === b)); ss.rowsKind = b.textContent === 'Rooms' ? 'rooms' : 'pairs'; ss.rowA.forEach((t, i) => t.to(ss.rowsKind === 'pairs' && i > 2 ? 0 : 1)); }; }
+}
+function stepM(i) {
+  const steps = P.ins.steps; if (i < 0) i = 0; if (i >= steps.length) { closeSheet(); return; } P.stepI = i; const s = steps[i], ss = P.ss;
+  const sm = { ...s, mode: 0 }; applyStep(ss, sm); const cap = $('#mCap'); cap.style.opacity = 0; setTimeout(() => { cap.textContent = s.cap; cap.style.opacity = 1; }, 200);
+  $('#mDots').innerHTML = steps.map((_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join(''); $('#mNx').textContent = i === steps.length - 1 ? 'Done' : 'Next →';
+  clearTimeout(P.timer); P.timer = setTimeout(() => { if (P.open === 'why') stepM(i + 1); }, 7500);
+}
+function askM(q) { const a = answerFor(q), ans = $('#mAns'); ans.innerHTML = '<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">Reading your data</span><div class="shim" style="width:90%"></div><div class="shim" style="width:64%"></div>'; setTimeout(() => { const ins = INSIGHTS.find((x) => x.id === a.id); ans.innerHTML = `<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">${ins.tag} · shown above</span>${a.text}<div style="margin-top:12px"><button class="btn v" id="mGo">Walk me through it →</button></div>`; $('#mGo').onclick = () => openSheet('why', ins); const ss = P.ss; applyStep(ss, { ...ins.steps[Math.min(1, ins.steps.length - 1)], mode: 0 }); }, 800); }
+function closeSheet() { P.open = null; sheet.classList.remove('open'); clearTimeout(P.timer); }
+$('#mWhy').onclick = () => openSheet('why', INSIGHTS[mi % INSIGHTS.length]); $('#mAsk').onclick = () => openSheet('ask'); $('#mEx').onclick = () => openSheet('explore'); $('#mClose').onclick = closeSheet; $('#mVeil').onclick = closeSheet;
+
+// ---- draw
+function drawMobile() {
+  if (!M.hg) return; const st = P.st, g = M.hg;
+  stepState(st, CLK.dt); prune(st); P.ss.mode.to(0); stepState(P.ss, CLK.dt); prune(P.ss);
+  const R = { x: 0, y: 2, w: P.W, h: P.HH - 28 };
+  g.clearRect(0, 0, P.W, P.HH); drawConst(g, st, R, { alpha: 1 });
+  // time strip
+  const tg = M.tg, w = P.W - 44; tg.clearRect(0, 0, w, 44); drawMinimap(tg, st, { x: 0, y: 4, w, h: 36 });
+  const a = new Date(dateAt(Math.max(0, st.t0.v))), b = new Date(dateAt(Math.min(WEEKS * 7 - 1, st.t1.v))), f = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }); $('#mRng').textContent = `${f(a)} – ${f(b)}`;
+  // sheet terrain
+  if (P.open) { const sg = M.sg, ss = P.ss; sg.clearRect(0, 0, P.W, M.sh); sg.fillStyle = INK.obsidian; sg.fillRect(0, 0, P.W, M.sh); const rr = { x: 62, y: 52, w: P.W - 80, h: M.sh - 88 }; drawTerrain(sg, ss, rr, {}); drawTerrainOverlay(sg, ss, rr, {}); }
+  drawCore(M.cg, CLK.t, 46);
+}
+
+
+})();
+</script>
+</body>
+</html>
