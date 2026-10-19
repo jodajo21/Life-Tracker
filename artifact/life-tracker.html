@@ -95,6 +95,30 @@ details.panel > summary { cursor: pointer; list-style: none; display: flex; alig
 .rate { background: var(--bg); border-radius: 12px; padding: 12px; } .rate b { display: block; font-size: 32px; line-height: 1.1; margin: 2px 0; } .up { color: var(--home); font-size: 12px; font-weight: 700; } .down { color: var(--fit); font-size: 12px; font-weight: 700; }
 .ins { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 2px; } .ins:last-of-type { border-bottom: 0; } .ins-t { font: 800 16px var(--display); }
 .cyc { display: grid; grid-template-columns: 44px repeat(3, 1fr); gap: 4px; align-items: center; font-size: 12px; } .cyc .cell { border-radius: 6px; padding: 7px 0; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; background: color-mix(in srgb, var(--home) calc(var(--v) * 70%), var(--heat)); color: var(--ink); } .cyc .cell.none { background: transparent; border: 1px dashed var(--line); color: var(--muted); font-weight: 400; }
+.loadline { display: grid; gap: 4px; margin: 0 0 10px; font-size: 13px; color: var(--muted); } .loadline b { color: var(--ink); font-size: 15px; } .loadline .bar { margin: 0; height: 6px; }
+.spaces { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: none; } .spaces::-webkit-scrollbar { display: none; }
+.spaces button { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 600 14px var(--body); display: flex; gap: 8px; align-items: center; } .spaces button.on { background: var(--home); border-color: var(--home); color: #fff; } .spaces button small { opacity: .7; font-weight: 500; } .spaces button[data-addspace] { color: var(--muted); border-style: dashed; }
+.pl-seg { display: flex; margin-bottom: 10px; } .pl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 14px; } .pl-grid.show-chat .ppane { display: none; } .pl-grid.show-plan .cpane { display: none; }
+@media (min-width: 900px) { .pl-seg { display: none; } .pl-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } .pl-grid .cpane, .pl-grid .ppane { display: block !important; } }
+.chatbox { display: flex; flex-direction: column; height: clamp(460px, calc(100dvh - 290px), 740px); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+.ch-h { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); } .ch-t { font: 800 16px var(--display); line-height: 1.1; }
+.av { width: 36px; height: 36px; border-radius: 50%; background: var(--home-soft); color: var(--home); display: grid; place-items: center; font: 800 15px var(--display); flex: none; } .av.sm { width: 26px; height: 26px; font-size: 12px; }
+.cmsgs { flex: 1; overflow-y: auto; padding: 14px 12px 6px; display: flex; flex-direction: column; gap: 3px; background: var(--bg); overscroll-behavior: contain; }
+.crow { display: flex; gap: 8px; align-items: flex-end; } .crow.me { justify-content: flex-end; } .crow .sp { width: 26px; flex: none; }
+.cb { max-width: min(84%, 520px); padding: 9px 13px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.4; font-size: 15px; }
+.cb.bot { background: var(--surface); border: 1px solid var(--line); } .cb.bot:not(.l) { border-bottom-left-radius: 6px; } .cb.bot.l { border-bottom-left-radius: 6px; }
+.cb.me { background: var(--home); color: #fff; border-bottom-right-radius: 6px; }
+.cmeta { font-size: 11px; color: var(--muted); margin: 1px 0 8px 40px; } .cmeta.me { text-align: right; margin: 1px 4px 8px 0; }
+.csep { align-self: center; font-size: 11px; color: var(--muted); margin: 6px 0 10px; text-transform: uppercase; letter-spacing: .06em; }
+.typing { display: flex; gap: 4px; padding: 13px 14px; } .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; } .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; } @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
+.cchips { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 12px 0; background: var(--bg); } .cchips:empty { display: none; } .cchips button { border: 1px solid var(--home); background: var(--surface); color: var(--home); border-radius: 999px; padding: 7px 13px; font: 600 14px var(--body); }
+.composer { display: flex; gap: 8px; align-items: flex-end; padding: 10px 12px 12px; background: var(--bg); } .composer textarea { min-height: 42px; max-height: 120px; border-radius: 21px; padding: 10px 16px; resize: none; background: var(--surface); }
+.send { width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--home); color: #fff; display: grid; place-items: center; flex: none; } .send.stop { background: var(--heat); color: var(--ink); } .send:disabled { opacity: .45; }
+.prop { margin: 6px 0 4px 34px; border: 1px solid var(--home); border-radius: 14px; background: var(--surface); padding: 12px; max-width: min(94%, 560px); } .prop.done { border-color: var(--line); color: var(--muted); font-size: 13px; padding: 8px 12px; } .prop-h { font: 800 15px var(--display); margin-bottom: 6px; }
+.pr { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-top: 1px solid var(--line); } .pr input { width: 20px; height: 20px; accent-color: var(--home); flex: none; margin-top: 2px; padding: 0; } .pr small { display: block; color: var(--muted); font-size: 12px; margin-top: 1px; }
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.plrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); } .plrow input { padding: 6px 10px; } .plrow select { width: auto; padding: 6px 8px; font-size: 14px; } .plrow .plnote { grid-column: 1 / -1; margin-top: -4px; } .plrow.add { border: 0; margin-top: 8px; }
 .twocol { display: grid; grid-template-columns: 1fr; gap: 14px; } @media (min-width: 900px) { .twocol { grid-template-columns: 1fr 1fr; } }
 .rhead { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); } .rrow.rhead { border: 0; padding: 0 0 2px; }
 .rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); } .rrow:last-child { border: 0; } .rrow select { width: auto; } .rrow input { min-width: 0; } .rrow .rinfo { grid-column: 1 / -1; margin-top: -2px; }
@@ -268,7 +292,7 @@ const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
 const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
 const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
 const limits = sample ? await sample.limits().catch(() => ({})) : {};
-const S = { entries: [], cats: [], chores: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+const S = { entries: [], cats: [], chores: [], chats: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
 let current = 'today', chatHistory = [], chatBusy = false;
 
 let chain = Promise.resolve(); // one write at a time
@@ -277,7 +301,7 @@ const col = (n) => db.collection(n);
 const sum = (rs) => rs.reduce((a, r) => a + r.xp, 0);
 
 let rafId = 0, lastLocalDeckEdit = 0;
-const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); migrateRooms(); refreshBadge(); if (current !== 'ask' && !(current === 'cards' && Date.now() - lastLocalDeckEdit < 2500) && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
+const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); migrateRooms(); refreshBadge(); if (current !== 'ask' && current !== 'rooms' && !(current === 'cards' && Date.now() - lastLocalDeckEdit < 2500) && !$('#dlg').open && !$('#sheet').open && !editing()) go(current, { keep: true }); }); };
 const editing = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#view') && a.type !== 'checkbox'; };
 function listen(name, key) { return col(name).onSnapshot((snap) => { S[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); S.ready[key] = true; schedule(); }, (e) => { S.err = e.message || e.code; schedule(); }); }
 
@@ -479,6 +503,7 @@ function go(tab, { keep = false } = {}) {
   if (!tabs[tab]) tab = 'today'; current = tab;
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
   $('#app').classList.toggle('wide', tab === 'cards' || tab === 'rooms');
+  const fab = $('#fab'); if (fab) fab.hidden = tab === 'rooms'; // the planner has its own message box
   const y = window.scrollY;
   try { tabs[tab](); } catch (e) { view.innerHTML = `<div class="panel warn">${esc(e.message)}</div>`; }
   window.scrollTo(0, keep ? y : 0);
@@ -1176,70 +1201,220 @@ function recommendations(inst, total) {
   return out.sort((a, b) => a.prio - b.prio).slice(0, 9);
 }
 
-// ---------------------------------------------------------------- the Rooms tab
-function tplHtml(c, rooms, cats, inst) {
-  const sc = c.scope || 'house', mine = inst.filter((x) => x.tpl === c.id), types = [...new Set(rooms.map((r) => r.type))];
-  const where = sc === 'room' ? (mine.map((x) => x.room).join(', ') || 'no rooms yet') : sc === 'category' ? (mine[0]?.room || 'no category yet') : 'Whole house';
-  return `<details class="tpl" data-id="${c.id}" ${ui.openTpl && ui.openTpl.has(c.id) ? 'open' : ''}><summary><span class="tpl-n">${esc(c.name)}</span><span class="sub tpl-s">${esc(where)} · ${freqName(c.per_quarter)}</span></summary><div class="tpl-body"><input data-f="name" value="${esc(c.name)}" aria-label="Task name">
-    <div class="seg mini" role="group" aria-label="Applies to">${Object.entries(SCOPES).map(([k, n]) => `<button data-scope="${k}" class="${sc === k ? 'on' : ''}">${n}</button>`).join('')}</div>
-    ${sc === 'room' ? `<div class="chips2">${rooms.length ? rooms.map((r) => `<label class="chip"><input type="checkbox" data-room="${r.id}" ${(c.roomIds || []).includes(r.id) ? 'checked' : ''}>${esc(r.name)}</label>`).join('') : '<span class="sub">Add a room above first.</span>'}</div>
-      ${types.length > 1 ? `<div class="row wrap" style="gap:6px"><span class="sub">Select all:</span>${types.map((t) => `<button class="link" data-type="${t}">${t}s</button>`).join('')}</div>` : ''}`
-    : sc === 'category' ? `<select data-f="catId" aria-label="Category"><option value="">Choose a category…</option>${cats.map((g) => `<option value="${g.id}" ${c.catId === g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select>` : '<div class="sub">Applies to the home as a whole.</div>'}
-    <div class="row wrap"><label class="sub" for="f-${c.id}">How often</label><select data-f="per_quarter" id="f-${c.id}" style="width:auto">${(PRESETS.some(([n]) => n === c.per_quarter) ? PRESETS : [...PRESETS, [c.per_quarter, `${c.per_quarter}× a cycle`]]).map(([n, l]) => `<option value="${n}" ${n === c.per_quarter ? 'selected' : ''}>${l}</option>`).join('')}</select><span class="grow"></span><button class="link danger" data-tdel aria-label="Remove task">Remove</button></div>
-    <div class="sub">${mine.length ? `Becomes ${mine.length} card task${mine.length === 1 ? '' : 's'} (${mine.slice(0, 4).map((x) => esc(x.room)).join(', ')}${mine.length > 4 ? '…' : ''}) · ${mine.reduce((a, x) => a + Math.min(x.per_quarter, 39), 0)} placements a cycle` : 'Not on any card yet'}</div></div></details>`;
+// ---------------------------------------------------------------- the Rooms tab: one planner per room, built around a chat
+const FREQS = [39, 13, 7, 6, 3, 1];
+const normFreq = (n) => FREQS.reduce((best, f) => (Math.abs(f - Number(n || 13)) < Math.abs(best - Number(n || 13)) ? f : best), 13);
+let roomBusy = false, roomCtl = null;
+const drafts = {};
+const hhmm = (iso) => new Date(iso).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' });
+const dayLabel = (iso) => { const d = iso.slice(0, 10), t = ymd(new Date(iso)); return t === today() ? 'Today' : t === addDaysIso(today(), -1) ? 'Yesterday' : parse(t).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }); };
+
+function spaceList() {
+  return [...activeRooms().map((r) => ({ key: 'room:' + r.id, kind: 'room', id: r.id, name: r.name, type: r.type })), ...activeCats().map((c) => ({ key: 'cat:' + c.id, kind: 'cat', id: c.id, name: c.name, type: 'Category' })), { key: 'house', kind: 'house', id: 'house', name: 'Whole house', type: 'House' }];
 }
+const currentSpace = () => { const l = spaceList(); return l.find((x) => x.key === store.get('space', '')) || l[0]; };
+function planOf(sp) {
+  return S.chores.filter((c) => c.active !== false && (sp.kind === 'room' ? c.scope === 'room' && (c.roomIds || []).includes(sp.id) : sp.kind === 'cat' ? c.scope === 'category' && c.catId === sp.id : c.scope === 'house'))
+    .sort((a, b) => (a.area || '~').localeCompare(b.area || '~') || a.name.localeCompare(b.name));
+}
+const placementsOf = (tasks) => tasks.reduce((a, c) => a + Math.min(c.per_quarter, 39), 0);
+const chatDoc = (key) => S.chats.find((c) => c.id === key) || { id: key, messages: [], notes: '' };
+async function saveChat(doc) {
+  doc.messages = doc.messages.slice(-60); S.chats = [...S.chats.filter((c) => c.id !== doc.id), doc];
+  const { id, ...rest } = doc; await queue(() => col('roomchats').doc(id).set(rest));
+}
+const taskLine = (c) => `${esc(c.name)}`;
+
+// ---- changes the user approves from a proposal card
+function taskBase(sp) { return sp.kind === 'room' ? { scope: 'room', roomIds: [sp.id], catId: '' } : sp.kind === 'cat' ? { scope: 'category', catId: sp.id, roomIds: [] } : { scope: 'house', roomIds: [], catId: '' }; }
+async function addTaskTo(sp, a) {
+  const ref = col('chores').doc(), doc = { name: String(a.name).trim(), ...taskBase(sp), per_quarter: normFreq(a.per_quarter), area: String(a.area || '').trim(), parts: Math.max(0, Math.round(Number(a.parts) || 0)), active: true };
+  S.chores = [...S.chores, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); await ensureCategory('home', doc.name); return ref.id;
+}
+async function removeTaskFrom(sp, c) {
+  if (c.scope === 'room' && (c.roomIds || []).length > 1) { const ids = c.roomIds.filter((x) => x !== sp.id); S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, roomIds: ids } : x)); await queue(() => col('chores').doc(c.id).update({ roomIds: ids })); return () => queue(() => col('chores').doc(c.id).update({ roomIds: c.roomIds })).then(() => { S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, roomIds: c.roomIds } : x)); }); }
+  S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, active: false } : x)); await queue(() => col('chores').doc(c.id).update({ active: false }));
+  return () => queue(() => col('chores').doc(c.id).update({ active: true })).then(() => { S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, active: true } : x)); });
+}
+async function applyProposal(sp, idx, picks) {
+  const doc = structuredClone(chatDoc(sp.key)), m = doc.messages[idx], p = m.proposal, added = [], changed = [], removed = [];
+  for (const i of picks.adds) { const a = p.adds[i]; if (a) { await addTaskTo(sp, a); added.push(a.name); } }
+  for (const i of picks.updates) { const u = p.updates[i], c = S.chores.find((x) => x.id === u.task_id); if (!c) continue; const patch = {}; if (u.name) patch.name = u.name; if (u.per_quarter) patch.per_quarter = normFreq(u.per_quarter); if (u.area != null) patch.area = u.area; S.chores = S.chores.map((x) => (x.id === c.id ? { ...x, ...patch } : x)); await queue(() => col('chores').doc(c.id).update(patch)); changed.push(c.name); }
+  for (const i of picks.removes) { const r = p.removes[i], c = S.chores.find((x) => x.id === r.task_id); if (c) { await removeTaskFrom(sp, c); removed.push(c.name); } }
+  p.status = 'applied'; p.result = { added: added.length, changed: changed.length, removed: removed.length };
+  const bits = [added.length && `added ${added.join(', ')}`, changed.length && `changed ${changed.join(', ')}`, removed.length && `removed ${removed.join(', ')}`].filter(Boolean).join('; ');
+  doc.messages.push({ role: 'user', hidden: true, content: `(The user applied your suggestion: ${bits || 'nothing selected'}.)`, ts: new Date().toISOString() }); await saveChat(doc);
+}
+async function dismissProposal(sp, idx) { const doc = structuredClone(chatDoc(sp.key)); doc.messages[idx].proposal.status = 'dismissed'; doc.messages.push({ role: 'user', hidden: true, content: '(The user dismissed that suggestion.)', ts: new Date().toISOString() }); await saveChat(doc); }
+
+// ---- the chat
+function plannerInstructions(sp, tasks, doc, total) {
+  const idm = tasks.map((c, i) => `t${i + 1}: ${c.name} · ${freqName(c.per_quarter)}${c.area ? ` · area: ${c.area}` : ''}${c.parts ? ` · ${c.parts} to rotate through` : ''}`).join('\n') || '(nothing planned yet)';
+  const where = sp.kind === 'room' ? `the ${sp.name} (a ${sp.type.toLowerCase()})` : sp.kind === 'cat' ? `the "${sp.name}" category, which is a set of tasks about a thing rather than a place` : 'the whole house (tasks that are not tied to one room)';
+  return `You are a warm, practical home-planning assistant inside the user's chores app. You are helping plan ONE space: ${where}.
+How the app works: chores are printed on 2-day cards (Mon-Tue, Wed-Thu, Fri-Sat), 3 to 5 small tasks per card, 39 cards per 13-week cycle. The whole home has a budget of about 195 task placements per cycle; ${total} are used now and this space uses ${placementsOf(tasks)}. Allowed frequencies (per_quarter, meaning times per cycle): 39 = every card, 13 = weekly, 7 = every 2 weeks, 6 = twice a month, 3 = monthly, 1 = once per cycle.
+How this user plans: they break a space into SMALL parts. For example "clean one shelf" in the kitchen is a single task. A task like that means rotating through the parts over time, so set "parts" to how many there are (6 shelves) and pick a frequency that covers them all about once or twice a cycle. Each task should be a specific action that takes roughly 5 to 15 minutes ("Clean one shelf", "Wipe the stove top", "Empty and wipe one drawer"). Prefer several small tasks over one big one. Group related tasks with a short "area" label (like "Pantry shelves").
+What you know about this space: ${doc.notes || 'nothing yet'}.
+Current plan (use these ids when changing or removing):
+${idm}
+How to talk: brief (1 to 3 short sentences), friendly, one question at a time. If you don't yet know what is in the space, ask about it before proposing anything. When you have enough, call propose_changes with a small, realistic set (3 to 6 tasks) and keep the total workload modest. Never change the plan silently: always propose, then wait for the user. Use quick_replies to offer 2 to 4 short tappable answers when a quick answer would help. Use save_notes to keep a concise summary of durable facts you learn (what is in the space, sizes, counts, preferences). Never mention tools, ids, JSON or "per_quarter" to the user; talk about "weekly", "every 2 weeks" and so on.`;
+}
+const AREA_PROPS = { name: { type: 'string', description: 'A short action, like "Clean one shelf".' }, per_quarter: { type: 'integer', enum: FREQS, description: '39 every card, 13 weekly, 7 every 2 weeks, 6 twice a month, 3 monthly, 1 once a cycle.' }, area: { type: 'string', description: 'Optional grouping label, like "Pantry shelves".' }, parts: { type: 'integer', description: 'If the task rotates through several similar parts (6 shelves), how many.' }, why: { type: 'string', description: 'One short reason or coverage note.' } };
+function plannerTools(sp, tasks, out) {
+  const idOf = (tid) => { const m = /^t(\d+)$/.exec(String(tid)); return m ? tasks[+m[1] - 1]?.id : null; };
+  return [
+    { name: 'propose_changes', description: 'Show the user a card with suggested plan changes they can accept or dismiss. Use for every change. After calling it, end your turn with one short sentence.',
+      inputSchema: { type: 'object', properties: { summary: { type: 'string', description: 'One short line describing the suggestion.' }, adds: { type: 'array', items: { type: 'object', properties: AREA_PROPS, required: ['name', 'per_quarter'] } }, updates: { type: 'array', items: { type: 'object', properties: { task_id: { type: 'string' }, name: { type: 'string' }, per_quarter: AREA_PROPS.per_quarter, area: { type: 'string' } }, required: ['task_id'] } }, removes: { type: 'array', items: { type: 'string', description: 'task id like t2' } } }, required: ['summary'] },
+      execute: (a) => {
+        const adds = (a.adds || []).filter((x) => x && x.name).slice(0, 8).map((x) => ({ name: String(x.name).trim().slice(0, 80), per_quarter: normFreq(x.per_quarter), area: String(x.area || '').slice(0, 40), parts: Math.max(0, Math.round(Number(x.parts) || 0)), why: String(x.why || '').slice(0, 140) }));
+        const updates = (a.updates || []).map((u) => ({ task_id: idOf(u.task_id), name: u.name ? String(u.name).slice(0, 80) : '', per_quarter: u.per_quarter ? normFreq(u.per_quarter) : 0, area: u.area != null ? String(u.area).slice(0, 40) : null })).filter((u) => u.task_id);
+        const removes = (a.removes || []).map((t) => idOf(t)).filter(Boolean).map((id) => ({ task_id: id }));
+        if (!adds.length && !updates.length && !removes.length) return 'Nothing to propose.';
+        out.proposal = { summary: String(a.summary || '').slice(0, 160), adds, updates, removes, status: 'open' }; return 'The suggestion is now shown to the user as a card. Do not repeat it. Finish with one short sentence and stop.';
+      } },
+    { name: 'quick_replies', description: 'Offer 2 to 4 short tappable replies for the user (each under 40 characters).', inputSchema: { type: 'object', properties: { options: { type: 'array', items: { type: 'string' } } }, required: ['options'] }, execute: (a) => { out.replies = (a.options || []).map((x) => String(x).slice(0, 44)).slice(0, 4); return 'Shown.'; } },
+    { name: 'save_notes', description: 'Save a concise summary of durable facts about this space (contents, counts, sizes, preferences). Replaces the previous notes.', inputSchema: { type: 'object', properties: { notes: { type: 'string' } }, required: ['notes'] }, execute: (a) => { out.notes = String(a.notes || '').slice(0, 800); return 'Saved.'; } },
+  ];
+}
+async function sendRoom(sp, text) {
+  text = String(text || '').trim(); if (!text || roomBusy || !sample) return;
+  roomBusy = true; drafts[sp.key] = '';
+  const doc = structuredClone(chatDoc(sp.key)); doc.messages.push({ role: 'user', content: text, ts: new Date().toISOString() }); S.chats = [...S.chats.filter((c) => c.id !== doc.id), doc];
+  const tasks = planOf(sp), out = {}; roomCtl = new AbortController(); drawMessages(sp, { typing: true }); setBusy(true);
+  saveChat(structuredClone(doc)).catch(() => {});
+  const total = expandTasks().reduce((a, x) => a + Math.min(x.per_quarter, 39), 0);
+  const turns = [{ role: 'user', content: plannerInstructions(sp, tasks, doc, total) }, ...doc.messages.slice(-24).map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }))];
+  let live = '';
+  try {
+    const r = await sample(turns, { tools: limits.tools ? plannerTools(sp, tasks, out) : undefined, signal: roomCtl.signal, cache: false, modelTier: 'quick', onText: ({ text: t }) => { live = t; drawMessages(sp, { live }); } });
+    doc.messages.push({ role: 'assistant', content: r.text, ts: new Date().toISOString(), ...(out.proposal ? { proposal: out.proposal } : {}), ...(out.replies ? { replies: out.replies } : {}) });
+  } catch (e) {
+    if (e.code === 'cancelled') { if (live) doc.messages.push({ role: 'assistant', content: live + ' (stopped)', ts: new Date().toISOString() }); }
+    else { toast(errCopy(e)); doc.messages.push({ role: 'assistant', content: 'Sorry, I couldn’t answer that. Try again in a moment.', ts: new Date().toISOString(), error: true }); }
+  }
+  if (out.notes != null) doc.notes = out.notes;
+  roomBusy = false; await saveChat(doc).catch((e) => toast(e.message));
+  if (current === 'rooms' && currentSpace().key === sp.key) { drawMessages(sp); setBusy(false); refreshPlanPane(sp); }
+}
+function setBusy(b) { const s = $('#c-send'), st = $('#c-stop'), ta = $('#c-in'); if (!s) return; s.hidden = b; st.hidden = !b; if (ta) ta.disabled = false; $('#ch-status') && ($('#ch-status').textContent = b ? 'typing…' : 'Room planner'); }
+function proposalHtml(sp, m, idx) {
+  const p = m.proposal; if (!p) return '';
+  const f = (a) => `${freqName(a)}`;
+  if (p.status !== 'open') return `<div class="prop done">${p.status === 'applied' ? `✓ ${[p.result.added && `Added ${p.result.added} task${p.result.added === 1 ? '' : 's'}`, p.result.changed && `Changed ${p.result.changed}`, p.result.removed && `Removed ${p.result.removed}`].filter(Boolean).join(' · ') || 'Applied'}` : 'Dismissed'}<span class="sub"> · ${esc(p.summary)}</span></div>`;
+  const rows = [
+    ...p.adds.map((a, i) => `<label class="pr"><input type="checkbox" data-k="adds" data-i="${i}" checked><span><b>${esc(a.name)}</b><small>${f(a.per_quarter)}${a.area ? ' · ' + esc(a.area) : ''}${a.parts ? ` · ${a.parts} to rotate through (each comes round about every ${Math.max(1, Math.round((13 * a.parts) / Math.max(1, a.per_quarter)))} weeks)` : ''}${a.why ? ` · ${esc(a.why)}` : ''}</small></span></label>`),
+    ...p.updates.map((u, i) => { const c = S.chores.find((x) => x.id === u.task_id); return `<label class="pr"><input type="checkbox" data-k="updates" data-i="${i}" checked><span><b>Change: ${esc(c ? c.name : 'task')}</b><small>${u.name ? 'rename to “' + esc(u.name) + '” ' : ''}${u.per_quarter ? '· now ' + f(u.per_quarter) : ''}${u.area != null && u.area !== '' ? ' · area ' + esc(u.area) : ''}</small></span></label>`; }),
+    ...p.removes.map((r, i) => { const c = S.chores.find((x) => x.id === r.task_id); return `<label class="pr"><input type="checkbox" data-k="removes" data-i="${i}" checked><span><b>Remove: ${esc(c ? c.name : 'task')}</b></span></label>`; }),
+  ].join('');
+  return `<div class="prop" data-prop="${idx}"><div class="prop-h">${esc(p.summary || 'Suggested changes')}</div>${rows}<div class="row" style="margin-top:8px"><button class="primary" data-apply="${idx}">Add to plan</button><button class="link" data-dismiss-prop="${idx}">Not now</button></div></div>`;
+}
+function greetingFor(sp) {
+  const body = sp.kind === 'room' ? `Hi! Let’s plan the ${sp.name}. Tell me what’s in it, like how many shelves, drawers or big items, and I’ll help break it into small tasks.` : sp.kind === 'cat' ? `Hi! Let’s plan ${sp.name}. Tell me what’s involved and I’ll help turn it into small, regular tasks.` : 'Hi! This is for tasks that belong to the whole home, like decluttering or checking supplies. What would you like to keep on top of?';
+  const chips = sp.kind === 'room' ? ['Suggest a simple starter plan', 'Break it into shelves and drawers', 'It’s small, keep it light'] : ['Suggest a simple starter plan', 'Break it into small parts'];
+  return { body, chips };
+}
+function drawMessages(sp, { typing = false, live = '' } = {}) {
+  const box = $('#cmsgs'); if (!box) return;
+  const doc = chatDoc(sp.key), msgs = doc.messages.map((m, i) => ({ ...m, i })).filter((m) => !m.hidden), g = greetingFor(sp);
+  const all = msgs.length ? msgs : [{ role: 'assistant', content: g.body, ts: new Date().toISOString(), greeting: true, i: -1 }];
+  let html = '', lastDay = '';
+  all.forEach((m, k) => {
+    const mine = m.role === 'user', next = all[k + 1], lastInGroup = !next || next.role !== m.role, firstInGroup = !all[k - 1] || all[k - 1].role !== m.role, day = dayLabel(m.ts);
+    if (day !== lastDay) { html += `<div class="csep">${day}</div>`; lastDay = day; }
+    html += `<div class="crow ${mine ? 'me' : 'bot'}">${mine ? '' : lastInGroup && !typing ? `<span class="av sm" aria-hidden="true">${esc(sp.name[0].toUpperCase())}</span>` : '<span class="sp"></span>'}<div class="cb ${mine ? 'me' : 'bot'} ${firstInGroup ? 'f' : ''} ${lastInGroup ? 'l' : ''}">${esc(m.content)}</div></div>`;
+    if (m.proposal) html += proposalHtml(sp, m, m.i);
+    if (lastInGroup) html += `<div class="cmeta ${mine ? 'me' : ''}">${m.greeting ? '' : hhmm(m.ts)}</div>`;
+  });
+  if (typing || live) html += `<div class="crow bot"><span class="av sm" aria-hidden="true">${esc(sp.name[0].toUpperCase())}</span>${live ? `<div class="cb bot f l">${esc(live)}</div>` : '<div class="cb bot f l typing" aria-label="Typing"><i></i><i></i><i></i></div>'}</div>`;
+  box.innerHTML = html;
+  const last = msgs.length ? msgs[msgs.length - 1] : null, chips = $('#cchips');
+  const opts = roomBusy ? [] : !msgs.length ? g.chips : last && last.role === 'assistant' && last.replies ? last.replies : [];
+  chips.innerHTML = opts.map((o) => `<button data-reply="${esc(o)}">${esc(o)}</button>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function chatShell(sp) {
+  return `<div class="chatbox"><div class="ch-h"><span class="av" aria-hidden="true">${esc(sp.name[0].toUpperCase())}</span><div class="grow"><div class="ch-t">${esc(sp.name)}</div><div class="sub" id="ch-status">Room planner</div></div><button class="link" id="c-clear">Clear chat</button></div>
+    ${sample ? '' : '<div class="notice" style="margin:10px">Claude isn’t available in this view, so the planner chat is off. You can still add tasks by hand in the plan.</div>'}
+    <div class="cmsgs" id="cmsgs" aria-live="polite"></div><div class="cchips" id="cchips"></div>
+    <div class="composer"><textarea id="c-in" rows="1" placeholder="Message the planner" aria-label="Message" ${sample ? '' : 'disabled'}></textarea>
+      <button class="send" id="c-send" aria-label="Send" ${sample ? '' : 'disabled'}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <button class="send stop" id="c-stop" aria-label="Stop" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button></div></div>`;
+}
+function planPane(sp) {
+  const tasks = planOf(sp), doc = chatDoc(sp.key), groups = {};
+  tasks.forEach((c) => (groups[c.area || ''] ||= []).push(c));
+  const row = (c) => `<div class="plrow" data-id="${c.id}"><input data-f="name" value="${esc(c.name)}" aria-label="Task name"><select data-f="per_quarter" aria-label="How often">${(FREQS.includes(c.per_quarter) ? FREQS : [...FREQS, c.per_quarter]).map((n) => `<option value="${n}" ${n === c.per_quarter ? 'selected' : ''}>${freqName(n)}</option>`).join('')}</select><button class="link danger" data-del aria-label="Remove task">✕</button>
+    ${c.parts || (c.scope === 'room' && (c.roomIds || []).length > 1) ? `<span class="sub plnote">${c.parts ? `${c.parts} to rotate through` : ''}${c.parts && (c.roomIds || []).length > 1 ? ' · ' : ''}${(c.roomIds || []).length > 1 ? 'shared with ' + esc((c.roomIds || []).filter((x) => x !== sp.id).map((x) => S.rooms.find((r) => r.id === x)?.name).filter(Boolean).join(', ')) : ''}</span>` : ''}</div>`;
+  return `<div class="plan"><div class="row"><h2 class="grow" style="margin:0">${esc(sp.name)} plan</h2><span class="sub">${tasks.length} task${tasks.length === 1 ? '' : 's'} · ${placementsOf(tasks)} a cycle</span></div>
+    ${tasks.length ? Object.entries(groups).sort((a, b) => (a[0] || '~').localeCompare(b[0] || '~')).map(([area, cs]) => `${area ? `<div class="chart-title" style="margin:12px 0 2px">${esc(area)}</div>` : Object.keys(groups).length > 1 ? '<div class="chart-title" style="margin:12px 0 2px">Other</div>' : ''}${cs.map(row).join('')}`).join('') : '<div class="empty" style="padding:22px 0">Nothing planned yet. Chat with the planner, or add a task below.</div>'}
+    <div class="plrow add"><input id="pl-new" placeholder="Add a task by hand" aria-label="New task"><select id="pl-freq" aria-label="How often">${FREQS.map((n) => `<option value="${n}" ${n === 13 ? 'selected' : ''}>${freqName(n)}</option>`).join('')}</select><button class="sec" id="pl-add">Add</button></div>
+    <details style="margin-top:12px"><summary class="sub" style="cursor:pointer">What the planner knows about this ${sp.kind === 'room' ? 'room' : 'space'}</summary><textarea id="pl-notes" style="margin-top:8px" placeholder="Nothing yet. It fills in as you chat, and you can edit it.">${esc(doc.notes || '')}</textarea></details></div>`;
+}
+function refreshPlanPane(sp) { const pane = $('.ppane'); if (!pane) return; pane.innerHTML = planPane(sp); bindPlan(sp); const tabBtn = $('[data-pane=plan] .sub'); if (tabBtn) tabBtn.textContent = planOf(sp).length; const chip = $(`.spaces [data-space="${sp.key}"] small`); if (chip) chip.textContent = placementsOf(planOf(sp)); updateLoad(); }
+function updateLoad() { const total = expandTasks().reduce((a, x) => a + Math.min(x.per_quarter, 39), 0), el = $('#loadline'); if (!el) return; $('b', el).textContent = total; const bar = $('i', el); bar.style.width = Math.min(100, (total / 195) * 100) + '%'; bar.style.background = total > 195 ? 'var(--fit)' : ''; $('#loadnote').textContent = total > 195 ? `${total - 195} over: some cards would need a 6th task.` : total < 117 ? 'Under 117 leaves some cards with fewer than 3 tasks.' : `Fits 3 to 5 per card (${195 - total} spare).`; }
+
 function renderRooms() {
-  const rooms = activeRooms(), cats = activeCats(), tpls = activeTpls(), inst = expandTasks(), total = inst.reduce((a, x) => a + Math.min(x.per_quarter, 39), 0), recs = recommendations(inst, total);
-  const byRoom = {}; inst.forEach((x) => (byRoom[x.room] = (byRoom[x.room] || 0) + Math.min(x.per_quarter, 39)));
-  const where = (name) => inst.filter((x) => x.room === name).length;
+  const list = spaceList(), sp = currentSpace(), total = expandTasks().reduce((a, x) => a + Math.min(x.per_quarter, 39), 0), rooms = activeRooms(), cats = activeCats(), recs = recommendations(expandTasks(), total);
+  const where = (name) => expandTasks().filter((x) => x.room === name).length;
   view.innerHTML = `<h1>Rooms</h1>
-    <section class="panel home"><h2>Task load</h2><div class="row"><b class="num" style="font-size:28px">${total}</b><span class="sub">placements per 13-week cycle · ${inst.length} card tasks from ${tpls.length} tasks, ${rooms.length} rooms, ${cats.length} categories</span></div>
-      <div class="bar"><i style="width:${Math.min(100, (total / 195) * 100)}%;${total > 195 ? 'background:var(--fit)' : ''}"></i></div>
-      <div class="sub">${total > 195 ? `<b>${total - 195} over.</b> 195 keeps every card at 5 tasks or fewer; above that some cards get a 6th.` : total < 117 ? 'Under 117 leaves some cards with fewer than 3 tasks.' : `Fits 3 to 5 tasks per card (${195 - total} spare).`}</div>
-      ${Object.keys(byRoom).length ? `<div class="chart-title">Placements by room or category</div>${hbars(Object.entries(byRoom).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value })), 'var(--home)')}` : ''}</section>
-    <section class="panel"><h2>Recommendations</h2>${recs.length ? recs.map((r) => `<div class="rec"><div class="grow"><div class="rec-t">${esc(r.title)}</div><div class="sub">${esc(r.why)}</div></div><div class="row" style="gap:4px">${r.apply ? `<button class="sec" data-rec="${r.id}">${esc(r.label || 'Apply')}</button>` : ''}<button class="link" data-recx="${r.id}">Dismiss</button></div></div>`).join('') : '<div class="empty">Nothing to suggest right now. As you add rooms, and as cards finish, suggestions show up here.</div>'}</section>
-    <div class="twocol"><section class="panel"><h2>Rooms</h2><p class="sub" style="margin-top:0">Each row is one room in your home. Name it anything you like. The <b>type</b> on the right only says what kind of space it is, so the app can suggest the right tasks and let you pick all bathrooms at once. It doesn't change which room this is.</p>
-        ${rooms.length ? '<div class="rrow rhead"><span>Room name</span><span>Type of space</span><span></span></div>' : ''}${rooms.map((r) => `<div class="rrow" data-rid="${r.id}"><input data-rf="name" value="${esc(r.name)}" aria-label="Room name"><select data-rf="type" aria-label="Type of space" title="What kind of space this is">${ROOM_TYPES.map((t) => `<option ${t === r.type ? 'selected' : ''}>${t}</option>`).join('')}</select><button class="link danger" data-rdel aria-label="Remove room">✕</button><span class="sub rinfo">${where(r.name)} task${where(r.name) === 1 ? '' : 's'}</span></div>`).join('') || '<div class="empty">No rooms yet.</div>'}
-        <div class="rhead sub" style="margin-top:10px">Add a room</div><div class="rrow"><input id="new-room-name" placeholder="Name, like Guest bath" aria-label="New room name"><select id="new-room-type" aria-label="Type of space">${ROOM_TYPES.map((t) => `<option>${t}</option>`).join('')}</select><button class="sec" id="new-room">Add</button></div></section>
-      <section class="panel"><h2>Categories</h2><p class="sub" style="margin-top:0">For tasks about a thing, not a place: Plants, Pets, Car. They show up on cards under the category's name.</p>
-        ${cats.map((g) => `<div class="rrow" data-gid="${g.id}"><input data-gf="name" value="${esc(g.name)}" aria-label="Category name"><button class="link danger" data-gdel aria-label="Remove category">✕</button><span class="sub rinfo">${where(g.name)} task${where(g.name) === 1 ? '' : 's'}</span></div>`).join('') || '<div class="empty">No categories yet.</div>'}
-        <div class="rhead sub" style="margin-top:10px">Add a category</div><div class="rrow"><input id="new-cat-name" placeholder="Name, like Plants" aria-label="New category name"><button class="sec" id="new-cat">Add</button></div></section></div>
-    <section class="panel"><h2>Tasks</h2><p class="sub" style="margin-top:0">Each task says where it applies. A room task becomes one card item per room it covers, a category task becomes one item for the category, and a whole-house task becomes one item.</p>
-      <div class="tplgrid">${tpls.map((c) => tplHtml(c, rooms, cats, inst)).join('') || '<div class="empty">No tasks yet.</div>'}</div>
-      <div class="rrow" style="margin-top:12px"><input id="new-task-name" placeholder="New task, like Clean toilet" aria-label="New task name"><button class="sec" id="new-task">Add task</button></div></section>`;
-  bindRooms();
+    <div class="loadline" id="loadline"><div><b class="num">${total}</b> of 195 placements per cycle · <span id="loadnote"></span></div><div class="bar"><i></i></div></div>
+    <div class="spaces" role="tablist" aria-label="Choose a room">${list.map((x) => `<button role="tab" data-space="${x.key}" aria-selected="${x.key === sp.key}" class="${x.key === sp.key ? 'on' : ''}">${esc(x.name)}<small>${placementsOf(planOf(x))}</small></button>`).join('')}<button data-addspace>＋ Add</button></div>
+    <section class="planner"><div class="seg pl-seg"><button data-pane="chat" class="${ui.pane !== 'plan' ? 'on' : ''}">Chat</button><button data-pane="plan" class="${ui.pane === 'plan' ? 'on' : ''}">Plan <span class="sub">${planOf(sp).length}</span></button></div>
+      <div class="pl-grid ${ui.pane === 'plan' ? 'show-plan' : 'show-chat'}"><div class="cpane">${chatShell(sp)}</div><aside class="ppane">${planPane(sp)}</aside></div></section>
+    <details class="panel" id="sugg" ${recs.length ? '' : 'hidden'}><summary><h2 style="margin:0">Suggestions</h2><span class="sub">${recs.length}</span></summary>${recs.map((r) => `<div class="rec"><div class="grow"><div class="rec-t">${esc(r.title)}</div><div class="sub">${esc(r.why)}</div></div><div class="row" style="gap:4px">${r.apply ? `<button class="sec" data-rec="${r.id}">${esc(r.label || 'Apply')}</button>` : ''}<button class="link" data-recx="${r.id}">Dismiss</button></div></div>`).join('')}</details>
+    <details class="panel" id="manage"><summary><h2 style="margin:0">Manage rooms and categories</h2></summary>
+      <p class="sub" style="margin:8px 0 0">Each row is one room. Name it anything. The <b>type</b> only says what kind of space it is, so the planner knows what to suggest. Categories are for things that aren’t places, like Plants or Pets.</p>
+      <div class="twocol" style="margin-top:10px"><div><h2 style="font-size:15px">Rooms</h2>${rooms.length ? '<div class="rrow rhead"><span>Room name</span><span>Type of space</span><span></span></div>' : ''}${rooms.map((r) => `<div class="rrow" data-rid="${r.id}"><input data-rf="name" value="${esc(r.name)}" aria-label="Room name"><select data-rf="type" aria-label="Type of space">${ROOM_TYPES.map((t) => `<option ${t === r.type ? 'selected' : ''}>${t}</option>`).join('')}</select><button class="link danger" data-rdel aria-label="Remove room">✕</button></div>`).join('')}
+        <div class="rhead sub" style="margin-top:10px">Add a room</div><div class="rrow"><input id="new-room-name" placeholder="Name, like Guest bath" aria-label="New room name"><select id="new-room-type" aria-label="Type of space">${ROOM_TYPES.map((t) => `<option>${t}</option>`).join('')}</select><button class="sec" id="new-room">Add</button></div></div>
+      <div><h2 style="font-size:15px">Categories</h2>${cats.map((g) => `<div class="rrow" data-gid="${g.id}"><input data-gf="name" value="${esc(g.name)}" aria-label="Category name"><button class="link danger" data-gdel aria-label="Remove category">✕</button></div>`).join('') || '<div class="sub">None yet.</div>'}
+        <div class="rhead sub" style="margin-top:10px">Add a category</div><div class="rrow"><input id="new-cat-name" placeholder="Name, like Plants" aria-label="New category name"><button class="sec" id="new-cat">Add</button></div></div></div></details>`;
+  updateLoad(); drawMessages(sp); const ta = $('#c-in'); if (ta && drafts[sp.key]) ta.value = drafts[sp.key]; if (roomBusy) setBusy(true);
+  bindRooms(sp, recs);
 }
-function bindRooms() {
+function bindPlan(sp) {
+  const pane = $('.ppane'); if (!pane) return;
+  const upd = (id, patch) => { S.chores = S.chores.map((x) => (x.id === id ? { ...x, ...patch } : x)); return queue(() => col('chores').doc(id).update(patch)).catch((e) => toast(e.message)); };
+  pane.querySelectorAll('.plrow[data-id]').forEach((row) => { const id = row.dataset.id;
+    $('[data-f=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upd(id, { name: v }); ensureCategory('home', v); } else e.target.value = S.chores.find((x) => x.id === id)?.name || ''; };
+    $('[data-f=per_quarter]', row).onchange = (e) => upd(id, { per_quarter: +e.target.value }).then(() => { refreshPlanPane(sp); });
+    $('[data-del]', row).onclick = async () => { const c = S.chores.find((x) => x.id === id), undo = await removeTaskFrom(sp, c); refreshPlanPane(sp); toastAction(`Removed “${c.name}”.`, 'Undo', async () => { await undo(); refreshPlanPane(sp); }); }; });
+  $('#pl-add').onclick = async () => { const name = $('#pl-new').value.trim(); if (!name) return; await addTaskTo(sp, { name, per_quarter: +$('#pl-freq').value }); refreshPlanPane(sp); $('#pl-new')?.focus(); };
+  $('#pl-new').onkeydown = (e) => { if (e.key === 'Enter') $('#pl-add').click(); };
+  $('#pl-notes').onchange = async (e) => { const d = structuredClone(chatDoc(sp.key)); d.notes = e.target.value.slice(0, 800); await saveChat(d); toast('Saved'); };
+}
+function bindRooms(sp, recs) {
   const upd = (coll, id, patch) => queue(() => col(coll).doc(id).update(patch)).catch((e) => toast(e.message));
   const upLocal = (key, id, patch) => { S[key] = S[key].map((x) => (x.id === id ? { ...x, ...patch } : x)); };
-  const confirmDel = (msg, fn) => confirmDialog(msg, fn);
-  // rooms
+  // choose a space, switch panes
+  view.querySelectorAll('[data-space]').forEach((b) => (b.onclick = () => { store.set('space', b.dataset.space); ui.pane = 'chat'; go('rooms', { keep: true }); }));
+  $('[data-addspace]').onclick = () => { const d = $('#manage'); d.open = true; d.scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#new-room-name')?.focus(), 250); };
+  view.querySelectorAll('[data-pane]').forEach((b) => (b.onclick = () => { ui.pane = b.dataset.pane; $('.pl-grid').className = 'pl-grid ' + (ui.pane === 'plan' ? 'show-plan' : 'show-chat'); view.querySelectorAll('[data-pane]').forEach((x) => x.classList.toggle('on', x === b)); if (ui.pane === 'chat') { const m = $('#cmsgs'); m.scrollTop = m.scrollHeight; } }));
+  // chat
+  const ta = $('#c-in'), send = () => { const t = ta.value; ta.value = ''; ta.style.height = ''; sendRoom(sp, t); };
+  ta.addEventListener('input', () => { drafts[sp.key] = ta.value; ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; });
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+  $('#c-send').onclick = send; $('#c-stop').onclick = () => roomCtl?.abort();
+  $('#cchips').addEventListener('click', (e) => { const b = e.target.closest('[data-reply]'); if (b) sendRoom(sp, b.dataset.reply); });
+  $('#cmsgs').addEventListener('click', async (e) => {
+    const ap = e.target.closest('[data-apply]'), dm = e.target.closest('[data-dismiss-prop]');
+    if (ap) { const idx = +ap.dataset.apply, box = ap.closest('.prop'), picks = { adds: [], updates: [], removes: [] }; box.querySelectorAll('input:checked').forEach((c) => picks[c.dataset.k].push(+c.dataset.i)); ap.disabled = true; try { await applyProposal(sp, idx, picks); drawMessages(sp); refreshPlanPane(sp); toast('Plan updated'); } catch (err) { toast(err.message); ap.disabled = false; } }
+    if (dm) { await dismissProposal(sp, +dm.dataset.dismissProp); drawMessages(sp); }
+  });
+  $('#c-clear').onclick = () => confirmDialog('Clear this conversation? Your plan stays as it is.', async () => { const d = structuredClone(chatDoc(sp.key)); d.messages = []; await saveChat(d); drawMessages(sp); });
+  bindPlan(sp);
+  // manage rooms and categories
   view.querySelectorAll('.rrow[data-rid]').forEach((row) => { const id = row.dataset.rid;
-    $('[data-rf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('rooms', id, { name: v }); upd('rooms', id, { name: v }); } };
-    $('[data-rf=type]', row).onchange = (e) => { upLocal('rooms', id, { type: e.target.value }); upd('rooms', id, { type: e.target.value }).then(() => go('rooms', { keep: true })); };
-    $('[data-rdel]', row).onclick = () => confirmDel('Remove this room? Tasks that applied to it stop appearing on new cards. Existing decks keep their cards.', async () => { upLocal('rooms', id, { active: false }); await upd('rooms', id, { active: false }); go('rooms', { keep: true }); }); });
-  $('#new-room').onclick = async () => { const name = $('#new-room-name').value.trim(); if (!name) return; const ref = col('rooms').doc(), doc = { name, type: $('#new-room-type').value, active: true, order: S.rooms.length }; S.rooms = [...S.rooms, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); go('rooms', { keep: true }); };
+    $('[data-rf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('rooms', id, { name: v }); upd('rooms', id, { name: v }).then(() => go('rooms', { keep: true })); } };
+    $('[data-rf=type]', row).onchange = (e) => { upLocal('rooms', id, { type: e.target.value }); upd('rooms', id, { type: e.target.value }); };
+    $('[data-rdel]', row).onclick = () => confirmDialog('Remove this room? Its tasks stop appearing on new cards. Existing decks keep their cards.', async () => { upLocal('rooms', id, { active: false }); await upd('rooms', id, { active: false }); go('rooms', { keep: true }); }); });
+  $('#new-room').onclick = async () => { const name = $('#new-room-name').value.trim(); if (!name) return; const ref = col('rooms').doc(), doc = { name, type: $('#new-room-type').value, active: true, order: S.rooms.length }; S.rooms = [...S.rooms, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); store.set('space', 'room:' + ref.id); ui.pane = 'chat'; go('rooms'); };
   $('#new-room-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-room').click(); });
-  // categories
   view.querySelectorAll('.rrow[data-gid]').forEach((row) => { const id = row.dataset.gid;
-    $('[data-gf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('taskcats', id, { name: v }); upd('taskcats', id, { name: v }); } };
-    $('[data-gdel]', row).onclick = () => confirmDel('Remove this category? Tasks in it stop appearing on new cards.', async () => { upLocal('taskcats', id, { active: false }); await upd('taskcats', id, { active: false }); go('rooms', { keep: true }); }); });
-  $('#new-cat').onclick = async () => { const name = $('#new-cat-name').value.trim(); if (!name) return; const ref = col('taskcats').doc(), doc = { name, active: true }; S.taskcats = [...S.taskcats, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); go('rooms', { keep: true }); };
+    $('[data-gf=name]', row).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('taskcats', id, { name: v }); upd('taskcats', id, { name: v }).then(() => go('rooms', { keep: true })); } };
+    $('[data-gdel]', row).onclick = () => confirmDialog('Remove this category? Its tasks stop appearing on new cards.', async () => { upLocal('taskcats', id, { active: false }); await upd('taskcats', id, { active: false }); go('rooms', { keep: true }); }); });
+  $('#new-cat').onclick = async () => { const name = $('#new-cat-name').value.trim(); if (!name) return; const ref = col('taskcats').doc(), doc = { name, active: true }; S.taskcats = [...S.taskcats, { id: ref.id, ...doc }]; await queue(() => ref.set(doc)); store.set('space', 'cat:' + ref.id); ui.pane = 'chat'; go('rooms'); };
   $('#new-cat-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-cat').click(); });
-  // tasks
-  view.querySelectorAll('.tpl').forEach((el) => { const id = el.dataset.id, tpl = () => S.chores.find((c) => c.id === id);
-    el.addEventListener('toggle', () => { (ui.openTpl ||= new Set())[el.open ? 'add' : 'delete'](id); });
-    $('[data-f=name]', el).onchange = (e) => { const v = e.target.value.trim(); if (v) { upLocal('chores', id, { name: v }); upd('chores', id, { name: v }).then(() => go('rooms', { keep: true })); ensureCategory('home', v); } };
-    $('[data-f=per_quarter]', el).onchange = (e) => { const v = +e.target.value; upLocal('chores', id, { per_quarter: v }); upd('chores', id, { per_quarter: v }).then(() => go('rooms', { keep: true })); };
-    $('[data-f=catId]', el)?.addEventListener('change', (e) => { upLocal('chores', id, { catId: e.target.value }); upd('chores', id, { catId: e.target.value }).then(() => go('rooms', { keep: true })); });
-    el.querySelectorAll('[data-scope]').forEach((b) => (b.onclick = () => { const patch = { scope: b.dataset.scope }; upLocal('chores', id, patch); upd('chores', id, patch).then(() => go('rooms', { keep: true })); }));
-    el.querySelectorAll('[data-room]').forEach((cb) => (cb.onchange = () => { const ids = [...el.querySelectorAll('[data-room]:checked')].map((x) => x.dataset.room); upLocal('chores', id, { roomIds: ids }); upd('chores', id, { roomIds: ids }).then(() => go('rooms', { keep: true })); }));
-    el.querySelectorAll('[data-type]').forEach((b) => (b.onclick = () => { const ids = [...new Set([...(tpl().roomIds || []), ...activeRooms().filter((r) => r.type === b.dataset.type).map((r) => r.id)])]; upLocal('chores', id, { roomIds: ids }); upd('chores', id, { roomIds: ids }).then(() => go('rooms', { keep: true })); }));
-    $('[data-tdel]', el).onclick = () => confirmDel(`Remove “${tpl().name}”? It stops appearing on new cards. Existing decks keep it.`, async () => { upLocal('chores', id, { active: false }); await upd('chores', id, { active: false }); go('rooms', { keep: true }); }); });
-  $('#new-task').onclick = async () => { const name = $('#new-task-name').value.trim(); if (!name) return; const ref = col('chores').doc(), doc = { name, scope: 'house', roomIds: [], catId: '', per_quarter: 13, active: true }; S.chores = [...S.chores, { id: ref.id, ...doc }]; (ui.openTpl ||= new Set()).add(ref.id); await queue(() => ref.set(doc)); await ensureCategory('home', name); go('rooms', { keep: true }); toast('Added. Choose where it applies and how often.'); };
-  $('#new-task-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#new-task').click(); });
-  // recommendations
-  const recs = recommendations(expandTasks(), expandTasks().reduce((a, x) => a + Math.min(x.per_quarter, 39), 0));
+  // suggestions
   view.querySelectorAll('[data-rec]').forEach((b) => (b.onclick = async () => { const r = recs.find((x) => x.id === b.dataset.rec); if (!r?.apply) return; b.disabled = true; try { await r.apply(); toast('Done'); go('rooms', { keep: true }); } catch (e) { toast(e.message); b.disabled = false; } }));
   view.querySelectorAll('[data-recx]').forEach((b) => (b.onclick = () => { let d = []; try { d = JSON.parse(store.get('recdis', '[]')); } catch {} store.set('recdis', JSON.stringify([...d, b.dataset.recx])); go('rooms', { keep: true }); }));
 }
@@ -1307,7 +1482,7 @@ async function handlePhoto(file) {
 // ================================================================ boot
 if (!db) { view.innerHTML = '<div class="panel"><h2>Storage isn’t available here</h2><p>Open this page in the Claude app or on claude.ai while signed in, so it can keep your data.</p></div>'; return; }
 $('#fab').hidden = false;
-listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('rooms', 'rooms'); listen('taskcats', 'taskcats'); listen('shields', 'shields'); listen('suggestions', 'sugg');
+listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('rooms', 'rooms'); listen('taskcats', 'taskcats'); listen('roomchats', 'chats'); listen('shields', 'shields'); listen('suggestions', 'sugg');
 db.doc('settings/main').onSnapshot((d) => { if (d.exists) S.settings = { fitness_weekly_target: Number(d.data().fitness_weekly_target) || 3 }; schedule(); }, () => {});
 const hash = (location.hash || '').slice(1);
 go(tabs[hash] ? hash : 'today');
