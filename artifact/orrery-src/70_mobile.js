@@ -67,13 +67,17 @@ function closeSheet() { P.open = null; sheet.classList.remove('open'); clearTime
 
 // capture: viewfinder → read → confirm what it was unsure of
 function captureSheet() {
-  const card = CURRENT; P.cap.t0 = CLK.t; P.cap.dec = detFor(NOW_CARD); $('#mShT').textContent = `Photograph · card ${cardLabel(card)}`; sb.innerHTML = '<canvas id="mPhotoC"></canvas><ul class="dets" id="mDets"></ul><div class="nav" style="margin-top:12px"><button class="btn v" id="mConfirm">Confirm &amp; log</button><button class="btn" id="mRetake">Retake</button></div><p class="note" id="mCapMsg"></p>';
+  const card = CURRENT; P.cap.t0 = CLK.t; P.cap.bmp = null; P.cap.note = ''; P.cap.dec = detFor(NOW_CARD); $('#mShT').textContent = `Photograph · card ${cardLabel(card)}`; sb.innerHTML = '<canvas id="mPhotoC"></canvas><div class="nav" style="margin-top:10px"><button class="btn v" id="mMine">◉ Take or choose photo</button><button class="btn" id="mRetake">Sample</button></div><ul class="dets" id="mDets"></ul><div class="nav" style="margin-top:12px"><button class="btn pri" id="mConfirm">Confirm &amp; log</button><button class="btn" id="mSave">Save card image</button></div><p class="note" id="mCapMsg"></p>';
   const pc = $('#mPhotoC'); P.cap.g = fit(pc, P.W - 44, 250); pc.style.width = '100%'; pc.style.height = '250px'; P.cap.w = P.W - 44; renderCapDets();
-  $('#mRetake').onclick = () => { P.cap.t0 = CLK.t; P.cap.dec = detFor(NOW_CARD); renderCapDets(); };
+  $('#mRetake').onclick = () => { P.cap.bmp = null; P.cap.t0 = CLK.t; P.cap.dec = detFor(NOW_CARD); renderCapDets(); };
+  $('#mSave').onclick = () => saveCardImage(card);
+  const mine = () => pickPhoto(async (file) => { P.cap.reading = true; $('#mCapMsg').textContent = 'Reading your photo…'; $('#mConfirm').disabled = true;
+    try { const r = await readCardPhoto(file, card); P.cap.bmp = r.bmp; if (r.dec) { P.cap.dec = r.dec; P.cap.note = r.note; } else P.cap.note = r.err; } catch (e) { P.cap.note = e && e.code === 'not_granted' ? 'Claude access is off for this page. Allow it when prompted.' : e && e.code === 'rate_limited' ? 'Too many requests — try again in a minute.' : 'That read failed. Try a closer, brighter photo.'; }
+    P.cap.reading = false; renderCapDets(); }); $('#mMine').onclick = mine; P.cap.mine = mine;
   $('#mConfirm').onclick = () => { card.tasks.forEach((x, i) => { if (P.cap.dec[i].v === true && !x.done) setTaskDone(x, true); }); ATT.forEach((a) => { if (a.x.done) a.done = true; }); renderAttn(); closeSheet(); setTimeout(() => card.tasks.forEach((x, i) => { if (x.done) { const p = pipAt(P.st, x); if (p) P.st.ripples.push({ x: p.x, y: p.y, t0: CLK.t + i * 0.12, s: 1 }); } }), 400); };
 }
 function renderCapDets() { const ul = $('#mDets'); ul.innerHTML = ''; CURRENT.tasks.forEach((x, i) => { const d = P.cap.dec[i], li = el('li', d.amb && d.v === 'unsure' ? 'amb' : ''); li.innerHTML = `<span class="s ${d.v === true ? 'ok' : ''}">${d.v === 'unsure' ? '?' : d.v ? '✓' : '○'}</span><span class="n">${x.t.name}</span><span class="c">${d.v === 'unsure' ? '<button data-v="1">Done</button><button data-v="0">Not</button>' : Math.round(d.conf * 100) + '%'}</span>`; li.querySelectorAll('button').forEach((b) => (b.onclick = () => { d.v = b.dataset.v === '1'; d.amb = false; d.conf = 1; renderCapDets(); })); ul.appendChild(li); });
-  const open = P.cap.dec.some((d) => d.v === 'unsure'); $('#mConfirm').disabled = open; $('#mConfirm').style.opacity = open ? 0.45 : 1; $('#mCapMsg').textContent = open ? 'One mark is unclear — tell it which.' : 'Looks right. This lights the wall.'; }
+  const open = P.cap.dec.some((d) => d.v === 'unsure'); $('#mConfirm').disabled = open; $('#mConfirm').style.opacity = open ? 0.45 : 1; if (!P.cap.reading) $('#mCapMsg').textContent = P.cap.note || (open ? 'One mark is unclear — tell it which.' : 'Looks right. This lights the wall.'); }
 // edit a card: the printed card, and its tasks
 function cardSheet(c) {
   const card = CARDS[c], live = c === NOW_CARD; $('#mShT').textContent = `Card ${cardLabel(card)} · ${SEGS[card.seg]}`;
@@ -87,7 +91,7 @@ function saySheet() { $('#mShT').textContent = 'Tell it'; sb.innerHTML = '<input
   const run = (q) => { q = q.toLowerCase(); const hit = ATT.filter((a) => !a.done && a.t.name.toLowerCase().split(/\s+/).some((w) => w.length > 3 && q.includes(w.replace(/s$/, '')))); $('#mSayOut').innerHTML = hit.length ? 'Marked: ' + hit.map((a) => `<b>${a.t.name}</b>`).join(', ') : '<span style="color:var(--muted)">Nothing open on today’s card matches that.</span>'; hit.forEach((a, i) => setTimeout(() => completeTask(a), 250 + i * 200)); };
   $('#mSayIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(e.target.value); }); ['I did the toilets and the stove top', 'Vacuumed the bedrooms'].forEach((q) => { const b = el('button', '', q); b.onclick = () => run(q); $('#mSayCh').appendChild(b); }); }
 $('#mWhy').onclick = () => openSheet('why', INSIGHTS[mi % INSIGHTS.length]); $('#mAsk').onclick = () => openSheet('ask'); $('#mEx').onclick = () => openSheet('explore'); $('#mClose').onclick = closeSheet; $('#mVeil').onclick = closeSheet;
-$('#mShoot').onclick = () => openSheet('capture'); $('#mEdit').onclick = () => openSheet('card', null, NOW_CARD); $('#mSay2').onclick = () => openSheet('say');
+$('#mShoot').onclick = () => { openSheet('capture'); if (P.cap.mine) P.cap.mine(); }; $('#mEdit').onclick = () => openSheet('card', null, NOW_CARD); $('#mSay2').onclick = () => openSheet('say');
 
 // ---- draw
 function drawMobile() {
@@ -95,6 +99,6 @@ function drawMobile() {
   stepState(st, CLK.dt); prune(st); P.ss.mode.to(0); stepState(P.ss, CLK.dt); prune(P.ss);
   g.clearRect(0, 0, P.W, P.HH); drawDeck(g, st, { x: 34, y: 18, w: P.W - 44, h: P.HH - 22 }, { alpha: 1 });
   if (P.open === 'why' || P.open === 'ask' || P.open === 'explore') { const sg = M.sg, ss = P.ss; sg.clearRect(0, 0, P.W, M.sh); sg.fillStyle = INK.obsidian; sg.fillRect(0, 0, P.W, M.sh); const rr = { x: 62, y: 52, w: P.W - 80, h: M.sh - 88 }; drawTerrain(sg, ss, rr, {}); drawTerrainOverlay(sg, ss, rr, {}); }
-  if (P.open === 'capture' && P.cap.g) { const pg = P.cap.g; drawPhoto(pg, P.cap.w, 250, CURRENT, CLK.t, P.cap.dec, { t0: P.cap.t0 }); }
+  if (P.open === 'capture' && P.cap.g && P.cap.bmp) drawUserPhoto(P.cap.g, P.cap.w, 250, P.cap.bmp, CLK.t, P.cap.reading); else if (P.open === 'capture' && P.cap.g) { const pg = P.cap.g; drawPhoto(pg, P.cap.w, 250, CURRENT, CLK.t, P.cap.dec, { t0: P.cap.t0 }); }
   drawCore(M.cg, CLK.t, 46);
 }
