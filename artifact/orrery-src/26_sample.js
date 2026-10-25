@@ -48,5 +48,11 @@ function makeSampleState() {
   }
   const acts = ['Bench Press', 'Squat', 'Running', 'Yoga', 'Deadlift'], dayP = [0.2, 0.75, 0.3, 0.7, 0.25, 0.6, 0.3];
   for (let d = day0; d <= t; d = addDaysIso(d, 1)) { const wk = ymd(monday(parse(d))); if (r() > dayP[parse(d).getDay()] * (slump.has(wk) ? 0.3 : 1)) continue; const a = acts[Math.floor(r() * acts.length)]; entries.push({ id: 'e' + eid++, goal: 'fitness', date: d, activity: a, cat: cat('fitness', a), details: a === 'Running' ? { distance_mi: 2 + Math.floor(r() * 4) } : { sets: 4, reps: 8 }, raw: 'sample', source: 'text', rewards: [{ kind: 'base', xp: XP.fitness, label: 'Logged' }], xp: XP.fitness, created: d + 'T07:00:00Z', demo: true }); }
-  return { entries, cats, chores, chats: [], rooms, taskcats, decks: [deck], sets, shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+  return { entries, cats, chores, chats: [], rooms, taskcats, decks: [deck], sets, shields: [], sugg: [], notes: sampleNotes(sets, t), settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+}
+function sampleNotes(sets, t) {
+  const set = sets[sets.length - 1], cards = set.cards.filter((c) => c.end_date < t), pick = (i) => cards[Math.max(0, cards.length - 1 - i)], out = [];
+  const add = (tag, text, c, item) => out.push({ id: 'n' + out.length, tag, text, date: c.end_date, status: 'open', created: c.end_date + 'T20:00:00Z', set_id: set.id, cycle: set.n, card_idx: c.idx, card_label: c.label, item_id: item ? item.id : null, item_name: item ? item.name : null, chore_id: item ? item.chore_id || null : null, room: item ? item.room || null : null });
+  if (cards.length > 6) { const a = pick(1), b = pick(3), c = pick(5); add('deck', 'This is every week and it is too much. Every other week is plenty.', a, a.items[0]); add('note', 'Guests all weekend, so the kitchen got away from me.', b, null); add('idea', 'Let me snooze a task for a week without it counting as missed.', c, null); }
+  return out;
 }

@@ -1,16 +1,24 @@
 // ================================================================ RENDERING CORE: tweens, palette, atmosphere, and the TERRAIN (time as landscape)
 class Tw { constructor(v, k = 5) { this.v = v; this.t = v; this.k = k; } step(dt) { this.v += (this.t - this.v) * (1 - Math.exp(-this.k * dt)); return this.v; } to(t, hard) { this.t = t; if (hard) this.v = t; return this; } }
-const INK = { obsidian: '#07080a', charcoal: '#0e1012', graphite: '#1a1d21', ivory: [239, 230, 212], dim: [179, 170, 152], muted: [138, 131, 114], ember: [210, 86, 42], copper: [200, 121, 74], amber: [227, 162, 74], verd: [111, 176, 163], steel: [141, 154, 168] };
+const INK = {}, BASE = [0, 0, 0];   // filled from the theme's CSS variables by syncPalette()
 const rgba = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
 const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
-const RAMP = [[0.35, [162, 74, 40]], [0.58, [194, 90, 43]], [0.78, [217, 136, 70]], [0.92, [238, 182, 92]]];   // validated warm ramp: ember → copper → amber → gold
-const GLINT = [247, 235, 203], ASH = [138, 127, 114];
+const RAMP = [[0.35, [0, 0, 0]], [0.58, [0, 0, 0]], [0.78, [0, 0, 0]], [0.92, [0, 0, 0]]];   // low → high; the colours come from --r1..--r4
+const GLINT = [0, 0, 0], ASH = [0, 0, 0];
 function heat(v) { if (v <= RAMP[0][0]) return RAMP[0][1]; for (let i = 1; i < RAMP.length; i++) if (v <= RAMP[i][0]) return mixc(RAMP[i - 1][1], RAMP[i][1], (v - RAMP[i - 1][0]) / (RAMP[i][0] - RAMP[i - 1][0])); return RAMP[RAMP.length - 1][1]; }
 // value, momentum (-1..1) and instability (0..1) → one colour
 function tone(v, m = 0, u = 0) { let c = heat(v); c = m < 0 ? mixc(c, RAMP[0][1], -m * 0.35) : mixc(c, GLINT, m * 0.22); c = mixc(c, ASH, u * 0.5); return c; }
 const FONT = { ui: '"Instrument Sans", system-ui, sans-serif', mono: '"IBM Plex Mono", ui-monospace, Menlo, monospace', disp: '"Fraunces", Georgia, serif' };
 function glowSprite(rgb, size = 64) { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'), gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); gr.addColorStop(0, rgba(rgb, 1)); gr.addColorStop(0.18, rgba(rgb, 0.55)); gr.addColorStop(0.5, rgba(rgb, 0.12)); gr.addColorStop(1, rgba(rgb, 0)); g.fillStyle = gr; g.fillRect(0, 0, size, size); return c; }
-const SPR = { amber: glowSprite(INK.amber), ember: glowSprite(INK.ember), verd: glowSprite(INK.verd), ivory: glowSprite(INK.ivory), copper: glowSprite(INK.copper) };
+const SPR = {};
+function syncPalette() {
+  const v = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim().split(/\s+/).map(Number);
+  Object.assign(INK, { ivory: v('--ink-rgb'), muted: v('--muted-rgb'), ember: v('--alert-rgb'), copper: v('--copper-rgb'), amber: v('--accent-rgb'), verd: v('--ai-rgb'), steel: v('--fit-rgb') });
+  BASE.splice(0, 3, ...v('--base-rgb')); INK.dim = mixc(INK.ivory, BASE, 0.3);
+  RAMP.forEach((r, i) => (r[1] = v('--r' + (i + 1)))); GLINT.splice(0, 3, ...v('--glint-rgb')); ASH.splice(0, 3, ...v('--ash-rgb'));
+  for (const k of ['amber', 'ember', 'verd', 'ivory', 'copper']) SPR[k] = glowSprite(INK[k]);
+}
+syncPalette();
 const hash1 = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
 const noise1 = (x) => { const i = Math.floor(x), f = x - i; return lerp(hash1(i), hash1(i + 1), smooth(f)) * 2 - 1; };
 
@@ -68,7 +76,7 @@ function drawTerrain(g, st, rect, o = {}) {
     const nowK = Math.min(N - 1, Math.max(0, Math.round(((NOW_DAY - t0) / span) * (N - 1)))), futureK = NOW_DAY > t0 && NOW_DAY < t1 ? nowK : N;
     g.beginPath(); g.moveTo(xs[0], base + 12); for (let k = 0; k < Math.min(N, futureK + 1); k++) g.lineTo(xs[k], ys[k]); g.lineTo(xs[Math.min(N - 1, futureK)], base + 12); g.closePath();
     const fillTop = Math.min(...ys.subarray(0, Math.max(1, Math.min(N, futureK)))), gr = g.createLinearGradient(0, fillTop, 0, base + 12), mood = tone(mean(Array.from(vs)), 0, 0);
-    gr.addColorStop(0, `rgba(${mood[0] | 0},${mood[1] | 0},${mood[2] | 0},${0.2 * ra})`); gr.addColorStop(0.55, 'rgba(10,11,13,0.93)'); gr.addColorStop(1, 'rgba(7,8,10,0.98)'); g.fillStyle = gr; g.fill();
+    gr.addColorStop(0, `rgba(${mood[0] | 0},${mood[1] | 0},${mood[2] | 0},${0.2 * ra})`); gr.addColorStop(0.55, rgba(BASE, 0.93)); gr.addColorStop(1, rgba(BASE, 0.98)); g.fillStyle = gr; g.fill();
     if (!mini && ra > 0.3) { // topographic contours inside the ridge
       g.save(); g.clip(); g.lineWidth = 1; for (const f of [0.28, 0.5, 0.72]) { g.strokeStyle = rgba(INK.ivory, 0.045 * ra); g.beginPath(); const yy = base - A * f; g.moveTo(rect.x, yy); g.lineTo(rect.x + rect.w, yy); g.stroke(); } g.restore();
     }
@@ -121,7 +129,7 @@ function drawTerrainOverlay(g, st, rect, o = {}) {
   if (!mini) for (const m of st.marks) { const x = px(m.day); if (!inX(x)) continue; const y = rowY(st, rect, m.row, m.day), ph = (CLK.t * 0.8 + m.day * 0.13) % 1, a = (m.a?.v ?? 1); g.strokeStyle = rgba(INK.ember, (1 - ph) * 0.8 * a); g.lineWidth = 1; g.beginPath(); g.arc(x, y, 4 + ph * 14, 0, 6.283); g.stroke(); g.fillStyle = rgba(INK.ember, 0.95 * a); g.beginPath(); g.arc(x, y, 2.6, 0, 6.283); g.fill(); }
   // ---- spotlight band: everything outside falls away; the region of interest is lit from within
   const bs = st.band.s.v; if (bs > 0.01) { const xa = clamp(px(st.band.a.v), rect.x, rect.x + rect.w), xb = clamp(px(st.band.b.v), rect.x, rect.x + rect.w), y0 = rect.y - 26, y1 = rect.y + rect.h + 34;
-    g.fillStyle = `rgba(7,8,10,${0.64 * bs})`; g.fillRect(rect.x - 60, y0, xa - rect.x + 60, y1 - y0); g.fillRect(xb, y0, rect.x + rect.w - xb + 60, y1 - y0);
+    g.fillStyle = rgba(BASE, 0.64 * bs); g.fillRect(rect.x - 60, y0, xa - rect.x + 60, y1 - y0); g.fillRect(xb, y0, rect.x + rect.w - xb + 60, y1 - y0);
     if (xb > xa) { const gr = g.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, rgba(INK.amber, 0.0)); gr.addColorStop(0.5, rgba(INK.amber, 0.06 * bs * (0.8 + 0.2 * Math.sin(CLK.t * 1.6)))); gr.addColorStop(1, rgba(INK.amber, 0)); g.fillStyle = gr; g.fillRect(xa, y0, xb - xa, y1 - y0);
       for (const x of [xa, xb]) { const e = g.createLinearGradient(0, y0, 0, y1); e.addColorStop(0, rgba(INK.amber, 0)); e.addColorStop(0.3, rgba(INK.amber, 0.85 * bs)); e.addColorStop(0.7, rgba(INK.amber, 0.85 * bs)); e.addColorStop(1, rgba(INK.amber, 0)); g.strokeStyle = e; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y0); g.lineTo(x, y1); g.stroke(); }
       if (st.band.label) txt(g, st.band.label.toUpperCase(), (xa + xb) / 2, y0 + 12, { align: 'center', color: rgba(INK.amber, bs), font: `600 9.5px ${FONT.mono}`, ls: '1.6px' }); } }
@@ -140,7 +148,7 @@ function drawTerrainOverlay(g, st, rect, o = {}) {
   // ---- scan line: hover reads the instrument at any moment
   if (!mini && st.hover && st.hover.x >= rect.x && st.hover.x <= rect.x + rect.w && st.hover.y >= rect.y - 30 && st.hover.y <= rect.y + rect.h + 50) { const x = st.hover.x, day = geo.dayOf(x), dt = dateAt(day); g.strokeStyle = rgba(INK.ivory, 0.35); g.lineWidth = 1; g.beginPath(); g.moveTo(x, rect.y - 6); g.lineTo(x, rect.y + rect.h); g.stroke(); const rows = ROWSETS[st.rowsKind], sg = Math.max(0.85, (dayToCard(span) / st._N) * 1.25); let best = -1, bd = 1e9;
     rows.forEach((row, i) => { const s = sampleRowAt(row, day, sg), y = rowY(st, rect, i, day); const ra = st.rowA[i]?.v ?? 1; if (Math.abs(y - st.hover.y) < bd) { bd = Math.abs(y - st.hover.y); best = i; } g.fillStyle = rgba(tone(s.v, 0, s.u), 0.95 * ra); g.beginPath(); g.arc(x, y, 3, 0, 6.283); g.fill(); const right = x < rect.x + rect.w - 70; txt(g, (s.w < 0.02 ? '–' : `${Math.round(s.v * 100)}%`), x + (right ? 8 : -8), y + 3.5, { align: right ? 'left' : 'right', color: rgba(INK.ivory, 0.92 * ra), font: `500 10px ${FONT.mono}` }); });
-    st.hoverRow = best; const label = `${WDS[dt.getDay()]} ${dt.getDate()} ${MONS[dt.getMonth()]} ’${String(dt.getFullYear()).slice(2)}${day > NOW_DAY ? ' · forecast' : ''}`; const w = g.measureText(label).width + 16; g.fillStyle = 'rgba(14,16,18,0.92)'; g.fillRect(clamp(x - w / 2, rect.x, rect.x + rect.w - w), rect.y + rect.h + 22, w, 18); txt(g, label, clamp(x - w / 2, rect.x, rect.x + rect.w - w) + 8, rect.y + rect.h + 34, { color: rgba(INK.ivory, 1), font: `500 10px ${FONT.mono}` });
+    st.hoverRow = best; const label = `${WDS[dt.getDay()]} ${dt.getDate()} ${MONS[dt.getMonth()]} ’${String(dt.getFullYear()).slice(2)}${day > NOW_DAY ? ' · forecast' : ''}`; const w = g.measureText(label).width + 16; g.fillStyle = rgba(BASE, 0.92); g.fillRect(clamp(x - w / 2, rect.x, rect.x + rect.w - w), rect.y + rect.h + 22, w, 18); txt(g, label, clamp(x - w / 2, rect.x, rect.x + rect.w - w) + 8, rect.y + rect.h + 34, { color: rgba(INK.ivory, 1), font: `500 10px ${FONT.mono}` });
     for (const h of HOLIDAYS) if (Math.abs(h.day - day) < Math.max(1.2, span / 90)) txt(g, h.name, x, rect.y - 24, { align: 'center', color: rgba(INK.ivory, 0.9), font: `600 11px ${FONT.ui}` }); } else if (!mini) st.hoverRow = -1;
   g.restore();
 }

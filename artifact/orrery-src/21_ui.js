@@ -1,6 +1,7 @@
 // ================================================================ UI helpers: icons, toasts, sheets, router
 const ICON = {
   help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.8M12 16.6v.1"/>',
+  note: '<path d="M6 4.5h9.5L19 8v11.5H6z"/><path d="M9 11.5h7M9 15h4.5"/>',
   today: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
   plan: '<rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/>',
   patterns: '<path d="M3 18 9 9l4 5 3-4 5 8"/><path d="M3 21h18" opacity=".45"/>',

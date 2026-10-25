@@ -4,9 +4,9 @@ const wallOf = () => { if (!WALL) { WALL = makeWall(); WALL.onCard = (setId, idx
 const wordFor = (h) => (h >= 80 ? 'Strong' : h >= 68 ? 'Steady' : 'Strained');
 function shortInsight(i) { if (!i) return ''; return { seg: `${SEGNAME[i.seg]} is the hard one`, holiday: 'holidays knock you off course', room: `${i.room} needs attention`, skipped: 'a few tasks keep getting skipped', trend: i.up ? 'climbing' : 'dipping lately', pair: `${i.a} and ${i.b} move together`, late: 'month-ends are harder', workout: 'workouts and chores go together', sweep: 'a clean sweep is within reach', recovery: 'bounce-backs are worth a look' }[i.kind] || ''; }
 function ringSvg(h) {
-  const arc = (r, v, c, i) => { const L = 2 * Math.PI * r; return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(239,230,212,.09)" stroke-width="5"/><circle class="arc" cx="50" cy="50" r="${r}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${L}" style="--L:${L};--to:${L * (1 - clamp(v, 0, 1))}px;animation-delay:${i * 0.12}s" transform="rotate(-90 50 50)"/>`; };
+  const arc = (r, v, c, i) => { const L = 2 * Math.PI * r; return `<circle cx="50" cy="50" r="${r}" fill="none" style="stroke:rgb(var(--ink-rgb) / .1)" stroke-width="5"/><circle class="arc" cx="50" cy="50" r="${r}" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="${L}" style="stroke:${c};--L:${L};--to:${L * (1 - clamp(v, 0, 1))}px;animation-delay:${i * 0.12}s" transform="rotate(-90 50 50)"/>`; };
   const ok = HEAD.state === 'ok';
-  return `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${ok ? `System health ${HEAD.health} out of 100` : 'System health: not enough data yet'}">${ok ? arc(44, HEAD.completion, '#e3a24a', 0) + arc(35, HEAD.consistency ?? HEAD.completion, '#c8794a', 1) + arc(26, 0.5 + (HEAD.trend ?? 0) / 18, '#6fb0a3', 2) : arc(44, 0, '#e3a24a', 0) + arc(35, 0, '#c8794a', 1) + arc(26, 0, '#6fb0a3', 2)}<text x="50" y="${ok ? 54 : 55}" text-anchor="middle" style="font:300 24px var(--display);fill:var(--ink)">${ok ? HEAD.health : '–'}</text></svg>`;
+  return `<svg class="ring" viewBox="0 0 100 100" role="img" aria-label="${ok ? `System health ${HEAD.health} out of 100` : 'System health: not enough data yet'}">${ok ? arc(44, HEAD.completion, 'var(--amber)', 0) + arc(35, HEAD.consistency ?? HEAD.completion, 'var(--copper)', 1) + arc(26, 0.5 + (HEAD.trend ?? 0) / 18, 'var(--verd)', 2) : arc(44, 0, 'var(--amber)', 0) + arc(35, 0, 'var(--copper)', 1) + arc(26, 0, 'var(--verd)', 2)}<text x="50" y="${ok ? 54 : 55}" text-anchor="middle" style="font:300 24px var(--display);fill:var(--ink)">${ok ? HEAD.health : '–'}</text></svg>`;
 }
 function statusFor(st) {
   const ins = MODEL.ins[0];
@@ -77,7 +77,8 @@ function cardPanel(cc, t) {
   const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5), pills = cc.week ? `<div class="seg wkseg" style="margin:0 0 10px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}">${esc(c.label)} <span class="num">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>` : '';
   return `<section class="panel cardpanel"><div class="row" style="margin-bottom:8px"><h2 class="grow" style="margin:0">Today’s card</h2><span class="sub">${cc.week ? (left > 0 ? `open ${left} more day${left === 1 ? '' : 's'}` : 'last day to tick') : ''}</span></div>${pills}${paperHtml(cc.set, cc.card, { t })}
     <div class="row wrap actrow"><button class="primary grow" id="snap">${icon('camera')} Photograph card</button><button class="sec" id="tell">Tell it</button></div>
-    <p class="sub" style="margin:10px 0 0">${cc.week ? 'This week’s cards stay open through Sunday. After that they close, so there is never a backlog to catch up on.' : `Starts ${fmtShort(cc.card.start_date)}.`}</p></section>`;
+    <button class="link sm" id="cnote" style="padding-left:0;margin-top:2px">${icon('note')} ${notesOfCard(cc.set.id, cc.card.idx).length ? `${notesOfCard(cc.set.id, cc.card.idx).length} note${notesOfCard(cc.set.id, cc.card.idx).length === 1 ? '' : 's'} · ` : ''}Add a note</button>
+    <p class="sub" style="margin:4px 0 0">${cc.week ? 'This week’s cards stay open through Sunday. After that they close, so there is never a backlog to catch up on.' : `Starts ${fmtShort(cc.card.start_date)}.`}</p></section>`;
 }
 function bindToday(st, cc, t) {
   view.querySelectorAll('[data-setup]').forEach((b) => (b.onclick = () => { if (b.dataset.show) ui.show = b.dataset.show; goPlan(b.dataset.setup); }));
@@ -86,7 +87,7 @@ function bindToday(st, cc, t) {
   $('#wall-more').onclick = () => go('patterns'); $('#ringbtn').onclick = openHealthSheet;
   $('#obs-why')?.addEventListener('click', () => openStory(MODEL.ins[0])); $('#obs-more')?.addEventListener('click', () => go('patterns'));
   $('#roomchips')?.addEventListener('click', (e) => { const b = e.target.closest('[data-room]'); if (b) openRoomSheet(b.dataset.room); });
-  $('#snap')?.addEventListener('click', () => $('#snapfile').click()); $('#tell')?.addEventListener('click', () => openLog('say'));
+  $('#snap')?.addEventListener('click', () => $('#snapfile').click()); $('#tell')?.addEventListener('click', () => openLog('say')); $('#cnote')?.addEventListener('click', () => openNoteSheet(cc.set.id, cc.card.idx));
   $('#fitlog').onclick = () => openLog('say', 'workout'); $('#fitmore').onclick = openFitnessSheet;
   if (cc) bindPaper(view, cc.set, cc.card, () => go('today', { keep: true }));
   const dom = 'home', setShield = (on) => async () => { try { const id = `${dom}_${t}`; if (on) { S.shields = [...S.shields, { id, domain: dom, date: t }]; go('today', { keep: true }); await queue(() => col('shields').doc(id).set({ domain: dom, date: t })); } else { S.shields = S.shields.filter((x) => x.id !== id); go('today', { keep: true }); await queue(() => col('shields').doc(id).delete()); } } catch (e) { toast(e.message); } };

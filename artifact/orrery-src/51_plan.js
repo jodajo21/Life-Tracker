@@ -95,7 +95,7 @@ async function createDeck(pv) {
 }
 function renderPlanDeck() {
   const tasks = expandTasks(), deck = currentDeck(), rs = roomStats(today()).filter((r) => r.planned >= 3 && r.coverage < 0.6);
-  PV.innerHTML = `${deck ? '' : `<section class="panel home"><h2>Deal your first deck</h2>${dealControls(tasks, rs, false)}</section>`}${deck ? editorHtml(deck) : ''}
+  PV.innerHTML = `${deckNotesPanel()}${deck ? '' : `<section class="panel home"><h2>Deal your first deck</h2>${dealControls(tasks, rs, false)}</section>`}${deck ? editorHtml(deck) : ''}
     ${deck ? `<details class="panel" id="dealmore"><summary><h2 style="margin:0">Deal a new deck</h2></summary><div style="margin-top:10px">${dealControls(tasks, rs, true)}</div></details>` : ''}
     <datalist id="tasklib">${tasks.map((x) => `<option value="${esc(x.name)} · ${esc(x.room)}">`).join('')}</datalist><datalist id="rooms">${[...new Set(tasks.map((x) => x.room))].map((r) => `<option value="${esc(r)}">`).join('')}</datalist>`;
   const deal = async () => { const b = $('#deal'); b.disabled = true; try { const pv = buildPreview(tasks, rs); const n = await createDeck(pv); toast(`Deck ${n} dealt. Look through the cards, edit anything, then tick Reviewed.`); go('plan', { keep: false }); setTimeout(() => $('#editor')?.scrollIntoView({ behavior: 'smooth' }), 80); } catch (e) { toast(e.message); b.disabled = false; } };
@@ -106,7 +106,7 @@ function renderPlanDeck() {
       ${pv.sixes ? `<p class="sub"><b>${pv.sixes} card${pv.sixes === 1 ? ' has' : 's have'} 6 tasks.</b> Your list adds up to ${pv.total} placements and 5 per card fits ${pv.softMax * 39}. Remove or lower about ${pv.overBy} placements on the Rooms step, or fix it by hand afterward.</p>` : '<p class="sub">Every card has 3 to 5 tasks.</p>'}
       <div class="row"><button class="primary" id="make-deck">Create this deck</button></div>`;
     $('#make-deck').onclick = deal; });
-  if (deck) bindEditor(deck);
+  bindDeckNotes(); if (deck) bindEditor(deck);
 }
 
 // ---------------------------------------------------------------- step 3: print and start

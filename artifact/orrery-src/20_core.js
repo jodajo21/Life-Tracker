@@ -143,7 +143,7 @@ const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
 const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
 const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
 const limits = sample ? await sample.limits().catch(() => ({})) : {};
-const R = { entries: [], cats: [], chores: [], chats: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+const R = { entries: [], cats: [], chores: [], chats: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], notes: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
 let S = R, PREVIEW = false;   // S is what the screens read: your real data, or an in-memory sample while previewing (nothing is written in preview)
 let current = 'today', chatHistory = [], chatBusy = false;
 
@@ -273,7 +273,7 @@ function openCardItemFor(cat, date) {
   for (const card of [...wk.cards].sort((a, b) => rank(a) - rank(b))) { if (isLocked(card, today())) continue; const item = card.items.find((i) => !i.done && names.has(normName(i.name))); if (item) return { set: wk.set, card, item }; }
   return null;
 }
-const allReady = () => PREVIEW || ['entries', 'cats', 'chores', 'sets', 'decks', 'rooms', 'taskcats', 'chats', 'shields', 'sugg'].every((k) => R.ready[k]);
+const allReady = () => PREVIEW || ['entries', 'cats', 'chores', 'sets', 'decks', 'rooms', 'taskcats', 'chats', 'shields', 'sugg', 'notes'].every((k) => R.ready[k]);
 let loadGaveUp = false;
 // ---------------------------------------------------------------- Claude: natural-language logging
 const COPY = { not_granted: 'Claude access is off for this page. Allow it when prompted to log by text or photo.', rate_limited: 'Too many requests right now. Try again in a minute.', upstream_error: 'That request failed. Try again.', invalid_json: 'I couldn’t read that. Try rephrasing.', session_expired: 'Sign in to Claude again, then retry.' };

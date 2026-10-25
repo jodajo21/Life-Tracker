@@ -6,7 +6,7 @@ function makeWall() {
   const cyclesList = () => S.sets.slice().sort((a, b) => a.n - b.n);
   const segRateOf = (set, seg, t) => { let p = 0, d = 0; for (const c of set.cards) if (c.idx % 3 === seg && c.end_date < t && c.items.length && !isPreStart(set, c)) { p += c.items.length; d += c.items.filter((i) => i.done).length; } return p ? d / p : null; };
   const cardRate = (c, t) => (c.end_date < t && c.items.length ? c.items.filter((i) => i.done).length / c.items.length : null);
-  const heatCss = (v) => `rgba(${v < 0.5 ? '229,104,60' : v < 0.8 ? '217,136,70' : '242,192,109'},${(0.25 + 0.7 * v).toFixed(2)})`;
+  const heatCss = (v) => rgba(heat(v), (0.7 + 0.3 * v).toFixed(2)), heatText = (v) => rgba(mixc(heat(v), INK.ivory, 0.5), 1);   // text needs more light than a fill does
   W.sets = cyclesList; W.current = () => { const l = cyclesList(); return l.find((s) => s.n === W.cy) || l[l.length - 1] || null; };
   W.update = ({ animate = false } = {}) => {
     const t = today(), list = cyclesList(), set = W.current(), deck = !set ? currentDeck() : null;
@@ -25,11 +25,11 @@ function makeWall() {
         const pre = !ghost && isPreStart(set, c), locked = !ghost && !pre && isLocked(c, t), fin = !ghost && !pre && c.end_date < t, isNow = c.idx === nowIdx, started = !ghost && !pre && c.start_date <= t, rate = pre ? null : cardRate(c, t), done = c.items.filter((i) => i.done).length, sealed = c.items.length && done === c.items.length && (fin || started);
         const pips = c.items.map((i) => { const st = i.done ? 'done' : pre ? 'pre' : locked ? 'miss' : fin ? 'late' : started ? 'open' : 'fut', key = `${set ? set.id : 'x'}:${c.idx}:${i.id}`, was = W.prev.get(key), just = was === false && i.done; W.prev.set(key, !!i.done); return `<i class="pp ${st}${just ? ' just' : ''}" data-k="${esc(key)}" data-room="${esc(i.room || '')}" data-task="${esc(i.name)}"></i>`; }).join('');
         const label = `Card ${c.idx + 1} of 39, ${c.label}, week ${w + 1}. ${ghost ? 'Not started.' : `${done} of ${c.items.length} done.`}`;
-        h += `<button class="cd ${isNow ? 'now' : ''} ${fin ? 'past' : ''} ${pre ? 'pre' : ''} ${sealed ? 'sealed' : ''}" data-i="${c.idx}" data-seg="${s}" style="--c:${w}" ${ghost ? 'tabindex="-1"' : ''} aria-label="${esc(label)}"><span class="pips">${pips}</span>${rate != null ? `<span class="cr" style="color:${heatCss(rate)}">${Math.round(rate * 100)}</span>` : ''}</button>`;
+        h += `<button class="cd ${isNow ? 'now' : ''} ${fin ? 'past' : ''} ${pre ? 'pre' : ''} ${sealed ? 'sealed' : ''}" data-i="${c.idx}" data-seg="${s}" style="--c:${w}" ${ghost ? 'tabindex="-1"' : ''} aria-label="${esc(label)}"><span class="pips">${pips}</span>${rate != null ? `<span class="cr" style="color:${heatText(rate)}">${Math.round(rate * 100)}</span>` : ''}</button>`;
       }
     }
     h += '</div>';
-    if (W.hist && list.length > 1) h += `<div class="wall-hist" aria-label="Cycles">${list.map((x) => `<button class="ht ${x.n === W.cy ? 'on' : ''}" data-hn="${x.n}" aria-label="Cycle ${x.n}"><svg viewBox="0 0 39 9" preserveAspectRatio="none" aria-hidden="true">${x.cards.slice().sort((a, b) => a.idx - b.idx).map((c) => { const r = cardRate(c, t), wk = Math.floor(c.idx / 3), sg = c.idx % 3; return `<rect x="${wk * 3}" y="${sg * 3}" width="2.6" height="2.6" rx=".5" fill="${r == null ? 'rgba(143,161,179,.2)' : heatCss(r)}"/>`; }).join('')}</svg><span>${x.n}</span></button>`).join('')}</div>`;
+    if (W.hist && list.length > 1) h += `<div class="wall-hist" aria-label="Cycles">${list.map((x) => `<button class="ht ${x.n === W.cy ? 'on' : ''}" data-hn="${x.n}" aria-label="Cycle ${x.n}"><svg viewBox="0 0 39 9" preserveAspectRatio="none" aria-hidden="true">${x.cards.slice().sort((a, b) => a.idx - b.idx).map((c) => { const r = cardRate(c, t), wk = Math.floor(c.idx / 3), sg = c.idx % 3; return `<rect x="${wk * 3}" y="${sg * 3}" width="2.6" height="2.6" rx=".5" fill="${r == null ? 'currentColor' : heatCss(r)}" ${r == null ? 'fill-opacity=".25"' : ''}/>`; }).join('')}</svg><span>${x.n}</span></button>`).join('')}</div>`;
     const sig = `${set ? set.id : 'x'}|${W.cy}`, entering = animate || sig !== W.sig; W.sig = sig;
     W.el.classList.toggle('enter', entering); W.el.innerHTML = h; W.applyFocus();
     const hs = W.el.querySelector('.wall-hist'), on = hs && hs.querySelector('.ht.on'); if (on) hs.scrollLeft = on.offsetLeft - hs.clientWidth / 2 + on.offsetWidth / 2;

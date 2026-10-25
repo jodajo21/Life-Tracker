@@ -43,5 +43,16 @@ await p.locator('.paper .pi input[type=checkbox]').first().evaluate((el) => el.c
 ok(await p.locator('.paper .pi.done').count() === before + 1, 'tick on the card updates it');
 const logged = await p.evaluate(async () => { const r = await window.__O.logText('Hoovered downstairs', 'text'); return r.saved.length; });
 ok(logged >= 1, 'text log saves an entry');
+// notes: add one tagged for the next deck, see it at deal time, back up with it, and switch theme
+await p.locator('#cnote').click(); await wait(500);
+await p.locator('[data-ntag=deck]').click(); await p.fill('#nt-text', 'Quick tidy is too often, every other week is plenty'); await p.selectOption('#nt-item', { index: 1 }); await p.locator('#nt-save').click(); await wait(500);
+ok(await p.locator('#nt-list .note').count() === 1, 'note saved on the card');
+await p.keyboard.press('Escape'); await wait(500);
+await p.locator('#tabbar [data-tab=plan]').click(); await wait(500); await p.locator('[data-sub=deck]').click(); await wait(600);
+ok(await p.locator('#deck-notes .note').count() === 1, 'next-deck note is shown on the Deck step');
+await p.locator('#topMore').click(); await wait(600);
+ok(await p.locator('#notes-panel .note').count() === 1, 'note listed under More');
+await p.locator('[data-theme-pick=ember]').click(); await wait(500);
+ok(await p.evaluate(() => document.documentElement.getAttribute('data-theme') === 'ember'), 'theme switch applies at once');
 ok(errs.length === 0, 'no console errors' + (errs.length ? ': ' + errs.join(' | ') : ''));
 await b.close(); process.exit(failed ? 1 : 0);
