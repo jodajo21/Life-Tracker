@@ -13,6 +13,8 @@ A personal goals tracker (Fitness + Home life) that runs as an installable web a
 | Merge "jog" / "run" | New wording that's clearly the same is merged automatically (≥80% sure); 50–80% shows up under **Tidy** as a question; below that it's a new category |
 | 4×6 printable cards | **Cards → Generate**: spreads your house tasks over 13 weeks × 3 cards (Mon–Tue, Wed–Thu, Fri–Sat), 3–6 tasks per card |
 
+> There is also a no-server version that runs as a Claude Artifact (data in the artifact's own database, printable-card PDF, photo reading). See [`artifact/README.md`](artifact/README.md).
+
 ## One-time setup (~15 min)
 
 Requires a free Cloudflare account (R2 asks for a payment method, but this usage stays in the free tier) and an Anthropic API key.

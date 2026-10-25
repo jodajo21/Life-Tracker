@@ -1,0 +1,11 @@
+// ================================================================ PREVIEW + BOOT
+function startPreview() { if (PREVIEW) return; closeSheet(); PREVIEW = true; S = makeSampleState(); chatHistory = []; WALL = null; PLAND = null; ui.todayCard = null; ui.cyc = null; $('#pvbar').hidden = false; go('today'); toast('Sample preview. Nothing here is saved.'); }
+function exitPreview() { PREVIEW = false; S = R; chatHistory = []; WALL = null; PLAND = null; ui.todayCard = null; ui.cyc = null; $('#pvbar').hidden = true; closeSheet(); go('today'); toast('Back to your own data.'); }
+$('#pvExit').onclick = exitPreview;
+if (!db) { view.innerHTML = '<div class="panel"><h2>Storage isn’t available here</h2><p>Open this page in the Claude app or on claude.ai while signed in, so it can keep your data.</p><p><button class="sec" id="pv-offline">Look around with sample data</button></p></div>'; $('#pv-offline').onclick = () => { PREVIEW = true; S = makeSampleState(); $('#pvbar').hidden = false; $('#pvExit').hidden = true; go('today'); }; return; }
+listen('entries', 'entries'); listen('categories', 'cats'); listen('chores', 'chores'); listen('cardsets', 'sets'); listen('decks', 'decks'); listen('rooms', 'rooms'); listen('taskcats', 'taskcats'); listen('roomchats', 'chats'); listen('shields', 'shields'); listen('suggestions', 'sugg');
+db.doc('settings/main').onSnapshot((d) => { if (d.exists) R.settings = { ...R.settings, ...d.data(), fitness_weekly_target: Number(d.data().fitness_weekly_target) || 3 }; schedule(); }, () => {});
+let lastDay = today(); document.addEventListener('visibilitychange', () => { if (!document.hidden && today() !== lastDay) { lastDay = today(); go(current, { keep: true }); } });
+setTimeout(() => { if (!allReady()) { loadGaveUp = true; go(current, { keep: true }); } }, 4500);
+const hash = (location.hash || '').slice(1); go(tabs[hash] ? hash : 'today');
+if (window.__ORRERY_DEBUG) window.__O = { get S() { return S; }, get R() { return R; }, get MODEL() { return MODEL; }, get HEAD() { return HEAD; }, get ROWSETS() { return ROWSETS; }, get PLAND() { return PLAND; }, buildModel, go, makeSampleState, logText, weekCards, openCardItemFor, today, latestSet, computeInsights, storyFor, wallOf, ui, store, setupState, NOW: () => ({ NOW_DAY, NOW_CARD, WEEKS, NCARDS, START }) };
