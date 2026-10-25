@@ -193,7 +193,7 @@ dialog.sheet.wide { max-width: 1080px; }
 .rchip { flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line2); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 0 14px; min-height: 42px; font-size: 14px; } .rchip b { font-weight: 600; } .rchip span { font: 500 12.5px var(--mono); color: var(--amber); } .rchip.hot { border-color: rgb(var(--accent-rgb) / 0.6); } .rchip:hover { border-color: var(--amber); }
 .tier { width: 9px; height: 9px; border-radius: 50%; } .tier.bronze { background: #b87333; } .tier.silver { background: #c0c7ce; } .tier.gold { background: #f2c06d; }
 .obs { border-color: rgb(var(--ai-rgb) / 0.35); background: linear-gradient(var(--verd-soft), transparent 55%), var(--surface); } .obs-t { font: 400 21px/1.25 var(--display); margin: 6px 0 0; }
-.cardpanel { padding: 16px 14px 14px; } .wkseg { margin-bottom: 10px; } .wkseg button { font-size: 13.5px; padding: 8px 6px; } .wkseg .num { font-size: 13px; opacity: 0.8; margin-left: 4px; } .actrow { margin-top: 12px; } .actrow .primary { min-height: 52px; font-size: 16px; }
+.cardpanel { padding: 16px 14px 14px; } .wkseg { margin-bottom: 10px; } .wkseg button { font-size: 13px; padding: 8px 3px; } .wkseg .num { font-size: 12px; opacity: 0.8; margin-left: 3px; } .wkseg .sdot { width: 8px; height: 8px; margin-right: 5px; } .actrow { margin-top: 12px; } .actrow .primary { min-height: 52px; font-size: 16px; }
 .fitpanel .bar { margin: 12px 0 4px; } .prog .bar { margin: 10px 0 2px; }
 /* the wall */
 .wall { --labw: 44px; --ph: 4px; --pg: 2px; container-type: inline-size; } @container (max-width: 830px) { .wh small { display: none !important; } } .wall-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; min-height: 40px; }
@@ -216,13 +216,16 @@ dialog.sheet.wide { max-width: 1080px; }
 .ht { flex: none; width: 64px; border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 6px 6px 4px; color: var(--muted); text-align: center; } .ht.on { border-color: var(--amber); color: var(--amber); } .ht svg { width: 100%; height: 22px; margin-bottom: 3px; } .ht span { font: 600 11px var(--mono); }
 .walltip { position: fixed; z-index: 90; pointer-events: none; min-width: 210px; max-width: 270px; background: var(--surface); border: 1px solid var(--line2); border-radius: 10px; padding: 10px 12px; opacity: 0; transition: opacity 0.12s; font-size: 13px; box-shadow: 0 14px 30px -10px #000; } .walltip.on { opacity: 1; } .walltip b { display: block; font: 600 13.5px var(--body); } .walltip .s { display: block; color: var(--muted); font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; } .walltip div { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; color: var(--ink2); } .walltip small { color: var(--muted); font: 500 11px var(--mono); text-transform: uppercase; }
 /* the paper card */
-.paper { position: relative; background: var(--paper); color: var(--paper-ink); border-radius: 12px; padding: 28px 18px 14px; box-shadow: 0 18px 30px -18px #000, inset 0 0 0 1px rgb(var(--paper-ink-rgb) / 0.06); transition: box-shadow 0.5s; } .paper .hole { position: absolute; left: 50%; top: 9px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 1px 2px #000a; }
-.paper .ph { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--paper-ink); padding-bottom: 8px; margin-bottom: 2px; } .paper .pt { font: 500 25px/1 var(--display); letter-spacing: 0.02em; } .paper .pw { font: 500 11.5px var(--mono); color: var(--paper-mute); margin-top: 5px; } .paper .pn { font: 600 14px var(--mono); border: 2px solid var(--paper-ink); border-radius: 4px; padding: 1px 8px; flex: none; }
-.pi { display: flex; gap: 14px; align-items: center; padding: 12px 2px; border-bottom: 1px dashed rgb(var(--paper-ink-rgb) / 0.2); min-height: 62px; position: relative; cursor: pointer; } .pi:last-child { border-bottom: 0; } .pi input { position: absolute; opacity: 0; width: 100%; height: 100%; left: 0; top: 0; margin: 0; cursor: pointer; min-height: 0; }
-.pi .bx { width: 32px; height: 32px; border: 2.5px solid var(--paper-ink); border-radius: 7px; display: grid; place-items: center; flex: none; transition: background 0.2s, border-color 0.2s, transform 0.25s cubic-bezier(.3, 1.6, .5, 1); } .pi .bx .ico { width: 22px; height: 22px; stroke: var(--on-accent); stroke-width: 3.2; opacity: 0; stroke-dasharray: 30; stroke-dashoffset: 30; transition: opacity 0.1s; }
-.pi input:checked + .bx { background: var(--amber); border-color: var(--accent-deep); transform: scale(1.06); } .pi input:checked + .bx .ico { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 0.32s 0.05s, opacity 0.1s; } .pi input:focus-visible + .bx { outline: 3px solid var(--accent-deep); outline-offset: 3px; }
-.pi .pnm b { font: 600 17.5px/1.25 var(--body); display: block; } .pi .pnm small { font: 600 11px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--paper-mute); } .pi.done .pnm b { color: rgb(var(--paper-ink-rgb) / 0.45); text-decoration: line-through; text-decoration-color: rgb(var(--paper-ink-rgb) / 0.4); } .pi input:disabled { cursor: default; }
-.paper .pf { display: flex; align-items: center; gap: 12px; margin-top: 10px; font: 500 12.5px var(--mono); color: var(--paper-mute); } .paper .bar { flex: 1; background: rgb(var(--paper-ink-rgb) / 0.14); margin: 0; } .paper .bar i { background: var(--accent-deep); }
+.paper { position: relative; background: #fff; color: var(--paper-ink); border-radius: 20px; padding: 0 0 14px; overflow: hidden; box-shadow: 0 18px 30px -18px #000, inset 0 0 0 1px rgb(var(--paper-ink-rgb) / 0.06); transition: box-shadow 0.5s; }
+.paper .ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--pb); border-radius: 0 0 22px 22px; padding: 22px 18px 16px; margin-bottom: 4px; } .paper .pt { font: 700 26px/1 var(--body); letter-spacing: 0.02em; } .paper .pw { font: 500 12.5px var(--body); color: rgb(var(--paper-ink-rgb) / 0.78); margin-top: 6px; } .paper .pm { width: 58px; height: 58px; flex: none; } .paper .pm svg { width: 100%; height: 100%; }
+.paper .pl { padding: 4px 18px 0; }
+.pi { display: flex; gap: 14px; align-items: center; padding: 11px 2px; border-bottom: 1.5px dotted rgb(var(--pdr) / 0.5); min-height: 62px; position: relative; cursor: pointer; } .pi:last-child { border-bottom: 0; } .pi input { position: absolute; opacity: 0; width: 100%; height: 100%; left: 0; top: 0; margin: 0; cursor: pointer; min-height: 0; }
+.pi .bx { width: 32px; height: 32px; border: 2px solid var(--paper-ink); border-radius: 10px; background: var(--pt); display: grid; place-items: center; flex: none; transition: background 0.2s, transform 0.25s cubic-bezier(.3, 1.6, .5, 1); } .pi .bx .ico { width: 22px; height: 22px; stroke: var(--paper-ink); stroke-width: 3.2; opacity: 0; stroke-dasharray: 30; stroke-dashoffset: 30; transition: opacity 0.1s; }
+.pi input:checked + .bx { background: var(--pd); transform: scale(1.08); } .pi input:checked + .bx .ico { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 0.32s 0.05s, opacity 0.1s; } .pi input:focus-visible + .bx { outline: 3px solid var(--paper-ink); outline-offset: 3px; }
+.pi .pnm b { font: 700 17px/1.25 var(--body); display: block; } .pi .pnm small { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 999px; background: var(--pt); font: 700 10.5px var(--body); letter-spacing: 0.09em; text-transform: uppercase; color: rgb(var(--paper-ink-rgb) / 0.78); } .pi.done .pnm b { color: rgb(var(--paper-ink-rgb) / 0.5); text-decoration: line-through; text-decoration-color: rgb(var(--paper-ink-rgb) / 0.4); } .pi input:disabled { cursor: default; }
+.paper .pmsg { margin: 8px 18px 0; padding: 8px 14px; border-radius: 999px; background: var(--pt); text-align: center; font: italic 500 14px var(--body); }
+.paper .pf { display: flex; align-items: center; gap: 12px; margin: 12px 18px 0; font: 600 12.5px var(--body); color: rgb(var(--paper-ink-rgb) / 0.78); } .paper .bar { flex: 1; background: rgb(var(--pdr) / 0.22); margin: 0; } .paper .bar i { background: var(--pd); } .paper .pn { background: var(--pt); border-radius: 999px; padding: 3px 11px; color: var(--paper-ink); font-weight: 700; flex: none; }
+.sdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: 0; box-shadow: 0 0 8px currentColor; }
 .paper.sealed { box-shadow: 0 0 0 2px var(--amber), 0 0 44px rgb(var(--accent-rgb) / 0.4), 0 18px 30px -18px #000; }
 /* fitness */
 .fdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 6px 0 8px; } .fd { display: flex; flex-direction: column; align-items: center; gap: 6px; font: 600 12px var(--mono); color: var(--muted); } .fd i { width: 100%; height: 38px; border-radius: 8px; background: var(--heat); border: 1px solid var(--line); } .fd.on i { background: var(--steel); border-color: var(--steel); } .fd.today span { color: var(--ink); }
@@ -233,9 +236,8 @@ dialog.sheet.wide { max-width: 1080px; }
 .qsgrid { display: flex; flex-wrap: wrap; gap: 8px; } .qsc { display: flex; align-items: center; border: 1px solid var(--line2); border-radius: 12px; background: var(--bg); overflow: hidden; } .qsc.on { border-color: var(--amber); background: var(--amber-soft); } .qsb { border: 0; background: none; color: var(--ink); padding: 0 16px; min-height: 48px; font: 600 15px var(--body); }
 .qsn { display: flex; align-items: center; gap: 2px; padding-right: 6px; } .qsn button { width: 38px; height: 38px; border-radius: 9px; border: 0; background: var(--heat); color: var(--ink); font-size: 18px; } .qsn b { min-width: 22px; text-align: center; }
 .ready { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line); } .ready:last-of-type { border-bottom: 0; } .ready i { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none; font: 700 14px var(--mono); font-style: normal; } .ready.ok i { background: var(--amber); color: var(--on-accent); } .ready.ok i .ico { width: 15px; height: 15px; stroke-width: 3.2; } .ready.no i { background: var(--ember-soft); color: var(--ember); border: 1px solid var(--ember); } .ready span { flex: 1; }
-.pvsheet { background: #fbf9f4; color: #111; aspect-ratio: 11 / 8.5; display: grid; grid-template-columns: 1fr 1fr; padding: 11.4% 13.6%; border-radius: 6px; box-shadow: 0 14px 30px -14px #000; } .pvc { container-type: inline-size; border: 1px dashed #b5b0a3; padding: 0 5cqw 4cqw; background: #fff; overflow: hidden; } .pvc.ghost { border-color: transparent; background: none; }
-.pvc-clamp { height: 13cqw; margin: 0 -5cqw 3cqw; border-bottom: 1px dotted #c8c3b5; font: 600 3.4cqw var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: #c3bdae; text-align: center; line-height: 13cqw; } .pvc-h { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 0.7cqw solid #111; padding-bottom: 2cqw; } .pvc-h b { font: 700 8.5cqw/1 var(--body); } .pvc-h span { font: 700 5cqw var(--mono); border: 0.8cqw solid #111; border-radius: 1cqw; padding: 0.5cqw 2cqw; } .pvc-w { font: 500 4cqw var(--body); color: #555; margin: 2cqw 0 3cqw; }
-.pvc-i { display: flex; align-items: center; gap: 4cqw; margin-bottom: 3.4cqw; } .pvc-i i { width: 8cqw; height: 8cqw; border: 0.8cqw solid #111; border-radius: 1.2cqw; flex: none; } .pvc-i span { font: 500 5.4cqw/1.15 var(--body); } .pvc-i small { display: block; font: 600 3cqw var(--mono); color: #777; text-transform: uppercase; letter-spacing: 0.08em; }
+.pvsheet { background: #fbf9f4; aspect-ratio: 11 / 8.5; display: grid; grid-template-columns: 1fr 1fr; padding: 11.4% 13.6%; border-radius: 6px; box-shadow: 0 14px 30px -14px #000; } .pvsheet.half { padding: 2.84% 2.27%; }
+.pvc { aspect-ratio: 288 / 432; background: #fff; overflow: hidden; outline: 1px dashed #b5b0a3; } .pvc svg { display: block; width: 100%; height: 100%; } .pvc.ghost { outline-color: transparent; background: none; }
 /* ---------- Patterns ---------- */
 .landwrap { height: 310px; position: relative; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; } .landwrap canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: crosshair; } .mmc { width: 100%; height: 46px; display: block; cursor: ew-resize; touch-action: none; margin-top: 8px; }
 .seg.mini { margin: 0; } .seg.mini button { min-height: 40px; padding: 0 14px; font-size: 14px; flex: none; } .legend { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 5px; color: var(--ink2); font-size: 14px; } .legend b { color: var(--ink); }
@@ -314,7 +316,7 @@ input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
 .bar { position: relative; height: 10px; border-radius: 999px; background: rgb(var(--base-rgb) / 0.62); box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6), 0 1px 0 rgb(255 255 255 / 0.05); } .bar.big { height: 14px; }
 .bar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 11px, rgb(var(--base-rgb) / 0.5) 11px 12px); }
 .bar i { border-radius: inherit; background: linear-gradient(90deg, var(--done-a), var(--done-b)); box-shadow: 0 0 14px rgb(var(--accent-rgb) / 0.65); } .fit .bar i { background: linear-gradient(90deg, rgb(var(--fit-rgb) / 0.65), var(--steel)); box-shadow: 0 0 14px rgb(var(--fit-rgb) / 0.55); }
-.paper .bar { background: rgb(var(--paper-ink-rgb) / 0.14); box-shadow: none; } .paper .bar::after { background: none; } .paper .bar i { background: var(--accent-deep); box-shadow: none; }
+.paper .bar { background: rgb(var(--pdr) / 0.22); box-shadow: none; } .paper .bar::after { background: none; } .paper .bar i { background: var(--pd); box-shadow: none; }
 .loadline .bar { height: 6px; } .momentum i.on { box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.75); } .fit .momentum i.on { box-shadow: 0 0 10px rgb(var(--fit-rgb) / 0.6); }
 .dots6 li.now i { box-shadow: 0 0 12px var(--amber); } .dots-n i.on { box-shadow: 0 0 10px var(--verd); }
 
@@ -327,9 +329,9 @@ input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
 .cd.now { border-color: rgb(var(--accent-rgb) / 0.85); box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.3), 0 0 24px -4px rgb(var(--accent-rgb) / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1); }
 .pp.done { box-shadow: 0 0 9px rgb(var(--accent-rgb) / 0.6); } .cd.sealed::after { box-shadow: 0 0 12px var(--amber); }
 .pp.fut, .pp.pre { background: rgb(255 255 255 / 0.03); }
-.paper { background: linear-gradient(180deg, #fff 0%, var(--paper) 22%); border-radius: 14px; box-shadow: 0 34px 56px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.45) inset, 0 0 70px -24px rgb(var(--accent-rgb) / 0.35); }
-.paper.sealed { box-shadow: 0 0 0 2px var(--amber), 0 0 54px rgb(var(--accent-rgb) / 0.5), 0 34px 56px -26px rgb(0 0 0 / 0.9); } .paper .hole { background: var(--bg); }
-.pi input:checked + .bx { background: linear-gradient(180deg, var(--amber2), var(--amber)); box-shadow: 0 0 14px rgb(var(--accent-rgb) / 0.6); }
+.paper { box-shadow: 0 34px 56px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.45) inset, 0 0 70px -24px rgb(var(--pbr) / 0.55); }
+.paper.sealed { box-shadow: 0 0 0 2px var(--pd), 0 0 54px rgb(var(--pdr) / 0.55), 0 34px 56px -26px rgb(0 0 0 / 0.9); }
+/* checked boxes take the slot colour (see 02_screens) */
 .fd i { background: rgb(var(--base-rgb) / 0.6); box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.5); } .fd.on i { background: linear-gradient(180deg, var(--steel), rgb(var(--fit-rgb) / 0.6)); box-shadow: 0 0 14px rgb(var(--fit-rgb) / 0.5); border-color: transparent; }
 .rate b { text-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.25); } .rate { background: var(--glass-raised); }
 .hrow i { box-shadow: 0 0 10px currentColor; }
@@ -372,6 +374,11 @@ dialog::backdrop { background: radial-gradient(90% 70% at 50% 100%, rgb(var(--ac
 .pc.reviewed { box-shadow: var(--lift), 0 0 0 1px rgb(var(--accent-rgb) / 0.35), 0 0 36px -12px rgb(var(--accent-rgb) / 0.55); background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.14), rgb(var(--glass-rgb) / 0.03) 60%), rgb(var(--base-rgb) / 0.55); }
 .pc.reviewed::before { background: linear-gradient(150deg, rgb(var(--accent-rgb) / 0.95), rgb(var(--accent-rgb) / 0.22) 45%, rgb(var(--accent-rgb) / 0.5)); }
 .pc.reviewed .pc-n { border-color: rgb(var(--accent-rgb) / 0.7); color: var(--ink); }
+
+/* the review cards wear their slot's colour too */
+.pc-clamp { background: repeating-linear-gradient(135deg, rgb(var(--pbr) / 0.3) 0 6px, transparent 6px 12px), rgb(var(--base-rgb) / 0.55); border-color: rgb(var(--pbr) / 0.55); color: var(--ink2); }
+.pc-t::before { content: ''; display: inline-block; width: 11px; height: 11px; margin-right: 10px; border-radius: 50%; background: var(--pb); box-shadow: 0 0 12px rgb(var(--pbr) / 0.8); vertical-align: 2px; }
+.pc .pc-n { border-color: rgb(var(--pbr) / 0.65); }
 
 </style></head><body>
 <script>try{var t=localStorage.getItem("orrery-theme");if(t==="ember"||t==="nebula")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
@@ -1434,6 +1441,156 @@ function openStory(ins) {
   inst.after = () => pruneLand(st); setTimeout(show, 120);
 }
 
+// ================================================================ CARD ART: how the printed card looks
+// One layout (cardOps) feeds two painters: jsPDF for the real PDF and SVG for the print preview, so what you preview is what prints.
+// Each two-day slot has its own colour and a small drawing: Mon–Tue a sun, Wed–Thu a sprout, Fri–Sat a star. Text stays dark navy on soft colour, so it prints clearly on any printer.
+const CARD_INK = '#232946';
+const CARDG = { W: 288, H: 432, L: 24, R: 264, band: 116, rowsTop: 136, rowsBot: 354 };   // points, for a 4 × 6 in card
+const SEGS = [
+  { name: 'Fresh start', band: '#FFD166', deep: '#F29F05', tint: '#FFF1C7', motif: 'sun',
+    msgs: ['Fresh week, fresh start.', 'You\'ve got this.', 'Start small. Start now.', 'Momentum begins today.', 'One thing at a time.', 'Tiny wins add up.'] },
+  { name: 'Midweek groove', band: '#6FD6C6', deep: '#16A08E', tint: '#D9F6F0', motif: 'sprout',
+    msgs: ['Right in the groove.', 'Look at you go.', 'Steady wins the week.', 'Future you says thanks.', 'Making it look easy.', 'Keep that good rhythm.'] },
+  { name: 'Finish strong', band: '#FF93A8', deep: '#E0476A', tint: '#FFE1E8', motif: 'star',
+    msgs: ['Finish strong, then rest.', 'Almost the weekend!', 'Sunday you will be proud.', 'Last push. You\'ve got this.', 'Tidy home, happy heart.', 'Done feels so good.'] },
+];
+const segOf = (c) => SEGS[c.idx % 3];
+const cardMsg = (c) => { const s = segOf(c); return s.msgs[Math.floor(c.idx / 3) % s.msgs.length]; };
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mixHex = (a, b, t) => { const x = hexRgb(a), y = hexRgb(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+const segVars = (s) => `--pb:${s.band};--pd:${s.deep};--pt:${s.tint};--pbr:${hexRgb(s.band).join(' ')};--pdr:${hexRgb(s.deep).join(' ')}`;
+
+// ---- the drawings, in a 100 × 100 box. Colour names are resolved per slot.
+const star5 = (cx, cy, ro, ri, rot) => Array.from({ length: 10 }, (_, i) => { const a = rot + (i * Math.PI) / 5, r = i % 2 ? ri : ro; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; });
+const MOTIFS = {
+  sun: [
+    ...Array.from({ length: 8 }, (_, i) => { const a = (i * Math.PI) / 4, c = Math.cos(a), s = Math.sin(a); return { t: 'line', p: [50 + c * 35, 50 + s * 35, 50 + c * 46, 50 + s * 46], w: 6, c: 'deep' }; }),
+    { t: 'circle', p: [50, 50, 25], c: 'deep' },
+    { t: 'circle', p: [41, 45, 2.9], c: 'ink' }, { t: 'circle', p: [59, 45, 2.9], c: 'ink' },
+    { t: 'path', d: [['M', 38.5, 55], ['C', 43, 67, 57, 67, 61.5, 55]], s: 'ink', w: 3.6 },
+  ],
+  sprout: [
+    { t: 'path', d: [['M', 50, 90], ['C', 50, 74, 50, 62, 50, 44]], s: 'deep', w: 5.5 },
+    { t: 'path', d: [['M', 50, 62], ['C', 33, 63, 21, 53, 20, 33], ['C', 38, 32, 50, 44, 50, 62], ['Z']], c: 'deep' },
+    { t: 'path', d: [['M', 50, 50], ['C', 66, 51, 79, 42, 81, 22], ['C', 63, 21, 50, 33, 50, 50], ['Z']], c: 'white' },
+    { t: 'path', d: [['M', 24, 91], ['C', 36, 83, 64, 83, 76, 91]], s: 'deep', w: 4.5 },
+  ],
+  star: [
+    { t: 'poly', p: star5(50, 52, 37, 16, -Math.PI / 2 - 0.18), c: 'deep', s: 'deep', w: 5 },
+    { t: 'circle', p: [13, 24, 4.2], c: 'white' }, { t: 'circle', p: [87, 72, 3.8], c: 'white' }, { t: 'circle', p: [83, 16, 3.2], c: 'ink' },
+    { t: 'line', p: [12, 74, 21, 83], w: 4.2, c: 'white' }, { t: 'line', p: [87, 38, 94, 31], w: 4.2, c: 'deep' },
+  ],
+};
+function motifOps(ops, seg, x0, y0, size) {
+  const u = size / 100, col = (k) => ({ deep: seg.deep, ink: CARD_INK, white: '#ffffff', band: seg.band, tint: seg.tint }[k] || k), X = (v) => x0 + v * u, Y = (v) => y0 + v * u;
+  for (const m of MOTIFS[seg.motif]) {
+    if (m.t === 'circle') ops.push({ o: 'circle', x: X(m.p[0]), y: Y(m.p[1]), r: m.p[2] * u, f: col(m.c) });
+    else if (m.t === 'line') ops.push({ o: 'line', x1: X(m.p[0]), y1: Y(m.p[1]), x2: X(m.p[2]), y2: Y(m.p[3]), s: col(m.c), sw: m.w * u, cap: 'round' });
+    else if (m.t === 'poly') ops.push({ o: 'poly', pts: m.p.map(([a, b]) => [X(a), Y(b)]), f: col(m.c), s: m.s && col(m.s), sw: (m.w || 0) * u });
+    else ops.push({ o: 'path', d: m.d.map((s) => (s[0] === 'Z' ? s : [s[0], ...s.slice(1).map((v, i) => (i % 2 ? Y(v) : X(v)))])), f: m.c && col(m.c), s: m.s && col(m.s), sw: (m.w || 0) * u });
+  }
+}
+
+// ---- layout: rows share the space between the header and the footer; a six-task card gets compact rows
+function rowLayout(n) { const area = CARDG.rowsBot - CARDG.rowsTop, rh = Math.min(60, area / Math.max(1, n)), y0 = CARDG.rowsTop + (area - rh * n) / 2; return { rh, y0, compact: rh < 38 }; }
+function wrapText(text, maxW, size, weight, measure) {
+  const out = []; let line = '';
+  const words = [];
+  for (let word of String(text).split(/\s+/).filter(Boolean)) {                     // a word wider than the line is cut into pieces
+    while (measure(word, size, weight) > maxW && word.length > 1) { let n = word.length - 1; while (n > 1 && measure(word.slice(0, n), size, weight) > maxW) n--; words.push(word.slice(0, n)); word = word.slice(n); }
+    words.push(word);
+  }
+  for (const word of words) {
+    const t = line ? line + ' ' + word : word;
+    if (measure(t, size, weight) <= maxW || !line) line = t; else { out.push(line); line = word; }
+  }
+  if (line) out.push(line);
+  return out;
+}
+function ellipsize(s, maxW, size, weight, measure) { let t = s; while (t.length > 1 && measure(t + '...', size, weight) > maxW) t = t.slice(0, -1); return t.trimEnd() + '...'; }
+
+function cardOps(deck, c, measure, { preview = false } = {}) {
+  const G = CARDG, S = segOf(c), NAVY = CARD_INK, ops = [], weeks = Math.ceil(deck.cards.length / 3), wk = Math.floor(c.idx / 3), soft = (h, t) => mixHex(h, '#ffffff', t);
+  const txt = (t, x, y, size, w, c2, extra = {}) => ({ o: 'text', t, x, y, size, w, c: c2, ...extra });
+  // header band: square at the top edge, soft at the bottom. The top 54 pt is only colour, left clear for a clamp.
+  ops.push({ o: 'rect', x: 0, y: 0, w: G.W, h: G.band - 18, f: S.band }, { o: 'rect', x: 0, y: G.band - 40, w: G.W, h: 40, r: 18, f: S.band });
+  [[30, 21, 11], [64, 35, 5], [255, 25, 17]].forEach(([x, y, r]) => ops.push({ o: 'circle', x, y, r, f: soft(S.band, 0.0) === S.band ? mixHex(S.band, '#ffffff', 0.38) : mixHex(S.band, '#ffffff', 0.38) }));   // soft decoration up in the clamp zone
+  [[0, 10], [278, 288]].forEach(([a, b]) => ops.push({ o: 'line', x1: a, y1: 54, x2: b, y2: 54, s: mixHex(S.band, NAVY, 0.35), sw: 1 }));
+  if (preview) ops.push({ o: 'line', x1: 0, y1: 54, x2: G.W, y2: 54, s: mixHex(S.band, NAVY, 0.3), sw: 0.8, dash: [3, 3] }, txt('CLAMP SPACE', G.W / 2, 31, 8, 'bold', mixHex(S.band, NAVY, 0.5), { a: 'center', cs: 1.8 }));
+  ops.push(txt(c.label.replace('–', ' · ').toUpperCase(), G.L, 88, 27, 'bold', NAVY, { cs: 0.6 }));
+  ops.push(txt(`Week ${wk + 1} of ${weeks}`, G.L, 106, 11, 'normal', mixHex(NAVY, S.band, 0.2)));
+  motifOps(ops, S, 206, 58, 52);
+  // tasks
+  const n = c.items.length, { rh, y0, compact } = rowLayout(n), nx = 58, maxW = G.R - nx - (compact ? 0 : 4), cap = compact ? 1 : 2;
+  c.items.forEach((it, i) => {
+    const cy = y0 + rh * (i + 0.5), room = it.room ? it.room.toUpperCase() : '', cs = 0.7, chipW = room ? measure(room, 7.2, 'bold') + room.length * cs + 11 : 0;
+    ops.push({ o: 'rect', x: G.L, y: cy - 12, w: 24, h: 24, r: 7, f: S.tint, s: NAVY, sw: 1.7 });
+    let fs = compact ? 12.5 : 14.5, lines, lh;                                          // a long name steps the type down until the row fits
+    for (const size of compact ? [12.5] : [14.5, 13.5, 12.5]) { fs = size; lh = fs * 1.18; lines = wrapText(it.name, maxW, fs, 'bold', measure); if (lines.length <= cap && lines.length * lh + (room ? 17 : 0) <= rh - 6) break; }
+    if (lines.length > cap) { lines = lines.slice(0, cap); lines[cap - 1] = ellipsize(lines[cap - 1], maxW, fs, 'bold', measure); }
+    const block = lines.length * lh + (room && !compact ? 17 : 0), top = cy - block / 2;
+    lines.forEach((ln, j) => ops.push(txt(ln, nx, top + fs * 0.84 + j * lh, fs, 'bold', NAVY)));
+    if (room && (!compact || measure(lines[0], fs, 'bold') + chipW + 8 < maxW)) {
+      const cx = compact ? G.R - chipW : nx, cyy = compact ? cy - 6 : top + lines.length * lh + 5;
+      ops.push({ o: 'rect', x: cx, y: cyy, w: chipW, h: 12, r: 6, f: S.tint }, txt(room, cx + 5.5, cyy + 8.6, 7.2, 'bold', mixHex(NAVY, '#ffffff', 0.25), { cs }));
+    }
+    if (i) ops.push({ o: 'line', x1: nx, y1: y0 + rh * i, x2: G.R, y2: y0 + rh * i, s: soft(S.deep, 0.4), sw: 1.6, dash: [0.1, 4.2], cap: 'round' });
+  });
+  // footer: a friendly line, where this card sits in the 13 weeks, and its number
+  ops.push({ o: 'rect', x: G.L, y: 362, w: G.R - G.L, h: 26, r: 13, f: S.tint }, txt(cardMsg(c), G.W / 2, 378.8, 10.5, 'italic', NAVY, { a: 'center' }));
+  for (let i = 0; i < weeks; i++) {
+    const x = G.L + 4 + i * 14.2, y = 408;
+    if (i < wk) ops.push({ o: 'circle', x, y, r: 3.2, f: soft(S.deep, 0.45) });
+    else if (i === wk) ops.push({ o: 'circle', x, y, r: 4, f: S.deep }, { o: 'circle', x, y, r: 6.4, s: S.deep, sw: 1 });
+    else ops.push({ o: 'circle', x, y, r: 3, s: soft(S.deep, 0.3), sw: 1.1 });
+  }
+  const no = cardNo(deck, c), nw = measure(no, 10.5, 'bold') + 16;
+  ops.push({ o: 'rect', x: G.R - nw, y: 398, w: nw, h: 20, r: 10, f: S.tint }, txt(no, G.R - nw / 2, 411.6, 10.5, 'bold', NAVY, { a: 'center' }));
+  return ops;
+}
+
+// ---- painter 1: the PDF. (ox, oy) is the card's corner on the page, k scales 4 × 6 up to 5.25 × 7.875 in.
+function paintPdf(doc, ops, ox, oy, k) {
+  const X = (v) => ox + v * k, Y = (v) => oy + v * k, rgb = hexRgb;
+  for (const p of ops) {
+    if (p.f) doc.setFillColor(...rgb(p.f)); if (p.s) { doc.setDrawColor(...rgb(p.s)); doc.setLineWidth((p.sw || 1) * k); }
+    const style = p.f && p.s ? 'FD' : p.f ? 'F' : 'S';
+    if (p.dash) doc.setLineDashPattern(p.dash.map((v) => v * k), 0); if (p.cap) doc.setLineCap(p.cap); if (p.s) doc.setLineJoin('round');
+    if (p.o === 'rect') p.r ? doc.roundedRect(X(p.x), Y(p.y), p.w * k, p.h * k, p.r * k, p.r * k, style) : doc.rect(X(p.x), Y(p.y), p.w * k, p.h * k, style);
+    else if (p.o === 'circle') doc.circle(X(p.x), Y(p.y), p.r * k, style);
+    else if (p.o === 'line') doc.line(X(p.x1), Y(p.y1), X(p.x2), Y(p.y2));
+    else if (p.o === 'poly') { const d = p.pts.map(([x, y], i) => (i ? [(x - p.pts[i - 1][0]) * k, (y - p.pts[i - 1][1]) * k] : null)).filter(Boolean); doc.lines(d, X(p.pts[0][0]), Y(p.pts[0][1]), [1, 1], style, true); }
+    else if (p.o === 'path') {
+      let cx = 0, cy = 0, sx = 0, sy = 0; const segs = []; let closed = false;
+      for (const s of p.d) { if (s[0] === 'M') { cx = sx = s[1]; cy = sy = s[2]; } else if (s[0] === 'C') { segs.push([(s[1] - cx) * k, (s[2] - cy) * k, (s[3] - cx) * k, (s[4] - cy) * k, (s[5] - cx) * k, (s[6] - cy) * k]); cx = s[5]; cy = s[6]; } else closed = true; }
+      doc.lines(segs, X(p.d[0][1]), Y(p.d[0][2]), [1, 1], style, closed);
+    } else if (p.o === 'text') {
+      doc.setFont('helvetica', p.w).setFontSize(p.size * k); doc.setTextColor(...rgb(p.c)); doc.text(p.t, X(p.x), Y(p.y), { align: p.a || 'left', ...(p.cs ? { charSpace: p.cs * k } : {}) });
+    }
+    if (p.dash) doc.setLineDashPattern([], 0); if (p.cap) doc.setLineCap('butt');
+  }
+}
+const pdfMeasure = (doc) => (s, size, w) => { doc.setFont('helvetica', w).setFontSize(size); return doc.getTextWidth(s); };
+
+// ---- painter 2: SVG for the preview (same numbers, so it lines up with the PDF)
+let _mctx = null;
+const svgMeasure = (s, size, w) => { _mctx ||= document.createElement('canvas').getContext('2d'); _mctx.font = `${w === 'italic' ? 'italic' : w} ${size}px Helvetica, Arial, sans-serif`; return _mctx.measureText(s).width; };
+function paintSvg(ops, vb = [CARDG.W, CARDG.H]) {
+  const f = (v) => +v.toFixed(2), col = (c) => c || 'none';
+  const body = ops.map((p) => {
+    const paint = `fill="${col(p.f)}" stroke="${col(p.s)}"${p.s ? ` stroke-width="${f(p.sw || 1)}" stroke-linejoin="round"` : ''}${p.cap ? ` stroke-linecap="${p.cap}"` : ''}${p.dash ? ` stroke-dasharray="${p.dash.join(' ')}"` : ''}`;
+    if (p.o === 'rect') return `<rect x="${f(p.x)}" y="${f(p.y)}" width="${f(p.w)}" height="${f(p.h)}"${p.r ? ` rx="${p.r}"` : ''} ${paint}/>`;
+    if (p.o === 'circle') return `<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(p.r)}" ${paint}/>`;
+    if (p.o === 'line') return `<line x1="${f(p.x1)}" y1="${f(p.y1)}" x2="${f(p.x2)}" y2="${f(p.y2)}" ${paint}/>`;
+    if (p.o === 'poly') return `<polygon points="${p.pts.map(([x, y]) => f(x) + ',' + f(y)).join(' ')}" ${paint}/>`;
+    if (p.o === 'path') return `<path d="${p.d.map((s) => (s[0] === 'Z' ? 'Z' : s[0] + s.slice(1).map(f).join(' '))).join(' ')}" ${paint}/>`;
+    return `<text x="${f(p.x)}" y="${f(p.y)}" text-anchor="${p.a === 'center' ? 'middle' : 'start'}"${p.cs ? ` letter-spacing="${p.cs}"` : ''} style="fill:${p.c};font:${p.w === 'italic' ? 'italic 400' : p.w === 'bold' ? '700' : '400'} ${p.size}px Helvetica, Arial, sans-serif">${esc(p.t)}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${vb[0]} ${vb[1]}" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif" aria-hidden="true">${body}</svg>`;
+}
+const cardSvg = (deck, c) => paintSvg(cardOps(deck, c, svgMeasure, { preview: true }));
+const motifSvg = (seg) => { const ops = []; motifOps(ops, seg, 0, 0, 100); return paintSvg(ops, [100, 100]); };
+
 // ================================================================ NOTES: a short note on a card, tagged by what it is for
 // note = stays with the card (Ask can read it) · deck = shown when the next deck is dealt · idea = collected in More for the app itself
 const NOTE_TAGS = [
@@ -1600,7 +1757,7 @@ async function restoreCycle(bk) {
 function cardHtml(deck, c) {
   const n = c.items.length, cls = n < 3 || n > 6 ? 'bad' : n === 6 ? 'six' : '';
   const msg = n < 3 ? `${n} task${n === 1 ? '' : 's'} · needs 3 or more` : n === 6 ? '6 tasks · use only if needed' : n > 6 ? `${n} tasks · too many` : `${n} tasks`;
-  return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}">
+  return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}" style="${segVars(segOf(c))}">
     <div class="pc-clamp" title="Left blank on the printed card so a clip or clamp can hold it">clamp space</div>
     <div class="pc-h"><div><div class="pc-t">${esc(c.label.replace('–', ' · ').toUpperCase())}</div><div class="sub">Week ${weekOf(c)} of ${Math.ceil(deck.cards.length / 3)}</div></div><div class="pc-n">${cardNo(deck, c)}</div></div>
     <ul class="pc-l">${c.items.map((i) => `<li data-id="${i.id}"><span class="grip" draggable="true" title="Drag to another card" aria-hidden="true">⠿</span><span class="box"></span><div class="pc-in"><input data-name value="${esc(i.name)}" aria-label="Task"><input data-room value="${esc(i.room || '')}" list="rooms" aria-label="Room" placeholder="Room"></div><button class="icon" data-more aria-label="Task options">⋯</button></li>`).join('')}</ul>
@@ -1611,7 +1768,7 @@ const cardVisible = (c) => (ui.week === 'all' || weekOf(c) === +ui.week) && (ui.
 function editorHtml(deck) {
   const weeks = Math.ceil(deck.cards.length / 3), size = store.get('cardsize', 'index');
   return `<section class="panel" id="editor"><div class="row wrap"><h2 class="grow" style="margin:0">Your cards · deck ${deck.n}</h2>${S.decks.length > 1 ? `<select id="deck-pick" style="width:auto" aria-label="Deck">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>` : ''}</div>
-    <p class="sub" style="margin:4px 0 12px">Each card keeps a blank strip at the top for a clip or clamp. Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
+    <p class="sub" style="margin:4px 0 12px">Each card keeps its top strip clear for a clip or clamp. Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
     <div class="deckbar"><div><div class="row"><b id="rv-count"></b><span class="grow"></span><span class="sub" id="rv-off"></span></div><div class="bar" style="margin:6px 0 0"><i id="rv-bar"></i></div></div>
       <div class="row wrap"><select id="wk" aria-label="Week"><option value="all">All weeks</option>${Array.from({ length: weeks }, (_, i) => `<option value="${i + 1}" ${ui.week == i + 1 ? 'selected' : ''}>Week ${i + 1}</option>`).join('')}</select>
         <select id="show" aria-label="Show"><option value="all" ${ui.show === 'all' ? 'selected' : ''}>All cards</option><option value="review" ${ui.show === 'review' ? 'selected' : ''}>Needs review</option><option value="off" ${ui.show === 'off' ? 'selected' : ''}>Not 3 to 5 tasks</option></select>
@@ -1690,26 +1847,8 @@ function taskMenu(btn, edit, cur) {
 }
 
 // ---------------------------------------------------------------- PDF: two cards per letter sheet
-const CLAMP = 54; // points of blank card at the top (0.75 in) so a clip or clamp can hold it without covering text
-function drawCard(doc, deck, c, ox, oy, k) {
-  const X = (v) => ox + v * k, Y = (v) => oy + v * k, L = 24, R = 264, z = CLAMP, weeks = Math.ceil(deck.cards.length / 3);
-  doc.setDrawColor(200).setLineWidth(0.5 * k); [[0, 10], [278, 288]].forEach(([a, b]) => doc.line(X(a), Y(z), X(b), Y(z))); // small ticks mark where the clamp area ends
-  doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26 * k); doc.text(c.label.replace('–', ' · ').toUpperCase(), X(L), Y(z + 30));
-  doc.setFont('helvetica', 'normal').setFontSize(11 * k); doc.text(`Week ${weekOf(c)} of ${weeks}`, X(L), Y(z + 48));
-  doc.setFont('courier', 'bold').setFontSize(15 * k); const no = cardNo(deck, c), cw = doc.getTextWidth(no) + 16 * k;
-  doc.setLineWidth(1.6 * k); doc.roundedRect(X(R) - cw, Y(z + 8), cw, 26 * k, 3 * k, 3 * k); doc.text(no, X(R) - cw / 2, Y(z + 26), { align: 'center' });
-  doc.line(X(L), Y(z + 60), X(R), Y(z + 60));
-  const top = z + 70, bottom = 402, n = c.items.length, rh = (bottom - top) / Math.max(1, n);
-  c.items.forEach((it, i) => {
-    const cy = top + rh * i + rh / 2;
-    doc.setLineWidth(2 * k); doc.roundedRect(X(L), Y(cy - 13), 26 * k, 26 * k, 3 * k, 3 * k);
-    doc.setFont('helvetica', 'normal').setFontSize(14 * k);
-    const lines = doc.splitTextToSize(it.name, (R - 60) * k).slice(0, 2), y0 = cy - (lines.length - 1) * 8 + (it.room ? -3 : 5);
-    doc.text(lines, X(58), Y(y0), { lineHeightFactor: 1.15 });
-    if (it.room) { doc.setFontSize(8 * k).setTextColor(100); doc.text(it.room.toUpperCase(), X(58), Y(y0 + (lines.length - 1) * 16 + 12)); doc.setTextColor(0); }
-  });
-  doc.setFontSize(8 * k).setTextColor(100); doc.text('Home - 2-day card', X(L), Y(424)); doc.text('Check the box when done', X(R), Y(424), { align: 'right' }); doc.setTextColor(0);
-}
+const CLAMP = 54; // points of blank colour at the top (0.75 in) so a clip or clamp can hold the card without covering text
+function drawCard(doc, deck, c, ox, oy, k) { paintPdf(doc, cardOps(deck, c, pdfMeasure(doc)), ox, oy, k); }
 
 // ================================================================ Rooms, categories and tasks (where tasks are broken down into card items)
 const ROOM_TYPES = ['Kitchen', 'Bathroom', 'Bedroom', 'Living', 'Entry', 'Laundry', 'Garage', 'Office', 'Outdoor', 'Other'];
@@ -2123,9 +2262,9 @@ function startOptions(sets) {
   return (dow >= 1 && dow <= 6 ? `<option value="${thisMon}">This week, from ${fmt(thisMon)}</option>` : '') + `<option value="${nextMon}">Next week, from ${fmt(nextMon)}</option>`;
 }
 function sheetPreview(deck, i) {
-  const cs = deck.cards.slice().sort((a, b) => a.idx - b.idx), a = cs[2 * i], b = cs[2 * i + 1], weeks = Math.ceil(deck.cards.length / 3);
-  const card = (c) => (c ? `<div class="pvc"><div class="pvc-clamp">clamp space</div><div class="pvc-h"><b>${esc(c.label.replace('–', ' · ').toUpperCase())}</b><span>${cardNo(deck, c)}</span></div><div class="pvc-w">Week ${weekOf(c)} of ${weeks}</div>${c.items.map((it) => `<div class="pvc-i"><i></i><span>${esc(it.name)}<small>${esc(it.room || '')}</small></span></div>`).join('')}</div>` : '<div class="pvc ghost"></div>');
-  return `<div class="pvsheet" role="img" aria-label="Sheet ${i + 1} of ${pageCount(deck)}: card ${a ? pad(a.idx + 1) : ''} and card ${b ? pad(b.idx + 1) : ''}, side by side, with a blank strip across the top of each">${card(a)}${card(b)}</div>`;
+  const cs = deck.cards.slice().sort((a, b) => a.idx - b.idx), a = cs[2 * i], b = cs[2 * i + 1], half = store.get('cardsize', 'index') === 'half';
+  const card = (c) => (c ? `<div class="pvc">${cardSvg(deck, c)}</div>` : '<div class="pvc ghost"></div>');
+  return `<div class="pvsheet ${half ? 'half' : ''}" role="img" aria-label="Sheet ${i + 1} of ${pageCount(deck)}: card ${a ? pad(a.idx + 1) : ''} and card ${b ? pad(b.idx + 1) : ''}, side by side. Each has a coloured header band for the day pair, with the top left clear for a clamp.">${card(a)}${card(b)}</div>`;
 }
 function cardsPdf(deck, size, { test = false } = {}) {
   const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
@@ -2159,7 +2298,7 @@ function renderPlanPrint() {
       ${row(true, `${deck.cards.length} cards dealt (deck ${deck.n})`)}${row(rem === 0, rem ? `${rem} card${rem === 1 ? '' : 's'} not reviewed yet` : 'Every card reviewed', rem ? '<button class="sec sm" id="go-review">Review them</button>' : '')}${off ? row(true, `${off} card${off === 1 ? ' is' : 's are'} not at 3 to 5 tasks. That is fine if it is on purpose.`) : ''}
       <div class="chart-title">What prints: 2 cards per letter sheet, landscape</div>
       <div class="row" style="justify-content:space-between;margin-bottom:8px"><button class="sec sm" id="sh-prev" ${ui.sheet === 0 ? 'disabled' : ''} aria-label="Previous sheet">${icon('left')}</button><b>Sheet ${ui.sheet + 1} of ${pages}</b><button class="sec sm" id="sh-next" ${ui.sheet >= pages - 1 ? 'disabled' : ''} aria-label="Next sheet">${icon('right')}</button></div>
-      <div id="sheetpv">${sheetPreview(deck, ui.sheet)}</div><p class="sub" style="margin:8px 0 0">The blank strip at the top of each card is for a clip or clamp. Dashed lines are cut guides.</p>
+      <div id="sheetpv">${sheetPreview(deck, ui.sheet)}</div><p class="sub" style="margin:8px 0 0">Each two-day slot has its own colour: sunny yellow for Mon–Tue, mint for Wed–Thu, pink for Fri–Sat. The top three-quarters of an inch is only colour, left clear for a clip or clamp. Dashed lines are cut guides. It prints best in colour, but it reads fine in black and white.</p>
       <div class="row wrap" style="margin-top:14px"><select id="pdf-size" aria-label="Paper layout" style="flex:1 1 220px;width:auto"><option value="index" ${size === 'index' ? 'selected' : ''}>4 × 6 in cards · 2 per letter sheet</option><option value="half" ${size === 'half' ? 'selected' : ''}>5.5 × 8.5 in cards · 2 per letter sheet</option></select></div>
       <div class="row wrap" style="margin-top:12px"><button class="primary" id="pdf-all" ${rem ? 'disabled' : ''}>${icon('print')} Make the PDF · ${pages} sheets</button><button class="sec" id="pdf-test" ${rem ? 'disabled' : ''}>Test sheet only</button></div>
       <p class="sub" style="margin:8px 0 0">${rem ? 'The PDF unlocks once every card is reviewed.' : st.printed ? `You saved this deck on ${esc(S.settings.printed_at || '')}. Print at 100% scale, landscape, US Letter, then cut along the dashed lines.` : 'Print the test sheet first to check your printer’s scaling, then the whole deck. Use 100% scale, landscape, US Letter.'}</p></section>
@@ -2212,11 +2351,12 @@ function rolloverBanner() {
   return `<section class="panel hint"><b>Cycle ${set.n} ends ${fmtShort(end)}.</b> ${newer ? 'Your next deck is dealt. Print it before then.' : 'Deal the next deck now so it is printed and ready.'}<div style="margin-top:10px"><button class="sec sm" data-setup="${newer ? 'print' : 'deck'}">${newer ? 'Print the next deck' : 'Plan the next deck'}</button></div></section>`;
 }
 function paperHtml(set, card, { t = today(), compact = false } = {}) {
-  const locked = isLocked(card, t), done = card.items.filter((i) => i.done).length, tot = card.items.length, w = Math.floor(card.idx / 3) + 1, started = card.start_date <= t;
-  return `<div class="paper ${tot && done === tot ? 'sealed' : ''}" data-card="${card.idx}"><i class="hole"></i>
-    <div class="ph"><div><div class="pt">${esc(card.label.replace('–', ' · ').toUpperCase())}</div><div class="pw">Week ${w} of ${Math.ceil(set.cards.length / 3)} · ${fmtShort(card.start_date)}${card.start_date !== card.end_date ? '–' + fmtShort(card.end_date).replace(/^\w+\s/, '') : ''}</div></div><div class="pn">${pad(card.idx + 1)} / ${set.cards.length}</div></div>
+  const locked = isLocked(card, t), done = card.items.filter((i) => i.done).length, tot = card.items.length, w = Math.floor(card.idx / 3) + 1, started = card.start_date <= t, S = segOf(card);
+  return `<div class="paper ${tot && done === tot ? 'sealed' : ''}" data-card="${card.idx}" style="${segVars(S)}">
+    <div class="ph"><div><div class="pt">${esc(card.label.replace('–', ' · ').toUpperCase())}</div><div class="pw">Week ${w} of ${Math.ceil(set.cards.length / 3)} · ${fmtShort(card.start_date)}${card.start_date !== card.end_date ? '–' + fmtShort(card.end_date).replace(/^\w+\s/, '') : ''}</div></div><span class="pm">${motifSvg(S)}</span></div>
     <div class="pl">${card.items.map((i) => `<label class="pi ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="bx">${icon('check')}</span><span class="pnm"><b>${esc(i.name)}</b>${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div>
-    <div class="pf"><span>${done} of ${tot} done${locked ? ' · closed' : !started ? ' · not started' : ''}</span><div class="bar"><i style="width:${tot ? (100 * done) / tot : 0}%"></i></div></div></div>`;
+    <div class="pmsg">${esc(cardMsg(card))}</div>
+    <div class="pf"><span>${done} of ${tot} done${locked ? ' · closed' : !started ? ' · not started' : ''}</span><div class="bar"><i style="width:${tot ? (100 * done) / tot : 0}%"></i></div><span class="pn">${pad(card.idx + 1)} / ${set.cards.length}</span></div></div>`;
 }
 function bindPaper(root, set, card, after) {
   root.querySelectorAll('.paper input[type=checkbox]').forEach((cb) => (cb.onchange = async () => {
@@ -2254,7 +2394,7 @@ function renderToday() {
 }
 function obsHtml(ins) { return `<section class="panel obs"><div class="row"><span class="lab" style="color:var(--verd)">Noticed</span><span class="grow"></span><span class="sub">${ins.strength}</span></div><h3 class="obs-t">${esc(ins.title)}</h3><p class="sub" style="margin:4px 0 12px;font-size:15px;color:var(--ink2)">${esc(ins.detail)}</p><div class="row wrap"><button class="ai" id="obs-why">${icon('spark')} Show me why</button>${MODEL.ins.length > 1 ? `<button class="link" id="obs-more">${MODEL.ins.length - 1} more in Patterns ›</button>` : ''}</div></section>`; }
 function cardPanel(cc, t) {
-  const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5), pills = cc.week ? `<div class="seg wkseg" style="margin:0 0 10px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}">${esc(c.label)} <span class="num">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>` : '';
+  const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5), pills = cc.week ? `<div class="seg wkseg" style="margin:0 0 10px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}"><i class="sdot" style="background:${segOf(c).band}"></i>${esc(c.label)} <span class="num">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>` : '';
   return `<section class="panel cardpanel"><div class="row" style="margin-bottom:8px"><h2 class="grow" style="margin:0">Today’s card</h2><span class="sub">${cc.week ? (left > 0 ? `open ${left} more day${left === 1 ? '' : 's'}` : 'last day to tick') : ''}</span></div>${pills}${paperHtml(cc.set, cc.card, { t })}
     <div class="row wrap actrow"><button class="primary grow" id="snap">${icon('camera')} Photograph card</button><button class="sec" id="tell">Tell it</button></div>
     <button class="link sm" id="cnote" style="padding-left:0;margin-top:2px">${icon('note')} ${notesOfCard(cc.set.id, cc.card.idx).length ? `${notesOfCard(cc.set.id, cc.card.idx).length} note${notesOfCard(cc.set.id, cc.card.idx).length === 1 ? '' : 's'} · ` : ''}Add a note</button>
@@ -2581,7 +2721,7 @@ function renderMore() {
 function openHelp() {
   const step = (n, t, d) => `<li><i>${n}</i><div><b>${t}</b><p class="sub" style="margin:2px 0 0">${d}</p></div></li>`;
   openSheet({ title: 'How Orrery works', html: `<p class="sub" style="margin-top:0">Paper does the daily work. The app keeps the books, shows you the pattern, and makes the next quarter better.</p>
-    <ol class="loop">${step(1, 'Plan', 'Add your rooms and the small jobs in each: one shelf, one sink. Say how often. The planner chat can break a room down for you.')}${step(2, 'Deal', 'Orrery spreads those jobs over 39 two-day cards (Mon–Tue, Wed–Thu, Fri–Sat for 13 weeks), 3 to 5 on each.')}${step(3, 'Print', 'Two cards per letter sheet with a blank strip on top for a clamp. You review every card before the PDF unlocks.')}${step(4, 'Start', 'Putting dates on the deck opens card 01. Hang the current card where you will see it.')}${step(5, 'Tick', 'Tick boxes with a pen, then photograph the card, or tick on Today. Say “did the toilets” in the Log box if you prefer.')}${step(6, 'Watch', 'The wall lights up as cards finish. Patterns shows the landscape and what Orrery has noticed. Ask answers anything about your data.')}</ol>
+    <ol class="loop">${step(1, 'Plan', 'Add your rooms and the small jobs in each: one shelf, one sink. Say how often. The planner chat can break a room down for you.')}${step(2, 'Deal', 'Orrery spreads those jobs over 39 two-day cards (Mon–Tue, Wed–Thu, Fri–Sat for 13 weeks), 3 to 5 on each.')}${step(3, 'Print', 'Two cards per letter sheet, each slot in its own colour, with the top left clear for a clamp. You review every card before the PDF unlocks.')}${step(4, 'Start', 'Putting dates on the deck opens card 01. Hang the current card where you will see it.')}${step(5, 'Tick', 'Tick boxes with a pen, then photograph the card, or tick on Today. Say “did the toilets” in the Log box if you prefer.')}${step(6, 'Watch', 'The wall lights up as cards finish. Patterns shows the landscape and what Orrery has noticed. Ask answers anything about your data.')}</ol>
     <div class="chart-title">Good to know</div><ul class="gk"><li>Printed cards have no dates, only a place in the cycle (like 07 / 39), so the same deck can run again and again.</li><li>A card stays open through the Sunday of its week, then it closes. There is never a backlog to catch up on.</li><li>XP and levels never go down. A Soft day protects your momentum, and momentum only dips after two or more missed days.</li><li>Add a note to any card: “Just a note” stays with it, “Next deck” comes back when you deal the next deck, “App idea” collects under More.</li><li>Rooms light up as their tasks are done. Clear a whole card to earn a shard in each of its rooms.</li><li>Your data lives in your Claude account and syncs between your phone and computer. Save a backup from More whenever you like.</li></ul>
     <div class="row" style="margin-top:14px"><button class="primary grow" id="hp-ok">Got it</button></div>` });
   $('#hp-ok').onclick = closeSheet;
@@ -2598,7 +2738,7 @@ db.doc('settings/main').onSnapshot((d) => { if (d.exists) R.settings = { ...R.se
 let lastDay = today(); document.addEventListener('visibilitychange', () => { if (!document.hidden && today() !== lastDay) { lastDay = today(); go(current, { keep: true }); } });
 setTimeout(() => { if (!allReady()) { loadGaveUp = true; go(current, { keep: true }); } }, 4500);
 const hash = (location.hash || '').slice(1); go(tabs[hash] ? hash : 'today');
-if (window.__ORRERY_DEBUG) window.__O = { get S() { return S; }, get R() { return R; }, get MODEL() { return MODEL; }, get HEAD() { return HEAD; }, get ROWSETS() { return ROWSETS; }, get PLAND() { return PLAND; }, buildModel, go, makeSampleState, logText, weekCards, openCardItemFor, today, latestSet, computeInsights, storyFor, wallOf, ui, store, setupState, NOW: () => ({ NOW_DAY, NOW_CARD, WEEKS, NCARDS, START }) };
+if (window.__ORRERY_DEBUG) window.__O = { get S() { return S; }, get R() { return R; }, get MODEL() { return MODEL; }, get HEAD() { return HEAD; }, get ROWSETS() { return ROWSETS; }, get PLAND() { return PLAND; }, buildModel, go, makeSampleState, logText, weekCards, openCardItemFor, today, latestSet, computeInsights, storyFor, wallOf, ui, store, setupState, cardsPdf, cardOps, pdfMeasure, currentDeck, NOW: () => ({ NOW_DAY, NOW_CARD, WEEKS, NCARDS, START }) };
 
 })();
 </script>

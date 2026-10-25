@@ -19,6 +19,10 @@ The loop it supports:
 6. **Notes.** Any card takes a short note, tagged *Just a note* (stays with the card; Ask can read it), *Next deck* (shown on the Deck step when you deal the next deck, and given to the room planner) or *App idea* (collected under More, with Copy). Notes are included in backups.
 7. **More.** Appearance, backup / restore as JSON, settings, possible-duplicate categories.
 
+### The printed card
+
+Each two-day slot has its own colour and drawing: **Mon–Tue** sunny yellow with a smiling sun, **Wed–Thu** mint with a sprout, **Fri–Sat** pink with a star. A coloured header band (the top 0.75 in is only colour, left clear for a clamp), big rounded tick boxes, room tags, a friendly line that changes each week, 13 dots showing where the card sits in the cycle, and the card number. Text is dark navy on soft colour, so it reads in black and white too. `47_cardart.js` builds one layout (`cardOps`) and paints it twice: jsPDF for the file and SVG for the print preview, so the preview matches. The Today card and the review cards wear the same slot colours.
+
 ### Look and feel
 
 Two themes share one depth system: a fixed ambient scene that panels slide over as you scroll, tinted glass panels with a light rim, raised controls, gauges with tick marks, and floating chrome (header, tab bar, sheets) that blurs what scrolls under it. **Nebula** (default) is deep indigo with an aqua accent; **Ember** is smoked graphite with an orange accent. Colour keeps the same jobs in both: accent = done and primary actions, pink/red = missed, lilac/teal = what Claude knows, gold/blue = fitness. Themes are CSS variables in `00_head.html` (canvas and SVG read them through `syncPalette()` in `45_land.js`); the choice is stored per device in `localStorage`. The review cards on the Deck step are dark glass that keeps the paper's structure (clamp strip, number badge, ruled header, drawn boxes) and lights up when reviewed; the tick card on Today and the print preview stay white paper because they depict the printed card. Reduced motion and reduced transparency are respected.

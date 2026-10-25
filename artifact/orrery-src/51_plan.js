@@ -117,9 +117,9 @@ function startOptions(sets) {
   return (dow >= 1 && dow <= 6 ? `<option value="${thisMon}">This week, from ${fmt(thisMon)}</option>` : '') + `<option value="${nextMon}">Next week, from ${fmt(nextMon)}</option>`;
 }
 function sheetPreview(deck, i) {
-  const cs = deck.cards.slice().sort((a, b) => a.idx - b.idx), a = cs[2 * i], b = cs[2 * i + 1], weeks = Math.ceil(deck.cards.length / 3);
-  const card = (c) => (c ? `<div class="pvc"><div class="pvc-clamp">clamp space</div><div class="pvc-h"><b>${esc(c.label.replace('–', ' · ').toUpperCase())}</b><span>${cardNo(deck, c)}</span></div><div class="pvc-w">Week ${weekOf(c)} of ${weeks}</div>${c.items.map((it) => `<div class="pvc-i"><i></i><span>${esc(it.name)}<small>${esc(it.room || '')}</small></span></div>`).join('')}</div>` : '<div class="pvc ghost"></div>');
-  return `<div class="pvsheet" role="img" aria-label="Sheet ${i + 1} of ${pageCount(deck)}: card ${a ? pad(a.idx + 1) : ''} and card ${b ? pad(b.idx + 1) : ''}, side by side, with a blank strip across the top of each">${card(a)}${card(b)}</div>`;
+  const cs = deck.cards.slice().sort((a, b) => a.idx - b.idx), a = cs[2 * i], b = cs[2 * i + 1], half = store.get('cardsize', 'index') === 'half';
+  const card = (c) => (c ? `<div class="pvc">${cardSvg(deck, c)}</div>` : '<div class="pvc ghost"></div>');
+  return `<div class="pvsheet ${half ? 'half' : ''}" role="img" aria-label="Sheet ${i + 1} of ${pageCount(deck)}: card ${a ? pad(a.idx + 1) : ''} and card ${b ? pad(b.idx + 1) : ''}, side by side. Each has a coloured header band for the day pair, with the top left clear for a clamp.">${card(a)}${card(b)}</div>`;
 }
 function cardsPdf(deck, size, { test = false } = {}) {
   const J = window.jspdf && window.jspdf.jsPDF; if (!J) return null;
@@ -153,7 +153,7 @@ function renderPlanPrint() {
       ${row(true, `${deck.cards.length} cards dealt (deck ${deck.n})`)}${row(rem === 0, rem ? `${rem} card${rem === 1 ? '' : 's'} not reviewed yet` : 'Every card reviewed', rem ? '<button class="sec sm" id="go-review">Review them</button>' : '')}${off ? row(true, `${off} card${off === 1 ? ' is' : 's are'} not at 3 to 5 tasks. That is fine if it is on purpose.`) : ''}
       <div class="chart-title">What prints: 2 cards per letter sheet, landscape</div>
       <div class="row" style="justify-content:space-between;margin-bottom:8px"><button class="sec sm" id="sh-prev" ${ui.sheet === 0 ? 'disabled' : ''} aria-label="Previous sheet">${icon('left')}</button><b>Sheet ${ui.sheet + 1} of ${pages}</b><button class="sec sm" id="sh-next" ${ui.sheet >= pages - 1 ? 'disabled' : ''} aria-label="Next sheet">${icon('right')}</button></div>
-      <div id="sheetpv">${sheetPreview(deck, ui.sheet)}</div><p class="sub" style="margin:8px 0 0">The blank strip at the top of each card is for a clip or clamp. Dashed lines are cut guides.</p>
+      <div id="sheetpv">${sheetPreview(deck, ui.sheet)}</div><p class="sub" style="margin:8px 0 0">Each two-day slot has its own colour: sunny yellow for Mon–Tue, mint for Wed–Thu, pink for Fri–Sat. The top three-quarters of an inch is only colour, left clear for a clip or clamp. Dashed lines are cut guides. It prints best in colour, but it reads fine in black and white.</p>
       <div class="row wrap" style="margin-top:14px"><select id="pdf-size" aria-label="Paper layout" style="flex:1 1 220px;width:auto"><option value="index" ${size === 'index' ? 'selected' : ''}>4 × 6 in cards · 2 per letter sheet</option><option value="half" ${size === 'half' ? 'selected' : ''}>5.5 × 8.5 in cards · 2 per letter sheet</option></select></div>
       <div class="row wrap" style="margin-top:12px"><button class="primary" id="pdf-all" ${rem ? 'disabled' : ''}>${icon('print')} Make the PDF · ${pages} sheets</button><button class="sec" id="pdf-test" ${rem ? 'disabled' : ''}>Test sheet only</button></div>
       <p class="sub" style="margin:8px 0 0">${rem ? 'The PDF unlocks once every card is reviewed.' : st.printed ? `You saved this deck on ${esc(S.settings.printed_at || '')}. Print at 100% scale, landscape, US Letter, then cut along the dashed lines.` : 'Print the test sheet first to check your printer’s scaling, then the whole deck. Use 100% scale, landscape, US Letter.'}</p></section>

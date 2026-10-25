@@ -32,11 +32,12 @@ function rolloverBanner() {
   return `<section class="panel hint"><b>Cycle ${set.n} ends ${fmtShort(end)}.</b> ${newer ? 'Your next deck is dealt. Print it before then.' : 'Deal the next deck now so it is printed and ready.'}<div style="margin-top:10px"><button class="sec sm" data-setup="${newer ? 'print' : 'deck'}">${newer ? 'Print the next deck' : 'Plan the next deck'}</button></div></section>`;
 }
 function paperHtml(set, card, { t = today(), compact = false } = {}) {
-  const locked = isLocked(card, t), done = card.items.filter((i) => i.done).length, tot = card.items.length, w = Math.floor(card.idx / 3) + 1, started = card.start_date <= t;
-  return `<div class="paper ${tot && done === tot ? 'sealed' : ''}" data-card="${card.idx}"><i class="hole"></i>
-    <div class="ph"><div><div class="pt">${esc(card.label.replace('–', ' · ').toUpperCase())}</div><div class="pw">Week ${w} of ${Math.ceil(set.cards.length / 3)} · ${fmtShort(card.start_date)}${card.start_date !== card.end_date ? '–' + fmtShort(card.end_date).replace(/^\w+\s/, '') : ''}</div></div><div class="pn">${pad(card.idx + 1)} / ${set.cards.length}</div></div>
+  const locked = isLocked(card, t), done = card.items.filter((i) => i.done).length, tot = card.items.length, w = Math.floor(card.idx / 3) + 1, started = card.start_date <= t, S = segOf(card);
+  return `<div class="paper ${tot && done === tot ? 'sealed' : ''}" data-card="${card.idx}" style="${segVars(S)}">
+    <div class="ph"><div><div class="pt">${esc(card.label.replace('–', ' · ').toUpperCase())}</div><div class="pw">Week ${w} of ${Math.ceil(set.cards.length / 3)} · ${fmtShort(card.start_date)}${card.start_date !== card.end_date ? '–' + fmtShort(card.end_date).replace(/^\w+\s/, '') : ''}</div></div><span class="pm">${motifSvg(S)}</span></div>
     <div class="pl">${card.items.map((i) => `<label class="pi ${i.done ? 'done' : ''}"><input type="checkbox" data-id="${i.id}" ${i.done ? 'checked' : ''} ${locked ? 'disabled' : ''}><span class="bx">${icon('check')}</span><span class="pnm"><b>${esc(i.name)}</b>${i.room ? `<small>${esc(i.room)}</small>` : ''}</span></label>`).join('')}</div>
-    <div class="pf"><span>${done} of ${tot} done${locked ? ' · closed' : !started ? ' · not started' : ''}</span><div class="bar"><i style="width:${tot ? (100 * done) / tot : 0}%"></i></div></div></div>`;
+    <div class="pmsg">${esc(cardMsg(card))}</div>
+    <div class="pf"><span>${done} of ${tot} done${locked ? ' · closed' : !started ? ' · not started' : ''}</span><div class="bar"><i style="width:${tot ? (100 * done) / tot : 0}%"></i></div><span class="pn">${pad(card.idx + 1)} / ${set.cards.length}</span></div></div>`;
 }
 function bindPaper(root, set, card, after) {
   root.querySelectorAll('.paper input[type=checkbox]').forEach((cb) => (cb.onchange = async () => {
@@ -74,7 +75,7 @@ function renderToday() {
 }
 function obsHtml(ins) { return `<section class="panel obs"><div class="row"><span class="lab" style="color:var(--verd)">Noticed</span><span class="grow"></span><span class="sub">${ins.strength}</span></div><h3 class="obs-t">${esc(ins.title)}</h3><p class="sub" style="margin:4px 0 12px;font-size:15px;color:var(--ink2)">${esc(ins.detail)}</p><div class="row wrap"><button class="ai" id="obs-why">${icon('spark')} Show me why</button>${MODEL.ins.length > 1 ? `<button class="link" id="obs-more">${MODEL.ins.length - 1} more in Patterns ›</button>` : ''}</div></section>`; }
 function cardPanel(cc, t) {
-  const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5), pills = cc.week ? `<div class="seg wkseg" style="margin:0 0 10px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}">${esc(c.label)} <span class="num">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>` : '';
+  const left = Math.round((parse(weekEnd(cc.card)) - parse(t)) / 864e5), pills = cc.week ? `<div class="seg wkseg" style="margin:0 0 10px">${cc.week.map((c) => `<button data-pick="${c.idx}" class="${c.idx === cc.card.idx ? 'on' : ''}"><i class="sdot" style="background:${segOf(c).band}"></i>${esc(c.label)} <span class="num">${c.items.filter((i) => i.done).length}/${c.items.length}</span></button>`).join('')}</div>` : '';
   return `<section class="panel cardpanel"><div class="row" style="margin-bottom:8px"><h2 class="grow" style="margin:0">Today’s card</h2><span class="sub">${cc.week ? (left > 0 ? `open ${left} more day${left === 1 ? '' : 's'}` : 'last day to tick') : ''}</span></div>${pills}${paperHtml(cc.set, cc.card, { t })}
     <div class="row wrap actrow"><button class="primary grow" id="snap">${icon('camera')} Photograph card</button><button class="sec" id="tell">Tell it</button></div>
     <button class="link sm" id="cnote" style="padding-left:0;margin-top:2px">${icon('note')} ${notesOfCard(cc.set.id, cc.card.idx).length ? `${notesOfCard(cc.set.id, cc.card.idx).length} note${notesOfCard(cc.set.id, cc.card.idx).length === 1 ? '' : 's'} · ` : ''}Add a note</button>

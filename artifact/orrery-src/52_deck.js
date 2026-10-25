@@ -62,7 +62,7 @@ async function restoreCycle(bk) {
 function cardHtml(deck, c) {
   const n = c.items.length, cls = n < 3 || n > 6 ? 'bad' : n === 6 ? 'six' : '';
   const msg = n < 3 ? `${n} task${n === 1 ? '' : 's'} · needs 3 or more` : n === 6 ? '6 tasks · use only if needed' : n > 6 ? `${n} tasks · too many` : `${n} tasks`;
-  return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}">
+  return `<article class="pc ${c.reviewed ? 'reviewed' : ''}" data-idx="${c.idx}" id="card-${c.idx}" aria-label="Card ${c.idx + 1}" style="${segVars(segOf(c))}">
     <div class="pc-clamp" title="Left blank on the printed card so a clip or clamp can hold it">clamp space</div>
     <div class="pc-h"><div><div class="pc-t">${esc(c.label.replace('–', ' · ').toUpperCase())}</div><div class="sub">Week ${weekOf(c)} of ${Math.ceil(deck.cards.length / 3)}</div></div><div class="pc-n">${cardNo(deck, c)}</div></div>
     <ul class="pc-l">${c.items.map((i) => `<li data-id="${i.id}"><span class="grip" draggable="true" title="Drag to another card" aria-hidden="true">⠿</span><span class="box"></span><div class="pc-in"><input data-name value="${esc(i.name)}" aria-label="Task"><input data-room value="${esc(i.room || '')}" list="rooms" aria-label="Room" placeholder="Room"></div><button class="icon" data-more aria-label="Task options">⋯</button></li>`).join('')}</ul>
@@ -73,7 +73,7 @@ const cardVisible = (c) => (ui.week === 'all' || weekOf(c) === +ui.week) && (ui.
 function editorHtml(deck) {
   const weeks = Math.ceil(deck.cards.length / 3), size = store.get('cardsize', 'index');
   return `<section class="panel" id="editor"><div class="row wrap"><h2 class="grow" style="margin:0">Your cards · deck ${deck.n}</h2>${S.decks.length > 1 ? `<select id="deck-pick" style="width:auto" aria-label="Deck">${S.decks.slice().sort((a, b) => b.n - a.n).map((d) => `<option value="${d.id}" ${d.id === deck.id ? 'selected' : ''}>Deck ${d.n}</option>`).join('')}</select>` : ''}</div>
-    <p class="sub" style="margin:4px 0 12px">Each card keeps a blank strip at the top for a clip or clamp. Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
+    <p class="sub" style="margin:4px 0 12px">Each card keeps its top strip clear for a clip or clamp. Edit anything directly: rename a task, change its room, add, remove, reorder or move tasks between cards (drag on a Mac, or use ⋯). Cards are saved as you go.</p>
     <div class="deckbar"><div><div class="row"><b id="rv-count"></b><span class="grow"></span><span class="sub" id="rv-off"></span></div><div class="bar" style="margin:6px 0 0"><i id="rv-bar"></i></div></div>
       <div class="row wrap"><select id="wk" aria-label="Week"><option value="all">All weeks</option>${Array.from({ length: weeks }, (_, i) => `<option value="${i + 1}" ${ui.week == i + 1 ? 'selected' : ''}>Week ${i + 1}</option>`).join('')}</select>
         <select id="show" aria-label="Show"><option value="all" ${ui.show === 'all' ? 'selected' : ''}>All cards</option><option value="review" ${ui.show === 'review' ? 'selected' : ''}>Needs review</option><option value="off" ${ui.show === 'off' ? 'selected' : ''}>Not 3 to 5 tasks</option></select>
@@ -152,23 +152,5 @@ function taskMenu(btn, edit, cur) {
 }
 
 // ---------------------------------------------------------------- PDF: two cards per letter sheet
-const CLAMP = 54; // points of blank card at the top (0.75 in) so a clip or clamp can hold it without covering text
-function drawCard(doc, deck, c, ox, oy, k) {
-  const X = (v) => ox + v * k, Y = (v) => oy + v * k, L = 24, R = 264, z = CLAMP, weeks = Math.ceil(deck.cards.length / 3);
-  doc.setDrawColor(200).setLineWidth(0.5 * k); [[0, 10], [278, 288]].forEach(([a, b]) => doc.line(X(a), Y(z), X(b), Y(z))); // small ticks mark where the clamp area ends
-  doc.setTextColor(0).setDrawColor(0).setFont('helvetica', 'bold').setFontSize(26 * k); doc.text(c.label.replace('–', ' · ').toUpperCase(), X(L), Y(z + 30));
-  doc.setFont('helvetica', 'normal').setFontSize(11 * k); doc.text(`Week ${weekOf(c)} of ${weeks}`, X(L), Y(z + 48));
-  doc.setFont('courier', 'bold').setFontSize(15 * k); const no = cardNo(deck, c), cw = doc.getTextWidth(no) + 16 * k;
-  doc.setLineWidth(1.6 * k); doc.roundedRect(X(R) - cw, Y(z + 8), cw, 26 * k, 3 * k, 3 * k); doc.text(no, X(R) - cw / 2, Y(z + 26), { align: 'center' });
-  doc.line(X(L), Y(z + 60), X(R), Y(z + 60));
-  const top = z + 70, bottom = 402, n = c.items.length, rh = (bottom - top) / Math.max(1, n);
-  c.items.forEach((it, i) => {
-    const cy = top + rh * i + rh / 2;
-    doc.setLineWidth(2 * k); doc.roundedRect(X(L), Y(cy - 13), 26 * k, 26 * k, 3 * k, 3 * k);
-    doc.setFont('helvetica', 'normal').setFontSize(14 * k);
-    const lines = doc.splitTextToSize(it.name, (R - 60) * k).slice(0, 2), y0 = cy - (lines.length - 1) * 8 + (it.room ? -3 : 5);
-    doc.text(lines, X(58), Y(y0), { lineHeightFactor: 1.15 });
-    if (it.room) { doc.setFontSize(8 * k).setTextColor(100); doc.text(it.room.toUpperCase(), X(58), Y(y0 + (lines.length - 1) * 16 + 12)); doc.setTextColor(0); }
-  });
-  doc.setFontSize(8 * k).setTextColor(100); doc.text('Home - 2-day card', X(L), Y(424)); doc.text('Check the box when done', X(R), Y(424), { align: 'right' }); doc.setTextColor(0);
-}
+const CLAMP = 54; // points of blank colour at the top (0.75 in) so a clip or clamp can hold the card without covering text
+function drawCard(doc, deck, c, ox, oy, k) { paintPdf(doc, cardOps(deck, c, pdfMeasure(doc)), ox, oy, k); }
