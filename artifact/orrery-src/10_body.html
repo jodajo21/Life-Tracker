@@ -6,7 +6,7 @@
       <nav class="crumbs" id="crumbs" aria-label="Zoom level"></nav>
       <div class="grow"></div>
       <div class="sw" id="swRows" role="group" aria-label="Group by"><button data-r="rooms" class="on">Rooms</button><button data-r="pairs">Day pairs</button></div>
-      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Terrain</button><button data-m="1">Constellation</button></div>
+      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Landscape</button><button data-m="1">Deck</button><button data-m="2">Cards</button></div>
       <button class="tog" id="tgPlan"><i></i>Planning</button><button class="tog v on" id="tgFc"><i></i>Forecast</button><button class="tog" id="tgCmp"><i></i>Last year</button>
     </header>
     <div class="strip" id="strip">
@@ -18,6 +18,7 @@
       <div class="ro" id="roS"><span class="lab">On-track run</span><div class="v"><span></span><small>cards</small></div><canvas></canvas><span class="d"></span></div>
     </div>
     <div class="cap" id="cap"></div>
+    <div class="work" id="work"></div>
     <div class="tip" id="tip"></div>
     <aside class="rt">
       <div class="sec focus" id="intel"><div class="lab"><span>Intelligence</span><b id="sigN"></b></div><div id="focusBox"></div></div>
@@ -27,7 +28,7 @@
     </aside>
     <footer class="foot">
       <div class="legend"><div class="lab">How to read this</div><ul id="legend"></ul></div>
-      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div></div>
+      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div><div class="dhelp" id="dHelp">Each column is a week. Each row is a two-day card. Each bar is one task — lit when done. Click any card to open it, or a cycle below to look back.</div></div>
     </footer>
     <button class="btn tour" id="tourBtn">▶ Watch the story</button>
   </section></div>

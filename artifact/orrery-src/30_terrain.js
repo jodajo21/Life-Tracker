@@ -22,9 +22,10 @@ function makeState(kind) {
     rowA: Array.from({ length: 8 }, () => new Tw(1, 5)), spot: new Tw(0, 3), band: { a: new Tw(0, 5), b: new Tw(0, 5), s: new Tw(0, 3.5), label: '' },
     fc: new Tw(0.55, 3), plan: new Tw(0, 3), compare: new Tw(0, 3), links: [], marks: [], focusRoom: -1, hover: null, hoverRow: -1, callouts: [], ripples: [], pulse: new Tw(0, 8),
     groupA: new Tw(0, 4), clusterFocus: -1, zoomC: new Tw(0, 3.5), cEmph: Array.from({ length: 8 }, () => new Tw(1, 5)), cLinks: [], dtp: 0,
+    deckCy: Math.floor(NOW_CARD / 39), deckT0: 0, deckSlide: new Tw(0, 6), segA: [new Tw(1, 5), new Tw(1, 5), new Tw(1, 5)], hoverCard: -1, hoverCy: -1,
   };
 }
-function stepState(st, dt) { for (const k of ['t0', 't1', 'mode', 'spot', 'fc', 'plan', 'compare', 'pulse', 'groupA', 'zoomC']) st[k].step(dt); st.band.a.step(dt); st.band.b.step(dt); st.band.s.step(dt); st.rowA.forEach((t) => t.step(dt)); st.cEmph.forEach((t) => t.step(dt)); st.links.forEach((l) => l.p.step(dt)); st.cLinks.forEach((l) => l.p.step(dt)); st.callouts.forEach((c) => c.a.step(dt)); st.ripples = st.ripples.filter((r) => CLK.t - r.t0 < 3.2); }
+function stepState(st, dt) { for (const k of ['t0', 't1', 'mode', 'spot', 'fc', 'plan', 'compare', 'pulse', 'groupA', 'zoomC']) st[k].step(dt); st.deckSlide.step(dt); st.segA.forEach((t) => t.step(dt)); st.band.a.step(dt); st.band.b.step(dt); st.band.s.step(dt); st.rowA.forEach((t) => t.step(dt)); st.cEmph.forEach((t) => t.step(dt)); st.links.forEach((l) => l.p.step(dt)); st.cLinks.forEach((l) => l.p.step(dt)); st.callouts.forEach((c) => c.a.step(dt)); st.ripples = st.ripples.filter((r) => CLK.t - r.t0 < 3.2); }
 const CLK = { t: 0, dt: 0.016 };
 const levelOf = (st) => { const d = st.t1.v - st.t0.v; return d > 420 ? 'Life' : d > 190 ? 'Year' : d > 70 ? 'Season' : d > 24 ? 'Month' : d > 8 ? 'Week' : 'Day'; };
 

@@ -33,11 +33,12 @@ function scene(g, st, rect, alphaMode) {
   const m = st.mode.v;
   g.fillStyle = INK.obsidian; g.fillRect(0, 0, DW, DH); drawAtmos(g, DW, DH, CLK.t, 1);
   if (m < 0.98) { drawTerrain(g, st, rect, { alpha: 1 - m }); drawTerrainOverlay(g, st, rect, { alpha: 1 - m }); }
-  if (m > 0.02) drawConst(g, st, rect, { alpha: m });
+  if (m > 0.02) drawDeck(g, st, { x: rect.x, y: rect.y, w: rect.w, h: rect.h + 40 }, { alpha: m });
 }
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; CLK.dt = dt; CLK.t += dt; const st = D.st; stepState(st, dt);
   const mob = document.documentElement.classList.contains('mobile'); if (!mob) scene(D.g, st, TR);
+  drawInspector(); if (work.offsetParent) paintWorkDeck();
   drawCore(coreG, CLK.t); if (typeof drawMobile === 'function') drawMobile(); prune(st); if ((crumbT += dt) > 0.25) { crumbT = 0; renderCrumbs2(); }
   if (D.mmG) { D.mmG.clearRect(0, 0, 700, 46); drawMinimap(D.mmG, st, { x: 0, y: 0, w: 700, h: 46 }); }
   requestAnimationFrame(frame);
@@ -76,7 +77,7 @@ function renderCrumbs() {
 const swR = $('#swRows'), swM = $('#swMode');
 swR.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...swR.children].forEach((x) => x.classList.toggle('on', x === b)); st.rowsKind = b.dataset.r; st.rowA.forEach((t, i) => t.to(st.rowsKind === 'pairs' && i > 2 ? 0 : 1, true)); };
 swM.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; stopStory(); setMode(+b.dataset.m); };
-function setMode(m) { [...swM.children].forEach((x) => x.classList.toggle('on', +x.dataset.m === m)); st.mode.to(m); if (!m) { st.clusterFocus = -1; st.zoomC.to(0); } }
+function setMode(m) { [...swM.children].forEach((x) => x.classList.toggle('on', +x.dataset.m === m)); st.mode.to(m ? 1 : 0); $('#desk').classList.toggle('cardsView', m === 2); $('#desk').classList.toggle('inDeck', m !== 0); renderLegend(m === 1); if (m === 2) { drawWorkDeck(true); renderCaps(); } if (m === 1) setDeckCycle(st, st.deckCy); }
 const tg = (id, key, onv = 1, offv = 0) => { const b = $(id); b.onclick = () => { b.classList.toggle('on'); st[key].to(b.classList.contains('on') ? onv : offv); }; };
 tg('#tgPlan', 'plan'); tg('#tgCmp', 'compare'); { const b = $('#tgFc'); b.onclick = () => { b.classList.toggle('on'); st.fc.to(b.classList.contains('on') ? 0.55 : 0); }; }
 
@@ -88,7 +89,15 @@ const LEG = [
   ['links', 'Teal · AI, forecast', (g) => { g.strokeStyle = rgba(INK.verd, 0.95); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(1, 11); g.quadraticCurveTo(13, -4, 25, 11); g.stroke(); g.setLineDash([]); }],
   ['ring', 'Pulse · open now', (g) => { g.strokeStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(13, 7, 5, 0, 6.283); g.stroke(); g.fillStyle = rgba(INK.ember, 1); g.beginPath(); g.arc(13, 7, 2, 0, 6.283); g.fill(); }],
 ];
-(() => { const ul = $('#legend'); LEG.forEach(([k, t, f]) => { const li = el('li'), c = el('canvas'); c.width = 52; c.height = 28; const g = c.getContext('2d'); g.scale(2, 2); g.lineWidth = 1.3; f(g); li.appendChild(c); li.appendChild(el('span', '', t)); ul.appendChild(li); }); })();
+const LEGD = [
+  ['Lit bar · task done', (g) => { g.fillStyle = rgba(INK.amber, 0.95); g.fillRect(2, 4, 22, 6); }],
+  ['Dashed · missed', (g) => { g.strokeStyle = rgba(INK.ember, 0.8); g.setLineDash([2.5, 2.5]); g.strokeRect(2.5, 4.5, 21, 5); g.setLineDash([]); }],
+  ['Pulse · open now', (g) => { g.strokeStyle = rgba(INK.ember, 0.95); g.strokeRect(2.5, 4.5, 21, 5); g.fillStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(13, 7, 1.6, 0, 6.283); g.fill(); }],
+  ['Glow line · card sealed', (g) => { g.fillStyle = rgba(GLINT, 0.95); g.fillRect(3, 6, 20, 1.6); }],
+  ['Teal · AI, forecast', (g) => { g.strokeStyle = rgba(INK.verd, 0.95); g.lineWidth = 1.3; g.strokeRect(2.5, 3.5, 21, 7); }],
+];
+function renderLegend(deck) { const ul = $('#legend'); ul.innerHTML = ''; (deck ? LEGD : LEG.map((l) => [l[1], l[2]])).forEach(([t, f]) => { const li = el('li'), c = el('canvas'); c.width = 52; c.height = 28; const g = c.getContext('2d'); g.scale(2, 2); g.lineWidth = 1.3; f(g); li.appendChild(c); li.appendChild(el('span', '', t)); ul.appendChild(li); }); }
+renderLegend(false);
 
 // -- minimap scrub
 D.mmG = fit(D.mmCv, 700, 46); { const r = D.mmCv.getBoundingClientRect(); }
@@ -106,21 +115,20 @@ D.cv.addEventListener('pointerdown', (e) => { const p = pos(e); drag = { x: p.x,
 D.cv.addEventListener('pointermove', (e) => {
   const p = pos(e); st.hover = p;
   if (drag && st.mode.t < 0.5) { const dx = p.x - drag.x; if (Math.abs(dx) > 3) { drag.moved = true; stopStory(); } if (drag.moved) { const dd = -(dx / TR.w) * (drag.t1 - drag.t0), hi = WEEKS * 7 + FC_WEEKS * 7, a = clamp(drag.t0 + dd, 0, hi - (drag.t1 - drag.t0)); st.t0.to(a, true); st.t1.to(a + drag.t1 - drag.t0, true); } }
-  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); st.hoverTask = h && h.kind === 'task' ? h.id : null; D.cv.style.cursor = h ? 'pointer' : 'default'; showTip(h, p); } else { D.cv.style.cursor = drag && drag.moved ? 'grabbing' : 'crosshair'; hideTip(); }
+  if (st.mode.t > 0.5) { const h = deckHit(st, p.x, p.y); st.hoverCard = h && h.kind === 'card' ? h.c : -1; st.hoverCy = h && h.kind === 'cycle' ? h.cy : -1; if (!st.cLinks.length && !stp.cur) st.hoverTask = h && h.pip ? h.pip.id : null; D.cv.style.cursor = h ? 'pointer' : 'default'; showTip(h, p); } else { D.cv.style.cursor = drag && drag.moved ? 'grabbing' : 'crosshair'; hideTip(); }
 });
-D.cv.addEventListener('pointerleave', () => { st.hover = null; st.hoverTask = null; hideTip(); });
+D.cv.addEventListener('pointerleave', () => { st.hover = null; st.hoverCard = -1; st.hoverCy = -1; if (!stp.cur) st.hoverTask = null; hideTip(); });
 D.cv.addEventListener('pointerup', (e) => {
   const p = pos(e), moved = drag && drag.moved; drag = null; if (moved) return;
-  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); if (h && h.kind === 'cluster') { st.clusterFocus = st.clusterFocus === h.i ? -1 : h.i; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0); st.cEmph.forEach((t, i) => t.to(st.clusterFocus < 0 || i === st.clusterFocus ? 1 : 0.35)); } else if (!h) { st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); }
-    else if (h && h.kind === 'task') st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.8 }); }
+  if (st.mode.t > 0.5) { const h = deckHit(st, p.x, p.y); if (h && h.kind === 'cycle') { stopStory(); setDeckCycle(st, h.cy); } else if (h && h.kind === 'card') { stopStory(); openInspector(h.c); } }
   else if (st.hoverRow >= 0) { st.focusRoom = st.focusRoom === st.hoverRow ? -1 : st.hoverRow; st.rowA.forEach((t, i) => t.to(st.focusRoom < 0 || i === st.focusRoom ? 1 : 0.28)); }
 });
 const tip = $('#tip');
 function showTip(h, p) {
-  if (!h) return hideTip(); let html;
-  if (h.kind === 'task') { const t = TASKS[h.id], nv = st._nv && st._nv[h.id]; html = `<b>${t.name}</b><span class="s">${ROOMS[t.ri].name} · ${t.f}× per cycle</span><div class="r"><span>Done</span><span>${nv ? pct(nv.rate.v) : '–'}%</span></div><div class="r"><span>Effort</span><span>${'●'.repeat(t.effort)}${'○'.repeat(3 - t.effort)}</span></div>`; }
-  else { const ro = st._ro && st._ro[h.i]; html = `<b>${ROOMS[h.i].name}</b><span class="s">${CONST[h.i].tasks.length} routines</span><div class="r"><span>Completion</span><span>${ro ? pct(ro.rate.v) : '–'}%</span></div><div class="r"><span>Order</span><span>${ro ? pct(ro.order.v) : '–'}</span></div><div class="r"><span>Click</span><span>zoom in</span></div>`; }
-  tip.innerHTML = html; tip.style.left = Math.min(p.x + 16, DW - 600) + 'px'; tip.style.top = Math.max(60, p.y - 20) + 'px'; tip.classList.add('on');
+  if (!h || h.kind !== 'card') return hideTip(); const c = CARDS[h.c]; const rate = cardRate(c);
+  const rows = c.tasks.map((x) => `<div class="r"><span>${x.done ? '✓' : c.finished ? '○' : '·'} ${x.t.name}</span><span>${ROOMS[x.t.ri].name.slice(0, 7)}</span></div>`).join('');
+  tip.innerHTML = `<b>Card ${cardLabel(c)}</b><span class="s">${SEGS[c.seg]} · week ${Math.floor((c.c % 39) / 3) + 1}${rate != null ? ' · ' + Math.round(rate * 100) + '%' : c.c === NOW_CARD ? ' · today' : ''}</span>${rows}<div class="r" style="color:var(--amber)"><span>Click to open the card</span></div>`;
+  tip.style.left = Math.min(p.x + 16, DW - 640) + 'px'; tip.style.top = Math.min(Math.max(60, p.y - 20), 560) + 'px'; tip.classList.add('on');
 }
 const hideTip = () => tip.classList.remove('on');
 
@@ -163,16 +171,16 @@ function tour() {
     [() => { zoomTo(120, HOLIDAYS.find((h) => h.name === 'Thanksgiving' && h.day < NOW_DAY).day); }, 'A season. Around Thanksgiving, the whole household sags.', 5200],
     [() => zoomTo(40, NOW_DAY - 14), 'A month. Each ripple is a day; broken lines are routines in doubt.', 4800],
     [() => zoomTo(14, NOW_DAY - 4), 'A week. Three two-day cards; the pulse marks today.', 4800],
-    [() => { zoomTo(1092 + 56, (WEEKS * 7 + FC_WEEKS * 7) / 2); setMode(1); st.cEmph.forEach((t) => t.to(1)); }, 'Or as a system: rooms are orbits, tasks are bodies, order is how steady they hold.', 5600],
-    [() => { st.clusterFocus = 0; st.zoomC.to(1); st.cEmph.forEach((t, i) => t.to(i === 0 ? 1 : 0.35)); }, 'Down to a single room, then a single task.', 4800],
-    [() => { stp.tour = false; st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); setMode(0); playInsight(INSIGHTS[0]); }, '', 0],
+    [() => { setMode(1); setDeckCycle(st, CUR_CY - 1); st.cEmph.forEach((t) => t.to(1)); }, 'Or as a wall of cards. One column per week; every lit bar is a task you did.', 5600],
+    [() => { openInspector(NOW_CARD); }, 'Open any card: the printed one, and your photo of it, side by side.', 5200],
+    [() => { closeInspector(); stp.tour = false; setMode(0); playInsight(INSIGHTS[0]); }, '', 0],
   ];
   let i = 0; const next = () => { if (!stp.tour) return; const [fn, cap, ms] = seq[i++]; fn(); const c = $('#cap'); c.style.opacity = 0; setTimeout(() => { c.textContent = cap; c.style.opacity = cap ? 1 : 0; }, 250); if (ms) stp.timer = setTimeout(next, ms); }; next();
 }
 $('#tourBtn').onclick = tour;
 
 // -- needs attention: today's open items; completing one sends a physical ripple through the picture
-const ATT = CURRENT.tasks.filter((x) => x.open).map((x) => ({ t: x.t, done: false }));
+const ATT = CURRENT.tasks.map((x) => ({ t: x.t, x, done: false }));
 function renderAttn() {
   const ul = $('#attn'); ul.innerHTML = ''; $('#attnCount').textContent = ATT.filter((a) => !a.done).length + ' open · card ' + String((NOW_CARD % 39) + 1).padStart(2, '0') + '/39';
   ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''); const c = el('canvas'); const g = fit(c, 20, 20); g.lineWidth = 1.4; g.strokeStyle = rgba(a.done ? INK.amber : INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 6, 0, 6.283); g.stroke(); if (a.done) { g.beginPath(); g.moveTo(6.5, 10); g.lineTo(9, 12.5); g.lineTo(13.5, 7); g.stroke(); } else { g.fillStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 2, 0, 6.283); g.fill(); }
@@ -180,9 +188,9 @@ function renderAttn() {
   if (typeof renderMobAttn === 'function') renderMobAttn();
 }
 function completeTask(a) {
-  a.done = !a.done; renderAttn(); if (!a.done) return;
-  if (st.mode.t > 0.5) { const n = (st._nodes || []).find((n) => n.id === a.t.id); const cl = (st._cl || []).find((c) => c.i === a.t.ri); const o = n || cl; if (o) st.ripples.push({ x: o.x, y: o.y, t0: CLK.t, s: 1 }); }
-  else { const x = TR.x + TR.w * 0.78, y = (st._geo ? st._geo.base(a.t.ri) : TR.y + 300); st.ripples.push({ x: 0, y: 0, t0: -9, s: 0 }); st.pulseAt = { t0: CLK.t, x, y }; }
+  a.done = !a.done; a.x.done = a.done; a.x.open = !a.done; CURRENT.done = CURRENT.tasks.filter((q) => q.done).length; renderAttn();
+  if (!a.done) return; const p = pipAt(st, a.x);
+  if (p) st.ripples.push({ x: p.x, y: p.y, t0: CLK.t, s: 1 }); if (typeof P !== 'undefined' && P.st._dk) { const q = pipAt(P.st, a.x); if (q) P.st.ripples.push({ x: q.x, y: q.y, t0: CLK.t, s: 1 }); }
 }
 // -- ask
 const askIn = $('#ask'), ans = $('#answer');

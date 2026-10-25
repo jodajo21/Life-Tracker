@@ -63,6 +63,23 @@ canvas { display: block; }
 @media (prefers-reduced-motion: reduce) { .shim { animation: none; } }
 .playing .focus p, .playing #focusBox > div:last-child { display: none; } .playing .focus h3 { font-size: 17px; margin-bottom: 0; } .playing.sec { padding-bottom: 8px; }
 .cap { background: radial-gradient(ellipse at 50% 100%, rgba(7,8,10,.92), rgba(7,8,10,0) 70%); padding: 18px 0 8px; }
+/* ---------- cards workspace + inspector ---------- */
+.work { position: absolute; left: 0; right: 340px; top: 52px; bottom: 0; background: var(--obsidian); z-index: 5; padding: 22px 28px 0; display: none; overflow: hidden; } .cardsView .work { display: block; } .cardsView #dc, .cardsView .strip, .cardsView .foot, .cardsView .tour, .cardsView .cap { visibility: hidden; }
+.wh h2 { margin: 0 0 4px; font: 300 30px var(--disp); } .wh p { margin: 0 0 18px; color: var(--dim); max-width: 640px; font-size: 13px; }
+.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; height: calc(100% - 96px); } .st { border-top: 1px solid var(--line2); padding-top: 12px; display: flex; flex-direction: column; min-height: 0; position: relative; } .st:not(:last-child)::after { content: '→'; position: absolute; right: -20px; top: 8px; color: var(--muted); }
+.sn { display: flex; align-items: center; gap: 10px; } .sn i { font: 500 11px var(--mono); font-style: normal; width: 22px; height: 22px; border: 1px solid var(--amber); color: var(--amber); border-radius: 50%; display: grid; place-items: center; } .sn b { font: 400 19px var(--disp); } .sd { color: var(--dim); font-size: 12.5px; line-height: 1.5; margin: 8px 0 12px; min-height: 38px; }
+.plist { flex: 1; min-height: 0; overflow-y: auto; border-top: 1px solid var(--line); scrollbar-width: thin; scrollbar-color: var(--line2) transparent; } .pg .ph { display: flex; justify-content: space-between; padding: 9px 0 3px; font: 600 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--amber); } .pt { display: grid; grid-template-columns: 1fr auto 40px; gap: 8px; padding: 4px 0; font-size: 12.5px; border-top: 1px solid rgba(239,230,212,.05); } .pt em { font: 500 9.5px var(--mono); color: var(--muted); font-style: normal; letter-spacing: .06em; text-transform: uppercase; align-self: center; } .pt i { font-style: normal; font-size: 6px; letter-spacing: 2px; color: var(--amber); align-self: center; text-align: right; } .pt u { text-decoration: none; opacity: .2; } .pt.fresh { animation: fresh 2.4s ease-out; } @keyframes fresh { 0% { background: rgba(111, 176, 163, .35); } 100% { background: transparent; } }
+.chat { margin-top: 10px; border: 1px solid var(--line); padding: 10px 12px; background: rgba(14, 16, 18, .7); } .chat .lab { margin-bottom: 6px; color: var(--verd); } .chat .ai { font-size: 12.5px; color: var(--ivory); line-height: 1.5; margin: 4px 0; } .chat .me { font-size: 12px; color: var(--dim); text-align: right; margin: 4px 0; } .chat .chips { margin: 8px 0 0; }
+#wDeck { width: 320px; height: 150px; margin: 2px 0 12px; } .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 14px; } .stats div { padding: 10px 0; } .stats b { display: block; font: 300 26px var(--disp); } .stats b.bad { color: var(--ember); } .stats span { font: 500 9px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); } .st .row { display: flex; gap: 8px; }
+.shoot { text-align: left; border: 1px solid rgba(111, 176, 163, .5); padding: 16px 16px 14px; display: block; background: linear-gradient(rgba(111, 176, 163, .06), transparent); position: relative; transition: background .25s, border-color .25s; } .shoot:hover { background: rgba(111, 176, 163, .12); border-color: var(--verd); } .shoot b { display: block; font: 400 18px var(--disp); margin-bottom: 3px; } .shoot small { color: var(--dim); font-size: 11.5px; } .shoot .cr { position: absolute; right: 14px; top: 14px; width: 34px; height: 44px; } .shoot .cr i { position: absolute; width: 9px; height: 9px; border: 0 solid var(--verd); } .shoot .cr i:nth-child(1) { left: 0; top: 0; border-width: 1.5px 0 0 1.5px; } .shoot .cr i:nth-child(2) { right: 0; top: 0; border-width: 1.5px 1.5px 0 0; } .shoot .cr i:nth-child(3) { left: 0; bottom: 0; border-width: 0 0 1.5px 1.5px; } .shoot .cr i:nth-child(4) { right: 0; bottom: 0; border-width: 0 1.5px 1.5px 0; }
+.say { margin-top: 16px; } .say .lab { margin-bottom: 6px; } #wSayOut { margin-top: 8px; font-size: 12.5px; min-height: 18px; } .mut { color: var(--muted); } .caps { list-style: none; margin: 8px 0 0; padding: 0; } .caps li { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); cursor: pointer; font-size: 12.5px; } .caps li:hover span:nth-child(2) { color: var(--amber); } .caps em { font: 500 10px var(--mono); color: var(--muted); font-style: normal; }
+.insp { position: absolute; inset: 0; z-index: 20; pointer-events: none; } .insp .veil { position: absolute; inset: 0; background: rgba(4, 5, 6, .74); opacity: 0; transition: opacity .3s; } .insp .mod { position: absolute; left: 90px; top: 74px; width: 960px; background: #0c0d0f; border: 1px solid var(--line2); box-shadow: 0 40px 100px rgba(0, 0, 0, .8); opacity: 0; transform: translateY(14px) scale(.985); transition: opacity .3s, transform .45s cubic-bezier(.2, .8, .2, 1); } .insp.open { pointer-events: auto; } .insp.open .veil, .insp.open .mod { opacity: 1; transform: none; }
+.mh { display: flex; justify-content: space-between; align-items: flex-start; padding: 18px 26px 12px; border-bottom: 1px solid var(--line); } .mh h3 { margin: 4px 0 0; font: 300 24px var(--disp); } .x { font: 500 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); } .x:hover { color: var(--ivory); }
+.mb { display: grid; grid-template-columns: 290px 1fr; gap: 30px; padding: 20px 26px 24px; } .mb .lab { margin-bottom: 10px; } #iPaper { box-shadow: 0 16px 40px rgba(0, 0, 0, .6); border-radius: 10px; } #iPhoto { border: 1px solid var(--line); } .col1 .row, .col2 .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; } .note { color: var(--dim); font-size: 12px; line-height: 1.5; margin-top: 10px; } .edit div { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--line); } .edit button { color: var(--muted); } .edit button:hover { color: var(--ember); } .edit select { width: 100%; background: #0c0d0f; color: var(--ivory); border: 1px solid var(--line2); padding: 6px; font: 12px var(--ui); } .edit small { color: var(--muted); font: 500 10px var(--mono); }
+.dets { list-style: none; margin: 10px 0 0; padding: 0; } .dets li { display: grid; grid-template-columns: 22px 1fr 90px 130px; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; } .dets .s { font: 600 13px var(--mono); color: var(--muted); } .dets .s.ok { color: var(--amber); } .dets .r { font: 500 9.5px var(--mono); letter-spacing: .08em; color: var(--muted); text-transform: uppercase; } .dets .c { text-align: right; font: 500 10.5px var(--mono); color: var(--verd); } .dets li.amb .s { color: var(--amber); } .dets button { font: 600 9.5px var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--amber); color: var(--amber); padding: 3px 7px; margin-left: 4px; border-radius: 2px; } .dets button:hover { background: rgba(227, 162, 74, .12); }
+.toast { position: absolute; left: 50%; bottom: 120px; transform: translate(-50%, 10px); background: rgba(14, 16, 18, .96); border: 1px solid var(--line2); padding: 10px 16px; font-size: 12.5px; z-index: 30; opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; max-width: 520px; } .toast.on { opacity: 1; transform: translate(-50%, 0); }
+.dhelp { display: none; position: absolute; left: 24px; top: 14px; width: 560px; color: var(--dim); font-size: 12.5px; line-height: 1.55; } .inDeck .scrub #mm, .inDeck .scrub .scale { visibility: hidden; } .inDeck .dhelp { display: block; } .inDeck #swRows, .inDeck #tgFc, .inDeck #tgCmp { display: none; } .cardsView #tgPlan { display: none; } .inDeck.cardsView .dhelp { display: none; }
+
 /* ---------- iPhone portal ---------- */
 #phone { --top: 54px; --bot: 26px; display: flex; flex-direction: column; background: radial-gradient(120% 60% at 50% 0%, #14100c 0%, var(--obsidian) 55%); }
 #phone .sb { position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font: 600 14px var(--ui); z-index: 8; pointer-events: none; }
@@ -91,6 +108,12 @@ canvas { display: block; }
 .m-sheet input { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line2); color: var(--ivory); font: 400 17px var(--ui); padding: 10px 0; outline: 0; } .m-sheet .chips { margin: 12px 0; } .m-sheet #mAns { color: var(--ivory); font-size: 14px; line-height: 1.55; margin-top: 8px; }
 html.mobile #deskBox { display: none; } html.mobile #stage { padding: 0; min-height: 100dvh; display: block; } html.mobile #phoneBox { width: 100% !important; height: 100dvh !important; margin: 0 !important; } html.mobile #phone { width: 100%; height: 100dvh; max-width: 520px; margin: 0 auto; border-radius: 0; border: 0; box-shadow: none; transform: none !important; --top: max(14px, env(safe-area-inset-top)); --bot: max(14px, env(safe-area-inset-bottom)); } html.mobile #phone .sb, html.mobile #phone .island { display: none; }
 @media (prefers-reduced-motion: reduce) { .m-pill i { animation: none; } }
+.m-hero { margin-top: 6px; } .m-card { position: relative; border: 1px solid var(--line2); background: linear-gradient(rgba(239, 230, 212, 0.05), rgba(239, 230, 212, 0.015)); padding: 22px 16px 14px; margin-bottom: 14px; border-radius: 8px; } .m-card .hole { position: absolute; left: 50%; top: 7px; width: 9px; height: 9px; margin-left: -4.5px; border: 1px solid var(--line2); border-radius: 50%; background: var(--obsidian); }
+.m-card .ch { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; } .m-card .ch b { font: 300 24px var(--disp); } .m-card .ch span { font: 500 10px var(--mono); letter-spacing: 0.1em; color: var(--amber); text-transform: uppercase; }
+.m-today li { grid-template-columns: 24px 1fr auto; padding: 10px 0; } .m-today .bx { width: 20px; height: 20px; border: 1.4px solid var(--ember); border-radius: 3px; display: grid; place-items: center; transition: background .25s, border-color .25s, box-shadow .25s; } .m-today li.done .bx { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 12px rgba(227, 162, 74, 0.6); } .m-today .bx svg { width: 14px; height: 14px; fill: none; stroke: var(--obsidian); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 30; animation: tick .35s ease-out; } @keyframes tick { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+.m-card .acts { display: flex; gap: 6px; margin-top: 10px; } .m-card .acts .btn { padding: 8px 10px; font-size: 10px; flex: 1; justify-content: center; }
+.m-sheet .dets { list-style: none; margin: 10px 0 0; padding: 0; } .m-sheet .dets li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; } .m-sheet .dets .s { font: 600 14px var(--mono); color: var(--muted); } .m-sheet .dets .s.ok { color: var(--amber); } .m-sheet .dets .c { font: 500 11px var(--mono); color: var(--verd); } .m-sheet .dets li.amb .s { color: var(--amber); } .m-sheet .dets button { font: 600 10px var(--mono); text-transform: uppercase; border: 1px solid var(--amber); color: var(--amber); padding: 5px 9px; margin-left: 5px; border-radius: 2px; }
+.m-sheet #mPhotoC { border: 1px solid var(--line); display: block; } .m-sheet .note { color: var(--dim); font-size: 12.5px; margin: 8px 0; } .m-sheet .paperwrap { display: flex; justify-content: center; margin: 4px 0 10px; } .m-sheet .paperwrap canvas { border-radius: 8px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6); } .m-sheet .edit div { display: flex; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; } .m-sheet .edit button { color: var(--muted); padding: 0 6px; } .m-sheet .edit select { width: 100%; margin-top: 8px; background: #0b0c0e; color: var(--ivory); border: 1px solid var(--line2); padding: 10px; font: 14px var(--ui); }
 
 </style>
 
@@ -103,7 +126,7 @@ html.mobile #deskBox { display: none; } html.mobile #stage { padding: 0; min-hei
       <nav class="crumbs" id="crumbs" aria-label="Zoom level"></nav>
       <div class="grow"></div>
       <div class="sw" id="swRows" role="group" aria-label="Group by"><button data-r="rooms" class="on">Rooms</button><button data-r="pairs">Day pairs</button></div>
-      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Terrain</button><button data-m="1">Constellation</button></div>
+      <div class="sw" id="swMode" role="group" aria-label="View"><button data-m="0" class="on">Landscape</button><button data-m="1">Deck</button><button data-m="2">Cards</button></div>
       <button class="tog" id="tgPlan"><i></i>Planning</button><button class="tog v on" id="tgFc"><i></i>Forecast</button><button class="tog" id="tgCmp"><i></i>Last year</button>
     </header>
     <div class="strip" id="strip">
@@ -115,6 +138,7 @@ html.mobile #deskBox { display: none; } html.mobile #stage { padding: 0; min-hei
       <div class="ro" id="roS"><span class="lab">On-track run</span><div class="v"><span></span><small>cards</small></div><canvas></canvas><span class="d"></span></div>
     </div>
     <div class="cap" id="cap"></div>
+    <div class="work" id="work"></div>
     <div class="tip" id="tip"></div>
     <aside class="rt">
       <div class="sec focus" id="intel"><div class="lab"><span>Intelligence</span><b id="sigN"></b></div><div id="focusBox"></div></div>
@@ -124,7 +148,7 @@ html.mobile #deskBox { display: none; } html.mobile #stage { padding: 0; min-hei
     </aside>
     <footer class="foot">
       <div class="legend"><div class="lab">How to read this</div><ul id="legend"></ul></div>
-      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div></div>
+      <div class="scrub"><canvas id="mm"></canvas><div class="scale" id="scale"></div><div class="dhelp" id="dHelp">Each column is a week. Each row is a two-day card. Each bar is one task — lit when done. Click any card to open it, or a cycle below to look back.</div></div>
     </footer>
     <button class="btn tour" id="tourBtn">▶ Watch the story</button>
   </section></div>
@@ -224,7 +248,7 @@ function prob(t, card) {
   return clamp(p, 0.04, 0.985);
 }
 for (const card of CARDS) {
-  const past = card.day + 1 < NOW_DAY;
+  const past = card.c < NOW_CARD;
   for (const x of card.tasks) {
     if (!past) { x.done = false; x.open = true; continue; }
     x.done = R() < prob(x.t, card);
@@ -319,9 +343,10 @@ function makeState(kind) {
     rowA: Array.from({ length: 8 }, () => new Tw(1, 5)), spot: new Tw(0, 3), band: { a: new Tw(0, 5), b: new Tw(0, 5), s: new Tw(0, 3.5), label: '' },
     fc: new Tw(0.55, 3), plan: new Tw(0, 3), compare: new Tw(0, 3), links: [], marks: [], focusRoom: -1, hover: null, hoverRow: -1, callouts: [], ripples: [], pulse: new Tw(0, 8),
     groupA: new Tw(0, 4), clusterFocus: -1, zoomC: new Tw(0, 3.5), cEmph: Array.from({ length: 8 }, () => new Tw(1, 5)), cLinks: [], dtp: 0,
+    deckCy: Math.floor(NOW_CARD / 39), deckT0: 0, deckSlide: new Tw(0, 6), segA: [new Tw(1, 5), new Tw(1, 5), new Tw(1, 5)], hoverCard: -1, hoverCy: -1,
   };
 }
-function stepState(st, dt) { for (const k of ['t0', 't1', 'mode', 'spot', 'fc', 'plan', 'compare', 'pulse', 'groupA', 'zoomC']) st[k].step(dt); st.band.a.step(dt); st.band.b.step(dt); st.band.s.step(dt); st.rowA.forEach((t) => t.step(dt)); st.cEmph.forEach((t) => t.step(dt)); st.links.forEach((l) => l.p.step(dt)); st.cLinks.forEach((l) => l.p.step(dt)); st.callouts.forEach((c) => c.a.step(dt)); st.ripples = st.ripples.filter((r) => CLK.t - r.t0 < 3.2); }
+function stepState(st, dt) { for (const k of ['t0', 't1', 'mode', 'spot', 'fc', 'plan', 'compare', 'pulse', 'groupA', 'zoomC']) st[k].step(dt); st.deckSlide.step(dt); st.segA.forEach((t) => t.step(dt)); st.band.a.step(dt); st.band.b.step(dt); st.band.s.step(dt); st.rowA.forEach((t) => t.step(dt)); st.cEmph.forEach((t) => t.step(dt)); st.links.forEach((l) => l.p.step(dt)); st.cLinks.forEach((l) => l.p.step(dt)); st.callouts.forEach((c) => c.a.step(dt)); st.ripples = st.ripples.filter((r) => CLK.t - r.t0 < 3.2); }
 const CLK = { t: 0, dt: 0.016 };
 const levelOf = (st) => { const d = st.t1.v - st.t0.v; return d > 420 ? 'Life' : d > 190 ? 'Year' : d > 70 ? 'Season' : d > 24 ? 'Month' : d > 8 ? 'Week' : 'Day'; };
 
@@ -472,7 +497,7 @@ function drawMinimap(g, st, rect) {
   const tot = WEEKS * 7 + FC_WEEKS * 7, xa = rect.x + (clamp(st.t0.v, 0, tot) / tot) * rect.w, xb = rect.x + (clamp(st.t1.v, 0, tot) / tot) * rect.w; g.fillStyle = rgba(INK.ivory, 0.06); g.fillRect(xa, rect.y - 2, Math.max(4, xb - xa), rect.h + 4); g.strokeStyle = rgba(INK.ivory, 0.55); g.lineWidth = 1; g.strokeRect(xa + 0.5, rect.y - 1.5, Math.max(4, xb - xa) - 1, rect.h + 3);
 }
 
-// ================================================================ CONSTELLATION: rooms as orbital systems, tasks as bodies
+// ================================================================ ROOM DATA: groupings and correlations (the Deck view and the insights draw on these)
 const CL_POS = [[0.30, 0.52], [0.55, 0.26], [0.58, 0.70], [0.80, 0.46], [0.12, 0.27], [0.12, 0.80], [0.90, 0.84], [0.36, 0.89]];
 const BANDS = (f) => (f >= 26 ? 0 : f >= 12 ? 1 : f >= 6 ? 2 : f >= 3 ? 3 : 4);
 const CONST = ROOMS.map((room, ri) => {
@@ -490,59 +515,92 @@ const CORR = (() => {
   return out.sort((x, y) => y.r - x.r).slice(0, 5);
 })();
 
-function constStats(st) { // what the window says about each room and task, smoothed so colour and order glide as the window moves
-  let c0 = clamp(dayToCard(st.t0.v), 0, NOW_CARD), c1 = clamp(dayToCard(st.t1.v), 0, NOW_CARD); if (c1 - c0 < 6) c0 = Math.max(0, c1 - 6);
-  const key = `${Math.round(c0 / 2)}-${Math.round(c1 / 2)}`; if (st._ck !== key) { st._ck = key; st._cw = windowStats(c0, c1); }
-  const w = st._cw; st._nv ||= {}; st._ro ||= {};
-  CONST.forEach((cl) => { const rm = w.rooms[cl.ri]; const ro = (st._ro[cl.ri] ||= { rate: new Tw(0.7, 3), order: new Tw(0.6, 2.2), trend: new Tw(0, 3) }); ro.rate.to(rm.rate ?? 0.7); ro.trend.to(clamp(rm.trend * 8, -1, 1)); ro.order.to(clamp(0.2 + 0.85 * (1 - clamp(rm.sd / 0.2, 0, 1)) - clamp(-rm.trend * 5, 0, 0.45), 0.04, 1)); ro.rate.step(CLK.dt); ro.order.step(CLK.dt); ro.trend.step(CLK.dt);
-    cl.tasks.forEach((t) => { const tk = w.tasks[t.id], nv = (st._nv[t.id] ||= { rate: new Tw(0.7, 3), sd: new Tw(0, 3) }); nv.rate.to(tk.rate ?? 0.7); nv.sd.to(tk.sd); nv.rate.step(CLK.dt); nv.sd.step(CLK.dt); }); });
-  return w;
-}
-function constLayout(st, rect) {
-  const Rmax = Math.min(rect.w, rect.h) * 0.19, f = st.clusterFocus, zc = st.zoomC.v, out = [];
-  const raw = CONST.map((cl, i) => ({ x: rect.x + CL_POS[i][0] * rect.w, y: rect.y + CL_POS[i][1] * rect.h, r: Rmax * Math.sqrt(cl.load / MAXLOAD) * 0.92 + Rmax * 0.12 }));
-  const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
-  const S = f >= 0 ? 1 + ((Math.min(rect.w, rect.h) * 0.43) / raw[f].r - 1) * zc : 1, fx = f >= 0 ? lerp(cx, raw[f].x, zc) : cx, fy = f >= 0 ? lerp(cy, raw[f].y, zc) : cy;
-  raw.forEach((p, i) => out.push({ x: cx + (p.x - fx) * S, y: cy + (p.y - fy) * S, r: p.r * S, a: f >= 0 && i !== f ? lerp(1, 0.1, zc) : 1 }));
-  return out;
-}
-function drawConst(g, st, rect, o = {}) {
-  const alpha = o.alpha ?? 1, small = rect.w < 520, w = constStats(st), L = constLayout(st, rect), t = CLK.t, dueIds = new Set(CURRENT.tasks.filter((x) => x.open).map((x) => x.t.id)); g.save(); g.globalAlpha = alpha; st._cl = []; st._nodes = [];
-  const sc = st.clusterFocus >= 0 ? 1 + st.zoomC.v * 0.9 : 1;
-  for (const l of st.cLinks) { const p = l.p.v; if (p < 0.02) continue; const A = L[l.a], B = L[l.b], mx = (A.x + B.x) / 2 + (B.y - A.y) * 0.18, my = (A.y + B.y) / 2 - (B.x - A.x) * 0.18, al = Math.min(A.a, B.a);
-    g.setLineDash(l.dash ? [3, 5] : []); g.strokeStyle = rgba(INK.verd, (0.18 + 0.5 * l.s) * p * al); g.lineWidth = 0.8 + 1.8 * l.s; g.beginPath(); g.moveTo(A.x, A.y); g.quadraticCurveTo(mx, my, B.x, B.y); g.stroke(); g.setLineDash([]);
-    g.globalCompositeOperation = 'lighter'; const n = 3 + Math.round(l.s * 6); for (let i = 0; i < n; i++) { const u = (t * (0.07 + 0.12 * l.s) + i / n) % 1, x = (1 - u) ** 2 * A.x + 2 * (1 - u) * u * mx + u * u * B.x, y = (1 - u) ** 2 * A.y + 2 * (1 - u) * u * my + u * u * B.y; g.globalAlpha = alpha * p * al * 0.85; g.drawImage(SPR.verd, x - 5, y - 5, 10, 10); } g.globalAlpha = alpha; g.globalCompositeOperation = 'source-over'; }
-  CONST.forEach((cl, ci) => {
-    const P = L[ci], em = st.cEmph[ci].v * P.a; if (em < 0.03) return; const ro = st._ro[cl.ri], rate = ro.rate.v, order = ro.order.v, trend = ro.trend.v, col = tone(rate, trend, 1 - order), focus = st.clusterFocus === ci;
-    st._cl.push({ i: ci, x: P.x, y: P.y, r: P.r }); g.globalAlpha = alpha * em;
-    const fr = P.r * 1.55, gr = g.createRadialGradient(P.x, P.y, 0, P.x, P.y, fr); gr.addColorStop(0, rgba(col, 0.2 * (0.5 + rate))); gr.addColorStop(0.55, rgba(col, 0.045)); gr.addColorStop(1, rgba(col, 0)); g.fillStyle = gr; g.beginPath(); g.arc(P.x, P.y, fr, 0, 6.283); g.fill();
-    cl.bands.forEach((b) => { const rb = P.r * (b.n === 1 ? 0.7 : 0.3 + 0.7 * (b.i / (b.n - 1))); g.lineWidth = 0.8; g.strokeStyle = rgba(INK.ivory, 0.1 + 0.08 * order);
-      if (order > 0.7) { g.beginPath(); g.arc(P.x, P.y, rb, 0, 6.283); g.stroke(); } else { const segs = 14, gap = (1 - order) * 0.75; for (let s = 0; s < segs; s++) { const a0 = (s / segs) * 6.283 + t * 0.03 * (b.i + 1), keep = hash1(s * 13.1 + ci * 5 + b.i * 17 + Math.floor(t * 0.5)) > gap * 0.55; if (!keep) continue; g.beginPath(); g.arc(P.x, P.y, rb + noise1(s + t * 0.8 + ci) * (1 - order) * 3, a0, a0 + (6.283 / segs) * 0.82); g.stroke(); } } });
-    if (order < 0.5) { g.globalCompositeOperation = 'lighter'; const nF = Math.round((0.5 - order) * 44); for (let i = 0; i < nF; i++) { const ph = (t * 0.12 + hash1(i * 3.3 + ci * 9)) % 1, ang = hash1(i * 7.1 + ci) * 6.283 + t * 0.06, rr = P.r * (0.95 + 0.7 * ph), x = P.x + Math.cos(ang) * rr + noise1(t + i) * 4, y = P.y + Math.sin(ang) * rr + noise1(t * 1.2 + i * 2) * 4; g.globalAlpha = alpha * em * (1 - ph) * 0.55; g.drawImage(SPR.ember, x - 4, y - 4, 8, 8); } g.globalAlpha = alpha * em; g.globalCompositeOperation = 'source-over'; }
-    const cr = Math.max(5, P.r * 0.17); g.strokeStyle = rgba(INK.ivory, 0.12); g.lineWidth = 1.4; g.beginPath(); g.arc(P.x, P.y, cr + 4, 0, 6.283); g.stroke(); g.strokeStyle = rgba(col, 0.95); g.lineWidth = 2; g.lineCap = 'round'; g.beginPath(); g.arc(P.x, P.y, cr + 4, -1.5708, -1.5708 + 6.283 * clamp(rate, 0.02, 1)); g.stroke();
-    g.globalCompositeOperation = 'lighter'; const pu = 0.85 + 0.15 * Math.sin(t * (1.2 + order) + ci); g.drawImage(SPR.amber, P.x - cr * 2.4 * pu, P.y - cr * 2.4 * pu, cr * 4.8 * pu, cr * 4.8 * pu); g.globalCompositeOperation = 'source-over'; g.fillStyle = rgba(mixc(col, GLINT, 0.55), 1); g.beginPath(); g.arc(P.x, P.y, cr * 0.42, 0, 6.283); g.fill();
-    cl.bands.forEach((b) => b.tasks.forEach((tk, j) => {
-      const rb = P.r * (b.n === 1 ? 0.7 : 0.3 + 0.7 * (b.i / (b.n - 1))), fn = Math.log2(tk.f + 1) / Math.log2(40), om = (0.1 + 0.5 * fn) * (ci % 2 ? 1 : -1), ordered = (j / b.tasks.length) * 6.283 + b.i * 1.1, free = hash1(tk.id * 3.7) * 6.283, nv = st._nv[tk.id], wob = nv.sd.v * 1.1;
-      const ang = om * t + lerp(free, ordered, order) + noise1(t * 0.6 + tk.id) * wob * (1 - order * 0.6), rr = rb + noise1(t * 0.8 + tk.id * 2) * wob * P.r * 0.07;
-      let x = P.x + Math.cos(ang) * rr, y = P.y + Math.sin(ang) * rr, boost = 0;
-      for (const rp of st.ripples) { const age = t - rp.t0, R = age * 260 * Math.max(0.7, sc), d = Math.hypot(x - rp.x, y - rp.y), wv = Math.exp(-(((d - R) / 30) ** 2)) * (1 - age / 3.2) * rp.s; if (wv > 0.001) { x += ((x - rp.x) / (d || 1)) * wv * 9; y += ((y - rp.y) / (d || 1)) * wv * 9; boost += wv; } }
-      const v = nv.rate.v, c = tone(v, 0, nv.sd.v * 1.3), rn = (2.2 + tk.effort * 1.05) * Math.min(1.8, Math.max(0.8, sc)) * (small ? 0.85 : 1) * (1 + boost * 0.6), due = dueIds.has(tk.id), miss = v < 0.5;
-      st._nodes.push({ id: tk.id, ci, x, y, rn: Math.max(rn + 4, 9) });
-      g.globalCompositeOperation = 'lighter'; g.globalAlpha = alpha * em * (0.4 + 0.5 * v + boost); g.drawImage(v > 0.75 ? SPR.amber : SPR.ember, x - rn * 3.2, y - rn * 3.2, rn * 6.4, rn * 6.4); g.globalCompositeOperation = 'source-over'; g.globalAlpha = alpha * em;
-      if (miss) { g.strokeStyle = rgba(c, 0.9); g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, rn, 0, 6.283); g.stroke(); const ph = (t * 0.33 + tk.id * 0.21) % 1; g.strokeStyle = rgba(INK.ember, (1 - ph) * 0.35); g.lineWidth = 1; g.beginPath(); g.arc(x, y, rn + ph * 18, 0, 6.283); g.stroke(); } else { g.fillStyle = rgba(mixc(c, GLINT, boost * 0.6 + (v > 0.92 ? 0.25 : 0)), 1); g.beginPath(); g.arc(x, y, rn, 0, 6.283); g.fill(); }
-      if (due) { const ph = (t * 0.85 + tk.id * 0.13) % 1; g.strokeStyle = rgba(INK.amber, (1 - ph) * 0.9); g.lineWidth = 1.4; g.beginPath(); g.arc(x, y, rn + 2 + ph * 11, 0, 6.283); g.stroke(); g.strokeStyle = rgba(INK.amber, 0.95); g.lineWidth = 1; g.beginPath(); g.arc(x, y, rn + 3, 0, 6.283); g.stroke(); }
-      if ((focus && st.zoomC.v > 0.55) || st.hoverTask === tk.id) { const ox = Math.cos(ang) * (rn + 8), oy = Math.sin(ang) * (rn + 8); txt(g, tk.name, x + ox, y + oy + 3, { align: Math.cos(ang) >= 0 ? 'left' : 'right', color: rgba(INK.ivory, 0.92 * (focus && st.hoverTask !== tk.id ? Math.min(1, (st.zoomC.v - 0.5) * 3) : 1)), font: `500 ${small ? 9.5 : 11}px ${FONT.ui}` }); }
-    }));
-    const showName = true; if (showName) { txt(g, cl.room.name.toUpperCase(), P.x, P.y + P.r + (small ? 13 : 17), { align: 'center', color: rgba(INK.ivory, 0.92), font: `600 ${small ? 8.5 : 10}px ${FONT.ui}`, ls: '1.4px' }); txt(g, `${Math.round(rate * 100)}%  ${trend > 0.15 ? '▲' : trend < -0.15 ? '▼' : '–'}`, P.x, P.y + P.r + (small ? 23 : 31), { align: 'center', color: rgba(col, 1), font: `500 ${small ? 8.5 : 10.5}px ${FONT.mono}` }); }
-    g.globalAlpha = alpha;
-  });
-  for (const rp of st.ripples) { const age = t - rp.t0, R = age * 260 * Math.max(0.7, sc), a = (1 - age / 3.2) * rp.s; g.strokeStyle = rgba(INK.amber, a * 0.55); g.lineWidth = 1.5; g.beginPath(); g.arc(rp.x, rp.y, R, 0, 6.283); g.stroke(); g.strokeStyle = rgba(INK.ivory, a * 0.18); g.lineWidth = 1; g.beginPath(); g.arc(rp.x, rp.y, R * 0.82, 0, 6.283); g.stroke(); }
+
+// ================================================================ DECK: the cycle as a wall of cards. Columns = weeks, rows = the three two-day cards.
+// each pip is one task on one card. lit = done, hollow = missed, pulsing = open now, faint = still to come.
+const CY_N = WEEKS / CYC, CUR_CY = Math.floor(NOW_CARD / 39), segRate = (cy, seg) => { let p = 0, d = 0; for (let i = 0; i < 39; i++) { const c = CARDS[cy * 39 + i]; if (c.seg !== seg || !c.finished) continue; p += c.planned; d += c.done; } return p ? d / p : null; };
+const cardRate = (c) => (c.finished && c.planned ? c.done / c.planned : null);
+const cycRate = (cy) => { let p = 0, d = 0; for (let i = 0; i < 39; i++) { const c = CARDS[cy * 39 + i]; if (c.finished) { p += c.planned; d += c.done; } } return p ? d / p : null; };
+const cardLabel = (c) => `${String((c.c % 39) + 1).padStart(2, '0')} / 39`;
+function deckGeom(rect) { const sm = rect.w < 520, head = sm ? 30 : 40, hist = sm ? 34 : 86, gx = rect.x, gw = rect.w, gy = rect.y + head, gh = rect.h - head - hist - 8; return { head, hist, gx, gw, gy, gh, cw: gw / 13, ch: gh / 3, hy: rect.y + rect.h - hist + 6 }; }
+function drawDeck(g, st, rect, o = {}) {
+  const alpha = o.alpha ?? 1, G = deckGeom(rect), cy = st.deckCy, small = rect.w < 520, t = CLK.t, rv = t - st.deckT0, slide = st.deckSlide.v;
+  g.save(); g.globalAlpha = alpha; st._dk = { G, cells: [], hist: [], pips: {} };
+  const dayOfCard = (c) => cardDay(c), cyc0 = cy * 39;
+  // ---- the "now" column: a faint beam through the week we are in
+  const nowW = Math.floor((NOW_CARD - cyc0) / 3), inCur = cy === CUR_CY;
+  if (inCur && nowW >= 0 && nowW < 13) { const x = G.gx + nowW * G.cw, bg = g.createLinearGradient(0, G.gy - 8, 0, G.gy + G.gh); bg.addColorStop(0, rgba(INK.amber, 0.12)); bg.addColorStop(1, rgba(INK.amber, 0.0)); g.fillStyle = bg; g.fillRect(x + 1, G.gy - 8, G.cw - 2, G.gh + 8); }
+  // ---- week header: number, date, holiday landmark, planning mark
+  for (let w = 0; w < 13; w++) {
+    const x = G.gx + w * G.cw + G.cw / 2 + slide * 30, wk = cy * 13 + w, d0 = wk * 7, dt = dateAt(d0), isNow = inCur && w === nowW;
+    txt(g, `W${w + 1}`, x, G.gy - 24, { align: 'center', color: rgba(isNow ? INK.amber : INK.muted, 1), font: `600 ${small ? 8 : 9.5}px ${FONT.mono}`, ls: '1px' });
+    if (!small) txt(g, `${MON[dt.getMonth()]} ${dt.getDate()}`, x, G.gy - 12, { align: 'center', color: rgba(isNow ? INK.ivory : INK.dim, 0.8), font: `500 9px ${FONT.mono}` });
+    const hol = HOLIDAYS.find((h) => h.day >= d0 && h.day < d0 + 7 && h.rank >= 1);
+    if (hol) { g.fillStyle = rgba(INK.ivory, 0.85); g.beginPath(); g.moveTo(x - 20, G.gy - 8); g.lineTo(x - 16.5, G.gy - 4.5); g.lineTo(x - 20, G.gy - 1); g.lineTo(x - 23.5, G.gy - 4.5); g.closePath(); g.fill(); if (!small && G.cw > 56) txt(g, hol.name.length > 9 ? hol.name.slice(0, 8) + '…' : hol.name, x - 13, G.gy - 1.5, { color: rgba(INK.ivory, 0.6), font: `500 8px ${FONT.mono}` }); }
+    if (st.plan.v > 0.02 && !small) { const on = PLANNED[wk]; g.strokeStyle = rgba(INK.verd, 0.95 * st.plan.v); g.fillStyle = on ? rgba(INK.verd, 0.95 * st.plan.v) : 'rgba(0,0,0,0)'; g.lineWidth = 1; g.beginPath(); g.arc(x + 20, G.gy - 5.5, 3, 0, 6.283); on ? g.fill() : g.stroke(); }
+  }
+  // ---- rows: the three cards of a week, with this cycle's rate against the one before
+  for (let s = 0; s < 3; s++) {
+    const y = G.gy + s * G.ch, sa = st.segA[s].v, r = segRate(cy, s), rp = cy > 0 ? segRate(cy - 1, s) : null, dlt = r != null && rp != null ? r - rp : 0;
+    if (small) { txt(g, ['MON', 'WED', 'FRI'][s], rect.x - 5, y + G.ch / 2 - 3, { align: 'right', color: rgba(INK.ivory, 0.4 + 0.5 * sa), font: `600 7px ${FONT.ui}`, ls: '0.6px' }); if (r != null) txt(g, `${Math.round(r * 100)}`, rect.x - 5, y + G.ch / 2 + 8, { align: 'right', color: rgba(tone(r, clamp(dlt * 6, -1, 1), 0), 0.95), font: `500 9px ${FONT.mono}` }); continue; }
+    txt(g, SEGS[s].toUpperCase(), rect.x - 14, y + G.ch / 2 - 8, { align: 'right', color: rgba(INK.ivory, 0.45 + 0.5 * sa), font: `600 10px ${FONT.ui}`, ls: '1.4px' });
+    if (r != null) { txt(g, `${Math.round(r * 100)}`, rect.x - 40, y + G.ch / 2 + 8, { align: 'right', color: rgba(tone(r, clamp(dlt * 6, -1, 1), 0), 0.95 * (0.4 + 0.6 * sa)), font: `500 12px ${FONT.mono}` }); txt(g, dlt > 0.03 ? '▲' : dlt < -0.03 ? '▼' : '–', rect.x - 14, y + G.ch / 2 + 8, { align: 'right', color: rgba(tone(r, clamp(dlt * 6, -1, 1), 0), 0.8 * sa), font: `500 8px ${FONT.mono}` }); }
+  }
+  // ---- cards
+  for (let i = 0; i < 39; i++) {
+    const c = CARDS[cyc0 + i], w = Math.floor(i / 3), s = i % 3, x = G.gx + w * G.cw + 2 + slide * 30, y = G.gy + s * G.ch + 2, cw = G.cw - 4, chh = G.ch - 4, sa = st.segA[s].v;
+    const delay = w * 0.045 + s * 0.04, rp = clamp((rv - delay) / 0.5, 0, 1), rate = cardRate(c), isNow = c.c === NOW_CARD, fut = c.c > NOW_CARD, hov = st.hoverCard === c.c;
+    st._dk.cells.push({ c: c.c, x, y, w: cw, h: chh });
+    g.save(); g.globalAlpha = alpha * (0.35 + 0.65 * sa) * (0.2 + 0.8 * rp);
+    // paper: the physical card, with its hang notch
+    g.fillStyle = hov ? 'rgba(239,230,212,0.07)' : 'rgba(239,230,212,0.028)'; g.strokeStyle = rgba(INK.ivory, hov ? 0.5 : isNow ? 0.34 : 0.1); g.lineWidth = hov || isNow ? 1.2 : 1; g.beginPath(); g.roundRect(x, y, cw, chh, 3); g.fill(); g.stroke();
+    g.fillStyle = rgba(INK.obsidian, 1); g.strokeStyle = rgba(INK.ivory, 0.16); g.beginPath(); g.arc(x + cw / 2, y + 7, 2.6, 0, 6.283); g.fill(); g.stroke();
+    if (!small) txt(g, String(i + 1).padStart(2, '0'), x + 5, y + 12, { color: rgba(INK.muted, 0.9), font: `500 8.5px ${FONT.mono}` });
+    // sealed: every task on the card done
+    if (c.finished && c.done === c.planned) { const gl = g.createLinearGradient(x, 0, x + cw, 0); gl.addColorStop(0, rgba(INK.amber, 0)); gl.addColorStop(0.5, rgba(GLINT, 0.95)); gl.addColorStop(1, rgba(INK.amber, 0)); g.fillStyle = gl; g.fillRect(x + 4, y + chh - 3, cw - 8, 1.6); g.globalCompositeOperation = 'lighter'; g.globalAlpha *= 0.5; g.drawImage(SPR.amber, x + cw / 2 - 26, y + chh - 18, 52, 30); g.globalCompositeOperation = 'source-over'; }
+    // pips
+    const n = c.tasks.length, top = y + (small ? 15 : 20), bot = y + chh - (small ? 8 : 20), pa = (bot - top) / 5, ph = Math.min(small ? 8 : 17, pa - (small ? 2.5 : 4));
+    c.tasks.forEach((tk, k) => {
+      const py = top + k * pa + (pa - ph) / 2, px = x + (small ? 3 : 6), pw = cw - (small ? 6 : 12), ri = tk.t.ri, em = st.cEmph[ri].v, ea = clamp((em - 0.2) / 0.8, 0.12, 1), litT = rp > 0 ? clamp((rv - delay - k * 0.05 - 0.1) / 0.28, 0, 1) : 0, hot = st.hoverTask === tk.t.id;
+      st._dk.pips[c.c * 8 + k] = { x: px, y: py, w: pw, h: ph, ri, id: tk.t.id };
+      g.save(); g.globalAlpha *= ea;
+      if (tk.done) { const gr = g.createLinearGradient(px, 0, px + pw, 0); gr.addColorStop(0, rgba(tone(0.78, 0, 0), 1)); gr.addColorStop(1, rgba(tone(0.9, 0.3, 0), 1)); g.shadowColor = rgba(INK.amber, 0.55 * litT); g.shadowBlur = 8 * litT; g.fillStyle = gr; g.beginPath(); g.roundRect(px, py, pw * litT, ph, ph > 9 ? 2.5 : 1.5); g.fill(); g.shadowBlur = 0; if (litT < 1 && litT > 0) { g.globalCompositeOperation = 'lighter'; g.fillStyle = rgba(GLINT, 0.7 * (1 - litT)); g.fillRect(px + pw * litT - 2, py, 2, ph); g.globalCompositeOperation = 'source-over'; } g.fillStyle = rgba(GLINT, 0.35 * litT); g.fillRect(px + 1, py + 0.5, pw * litT - 2, 1); }
+      else if (c.finished) { g.setLineDash([2.5, 2.5]); g.strokeStyle = rgba(INK.ember, 0.62); g.lineWidth = 1; g.beginPath(); g.roundRect(px + 0.5, py + 0.5, pw - 1, ph - 1, ph > 9 ? 2.5 : 1.5); g.stroke(); g.setLineDash([]); }
+      else if (isNow) { const pu = 0.5 + 0.5 * Math.sin(t * 3.2 - k * 0.7); g.strokeStyle = rgba(INK.ember, 0.55 + 0.45 * pu); g.lineWidth = 1.2; g.shadowColor = rgba(INK.ember, 0.8); g.shadowBlur = 6 * pu; g.beginPath(); g.roundRect(px + 0.5, py + 0.5, pw - 1, ph - 1, ph > 9 ? 2.5 : 1.5); g.stroke(); g.shadowBlur = 0; }
+      else { g.strokeStyle = rgba(INK.steel, 0.2); g.lineWidth = 1; g.beginPath(); g.roundRect(px + 0.5, py + 0.5, pw - 1, ph - 1, ph > 9 ? 2.5 : 1.5); g.stroke(); }
+      // effort: 1–3 small marks at the end of the pip
+      if (!small && ph > 11) { g.fillStyle = tk.done ? 'rgba(7,8,10,0.55)' : rgba(INK.muted, 0.5); for (let e = 0; e < tk.t.effort; e++) { g.beginPath(); g.arc(px + pw - 5 - e * 4, py + ph / 2, 1.1, 0, 6.283); g.fill(); } }
+      if (hot || (st.cLinks.length && st.cLinks.some((l) => l.p.v > 0.05 && (ri === l.a || ri === l.b)))) { const pl = hot ? 1 : Math.max(...st.cLinks.map((l) => l.p.v)); g.strokeStyle = rgba(INK.verd, 0.95 * pl); g.lineWidth = 1.4; g.shadowColor = rgba(INK.verd, 0.9); g.shadowBlur = 8; g.beginPath(); g.roundRect(px - 1.5, py - 1.5, pw + 3, ph + 3, 3.5); g.stroke(); g.shadowBlur = 0; }
+      g.restore();
+    });
+    if (!small) { const lab = fut ? '' : rate == null ? 'NOW' : Math.round(rate * 100) + '%'; txt(g, lab, x + cw / 2, y + chh - 6, { align: 'center', color: isNow ? rgba(INK.amber, 1) : rate != null ? rgba(tone(rate, 0, 0), 0.9) : rgba(INK.muted, 0.7), font: `500 9px ${FONT.mono}` }); }
+    g.restore();
+  }
+  // ---- completion ripples: a physical wave through the wall from the pip just ticked
+  for (const rp of st.ripples) { const age = t - rp.t0, R = age * 260, a = (1 - age / 3.2) * rp.s; if (age < 0 || a <= 0) continue; g.strokeStyle = rgba(INK.amber, a * 0.6); g.lineWidth = 1.5; g.beginPath(); g.arc(rp.x, rp.y, R, 0, 6.283); g.stroke(); g.strokeStyle = rgba(INK.ivory, a * 0.2); g.beginPath(); g.arc(rp.x, rp.y, R * 0.82, 0, 6.283); g.stroke(); }
+  // ---- cycle history: every cycle as a tiny wall of its own; the chosen one is bracketed
+  if (small) { const tw = rect.w / CY_N; for (let k = 0; k < CY_N; k++) { const rr = cycRate(k), sel = k === cy, hx = rect.x + k * tw; st._dk.hist.push({ cy: k, x: hx, y: G.hy - 2, w: tw, h: 32 }); g.fillStyle = rr == null ? rgba(INK.steel, 0.16) : rgba(tone(rr, 0, 0), 0.3 + 0.6 * rr); g.globalAlpha = alpha * (sel ? 1 : 0.55); g.fillRect(hx + 1.5, G.hy + 2, tw - 3, 10); g.globalAlpha = alpha; txt(g, `${k + 1}`, hx + tw / 2, G.hy + 24, { align: 'center', color: rgba(sel ? INK.amber : INK.muted, 1), font: `600 8px ${FONT.mono}` }); if (sel) { g.strokeStyle = rgba(INK.amber, 0.95); g.lineWidth = 1; g.strokeRect(hx + 0.5, G.hy + 0.5, tw - 1, 13); } } g.restore(); return; }
+  txt(g, 'CYCLES', rect.x - 14, G.hy + 10, { align: 'right', color: rgba(INK.muted, 1), font: `500 9px ${FONT.mono}`, ls: '1.4px' });
+  const hw = rect.w / CY_N, hs = Math.min(small ? 3.2 : 5.2, (hw - 14) / 13);
+  for (let k = 0; k < CY_N; k++) {
+    const hx = rect.x + k * hw + 6, sel = k === cy; st._dk.hist.push({ cy: k, x: hx - 4, y: G.hy - 4, w: hw - 4, h: G.hist - 6 });
+    g.save(); g.globalAlpha = alpha * (sel ? 1 : st.hoverCy === k ? 0.85 : 0.6);
+    for (let i = 0; i < 39; i++) { const c = CARDS[k * 39 + i], r = cardRate(c); g.fillStyle = r == null ? rgba(INK.steel, 0.16) : rgba(tone(r, 0, 0), 0.25 + 0.7 * r); g.fillRect(hx + Math.floor(i / 3) * hs, G.hy + 4 + (i % 3) * (hs + 1), hs - 0.8, hs); }
+    const rr = cycRate(k); txt(g, `C${k + 1}`, hx, G.hy + 4 + 3 * (hs + 1) + 12, { color: rgba(sel ? INK.amber : INK.dim, 1), font: `600 9px ${FONT.mono}` }); if (rr != null) txt(g, `${Math.round(rr * 100)}`, hx + hs * 13 - 1, G.hy + 4 + 3 * (hs + 1) + 12, { align: 'right', color: rgba(tone(rr, 0, 0), 1), font: `500 9px ${FONT.mono}` });
+    if (sel) { g.strokeStyle = rgba(INK.amber, 0.9); g.lineWidth = 1; g.beginPath(); g.roundRect(hx - 4.5, G.hy - 2, hs * 13 + 8, 3 * (hs + 1) + 24, 2); g.stroke(); }
+    g.restore();
+  }
+  // ---- caption for the chosen cycle
+  const cr = cycRate(cy), a0 = dateAt(cy * 91), a1 = dateAt(cy * 91 + 90); txt(g, `CYCLE ${cy + 1}  ·  ${MON[a0.getMonth()]} ${a0.getDate()} – ${MON[a1.getMonth()]} ${a1.getDate()}${cr != null ? '  ·  ' + Math.round(cr * 100) + '% DONE' : ''}`, rect.x, rect.y - 4, { color: rgba(INK.dim, 0.9), font: `500 10px ${FONT.mono}`, ls: '1.2px' });
   g.restore();
 }
-function constHit(st, x, y) {
-  let best = null, bd = 1e9; for (const n of st._nodes || []) { const d = Math.hypot(n.x - x, n.y - y); if (d < n.rn && d < bd) { bd = d; best = { kind: 'task', id: n.id, ci: n.ci, x: n.x, y: n.y }; } } if (best) return best;
-  for (const c of st._cl || []) { const d = Math.hypot(c.x - x, c.y - y); if (d < c.r * 1.15 && d < bd) { bd = d; best = { kind: 'cluster', i: c.i, x: c.x, y: c.y }; } } return best;
+function deckHit(st, x, y) {
+  const d = st._dk; if (!d) return null;
+  for (const h of d.hist) if (x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h) return { kind: 'cycle', cy: h.cy };
+  for (const c of d.cells) if (x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) { let pip = null; for (let k = 0; k < 8; k++) { const p = d.pips[c.c * 8 + k]; if (p && x >= p.x && x <= p.x + p.w && y >= p.y - 1 && y <= p.y + p.h + 1) pip = { ...p, k }; } return { kind: 'card', c: c.c, x: c.x + c.w / 2, y: c.y + c.h / 2, pip }; }
+  return null;
 }
+function setDeckCycle(st, cy) { cy = clamp(cy, 0, CY_N - 1); if (cy === st.deckCy) return; st.deckSlide.v = cy > st.deckCy ? 1 : -1; st.deckSlide.to(0); st.deckCy = cy; st.deckT0 = CLK.t; }
 
 // ================================================================ DIRECTOR: what the system has noticed, and how the picture re-forms to explain it
 const pct = (v) => Math.round(v * 100);
@@ -579,6 +637,7 @@ function stepsFor(id) {
   if (id === 'fri') return [
     { cap: 'Three rhythms, one week. Mon–Tue and Wed–Thu hold steady…', win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [1, 1, 1], band: [D0 - 7 * 78 + 7 * 2, D0 - 7 * 78 + 7 * 28, 'Earlier'], },
     { cap: `…but Fri–Sat has slid ${Math.abs(Math.round(I.fri.change * 100))}% — from ${pct(I.fri.r1)}% to ${pct(I.fri.r2)}%.`, win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], band: [D0 - 7 * 26, D0, 'Last 2 cycles'], callouts: [{ day: D0 - 7 * 8, row: 2, side: -1, color: 'ember', text: `Fri–Sat ${pct(I.fri.r2)}%`, sub: `was ${pct(I.fri.r1)}% two years ago` }] },
+    { cap: 'The same story on the cards. Every lit bar is a task done — the bottom row, Fri–Sat, is where they go hollow.', mode: 1, segs: [0.3, 0.3, 1], emph: ROOMS.map(() => 1), win: [D0 - 7 * 26, D0 + 14], deckCy: CUR_CY - 1 },
     { cap: `Rooms break it down: ${I.fri.top.map((d) => d.name).join(' and ')} account for most of the loss.`, win: [D0 - 7 * 40, D0 + 14], rows: 'rooms', emph: ROOMS.map((r, i) => (I.fri.top.some((d) => d.i === i) ? 1 : 0.18)), band: [D0 - 7 * 26, D0, 'Fri–Sat only'], callouts: I.fri.top.map((d, k) => ({ day: D0 - 7 * (10 + k * 5), row: d.i, side: k ? 1 : -1, color: 'ember', text: d.name, sub: `−${Math.round(d.drop * 100)} pts on Fri–Sat` })) },
     { cap: `Weeks with a Thursday planning session finish Fri–Sat at ${pct(I.plan.yes)}%. Without: ${pct(I.plan.no)}%.`, win: [D0 - 7 * 52, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], plan: 1, band: [D0 - 7 * 52, D0, 'Planning marks, below'], links: planLinks(), },
     { cap: 'So the next move is small: protect Thursday afternoon. Forecast shows the effect.', win: [D0 - 7 * 26, D0 + 56], rows: 'pairs', emph: [0.4, 0.4, 1], plan: 1, fc: 1, band: [D0, D0 + 56, 'Next 8 weeks'] },
@@ -590,12 +649,12 @@ function stepsFor(id) {
     { cap: `Next one is ${I.hol.nextIn} days out — the forecast already shows it. A lighter card that week would hold the line.`, win: [NOW_DAY - 21, NOW_DAY + 56], rows: 'rooms', emph: ROOMS.map(() => 1), fc: 1, band: [I.hol.next.day - 9, I.hol.next.day + 6, 'Expected dip'] },
   ];
   if (id === 'pair') return [
-    { cap: `${ROOMS[I.pair.a].name} and ${ROOMS[I.pair.b].name} rise and fall together.`, mode: 1, win: [D0 - 7 * 70, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1) }] },
-    { cap: 'When one is done, the other usually is. Plan them as a single block.', mode: 1, win: [D0 - 7 * 26, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1), dash: true }], focus: -1 },
+    { cap: `${ROOMS[I.pair.a].name} and ${ROOMS[I.pair.b].name} rise and fall together. Teal outlines mark both.`, mode: 1, emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.25)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: 1 }], deckCy: CUR_CY - 1 },
+    { cap: 'When a card has one hollow, it usually has the other. Plan them as a single block.', mode: 1, emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.25)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: 1 }], deckCy: CUR_CY },
   ];
   if (id === 'tasks') return [
-    { cap: 'Every task, orbiting its room. Hollow bodies are what keeps getting missed.', mode: 1, win: [D0 - 91, D0], emph: ROOMS.map(() => 1) },
-    ...I.tasks.worst.slice(0, 1).map((x) => ({ cap: `“${x.t.name}” — done ${pct(x.r)}% of the time this quarter.`, mode: 1, win: [D0 - 91, D0], emph: ROOMS.map((r, i) => (i === x.t.ri ? 1 : 0.22)), focus: x.t.ri })),
+    { cap: 'Every task on every card of the cycle. Hollow bars are what keeps getting missed.', mode: 1, emph: ROOMS.map(() => 1), deckCy: CUR_CY - 1 },
+    { cap: `“${I.tasks.worst[0].t.name}” — done ${pct(I.tasks.worst[0].r)}% of the time this quarter. Teal marks every place it appears.`, mode: 1, emph: ROOMS.map((r, i) => (i === I.tasks.worst[0].t.ri ? 1 : 0.3)), task: I.tasks.worst[0].t.id, deckCy: CUR_CY - 1 },
   ];
   return [];
 }
@@ -607,7 +666,7 @@ function planLinks() {
 const INSIGHTS = [
   { id: 'fri', tag: 'Pattern', title: `Friday–Saturday is slipping`, short: 'Fri–Sat completion', body: `Mon–Tue and Wed–Thu hold; Fri–Sat has lost ${Math.abs(Math.round(INS.fri.change * 100))}% over two years — mostly ${INS.fri.top.map((d) => d.name.toLowerCase()).join(' and ')}.`, conf: 0.86, hue: 'ember', get steps() { return stepsFor('fri'); } },
   { id: 'hol', tag: 'Seasonal', title: `Routines dip ${Math.abs(INS.hol.onset)} days before Thanksgiving`, short: 'Holiday dip', body: `Every year, household routines slip ${Math.abs(INS.hol.onset)} days ahead and return ${INS.hol.rec} days after. The next one is ${INS.hol.nextIn} days away.`, conf: 0.9, hue: 'copper', get steps() { return stepsFor('hol'); } },
-  { id: 'plan', tag: 'Cause', title: 'Thursday planning protects the weekend', short: 'Planning effect', body: `Fri–Sat finishes at ${pct(INS.plan.yes)}% after a planning session, ${pct(INS.plan.no)}% without one.`, conf: 0.78, hue: 'verd', get steps() { return stepsFor('fri').slice(3).concat([]); } },
+  { id: 'plan', tag: 'Cause', title: 'Thursday planning protects the weekend', short: 'Planning effect', body: `Fri–Sat finishes at ${pct(INS.plan.yes)}% after a planning session, ${pct(INS.plan.no)}% without one.`, conf: 0.78, hue: 'verd', get steps() { return stepsFor('fri').slice(4); } },
   { id: 'pair', tag: 'Link', title: `${ROOMS[INS.pair.a].name} & ${ROOMS[INS.pair.b].name} move together`, short: 'Coupled rooms', body: `Their weekly completion rises and falls in step (r = ${INS.pair.r.toFixed(2)}). Two tasks, one habit.`, conf: 0.7, hue: 'verd', get steps() { return stepsFor('pair'); } },
   { id: 'tasks', tag: 'Friction', title: `“${INS.tasks.worst[0].t.name}” keeps getting missed`, short: 'Stubborn task', body: `${pct(INS.tasks.worst[0].r)}% this quarter — the one routine that resists you most.`, conf: 0.8, hue: 'ember', get steps() { return stepsFor('tasks'); } },
 ];
@@ -619,15 +678,19 @@ function applyStep(st, s) {
   if (s.win) { st.t0.to(s.win[0]); st.t1.to(s.win[1]); }
   if (s.rows && s.rows !== st.rowsKind) { st.rowsKind = s.rows; }
   st.mode.to(s.mode || 0); st.plan.to(s.plan || 0); st.fc.to(s.fc ?? 0.55);
-  const em = s.emph || ROOMS.map(() => 1); em.forEach((v, i) => { st.rowA[i] && st.rowA[i].to(v); st.cEmph[i] && st.cEmph[i].to(v); });
-  for (let i = em.length; i < 8; i++) { st.rowA[i].to(s.rows === 'pairs' ? 0 : 1); }
+  const em = s.emph || ROOMS.map(() => 1), pairs = (s.rows || st.rowsKind) === 'pairs';
+  if (pairs) { st.rowA.forEach((t, i) => t.to(i < 3 ? em[i] ?? 1 : 0)); st.cEmph.forEach((t) => t.to(1)); }
+  else { st.rowA.forEach((t, i) => t.to(em[i] ?? 1)); st.cEmph.forEach((t, i) => t.to(em[i] ?? 1)); }
+  const sg = s.segs || (pairs && s.emph ? em : [1, 1, 1]); st.segA.forEach((t, i) => t.to(sg[i] ?? 1));
+  if (s.deckCy != null) setDeckCycle(st, s.deckCy); else if (s.mode) setDeckCycle(st, CUR_CY);
+  st.hoverTask = s.task ?? null;
   if (s.band) { st.band.a.to(s.band[0]); st.band.b.to(s.band[1]); st.band.s.to(1); st.band.label = s.band[2] || ''; } else st.band.s.to(0);
   (s.links || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.links.push(o); });
   (s.callouts || []).forEach((c) => { const o = { ...c, a: new Tw(0, 3) }; o.a.to(1); st.callouts.push(o); });
   (s.cLinks || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.cLinks.push(o); });
-  st.marks = []; st.clusterFocus = s.focus ?? -1; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0);
+  st.marks = [];
 }
-function resetView(st) { applyStep(st, { win: [NOW_DAY - 7 * 52, NOW_DAY + 7 * 6], rows: st.rowsKind, emph: ROOMS.map(() => 1), mode: st.mode.t }); st.band.s.to(0); }
+function resetView(st) { applyStep(st, { win: [NOW_DAY - 7 * 52, NOW_DAY + 7 * 6], rows: st.rowsKind, emph: ROOMS.map(() => 1), mode: st.mode.t, deckCy: st.deckCy }); st.band.s.to(0); }
 const prune = (st) => { st.links = st.links.filter((l) => l.p.t > 0 || l.p.v > 0.02); st.callouts = st.callouts.filter((c) => c.a.t > 0 || c.a.v > 0.02); st.cLinks = st.cLinks.filter((l) => l.p.t > 0 || l.p.v > 0.02); };
 
 // ---- Ask: answers are composed from the same computed facts the picture uses
@@ -676,11 +739,12 @@ function scene(g, st, rect, alphaMode) {
   const m = st.mode.v;
   g.fillStyle = INK.obsidian; g.fillRect(0, 0, DW, DH); drawAtmos(g, DW, DH, CLK.t, 1);
   if (m < 0.98) { drawTerrain(g, st, rect, { alpha: 1 - m }); drawTerrainOverlay(g, st, rect, { alpha: 1 - m }); }
-  if (m > 0.02) drawConst(g, st, rect, { alpha: m });
+  if (m > 0.02) drawDeck(g, st, { x: rect.x, y: rect.y, w: rect.w, h: rect.h + 40 }, { alpha: m });
 }
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; CLK.dt = dt; CLK.t += dt; const st = D.st; stepState(st, dt);
   const mob = document.documentElement.classList.contains('mobile'); if (!mob) scene(D.g, st, TR);
+  drawInspector(); if (work.offsetParent) paintWorkDeck();
   drawCore(coreG, CLK.t); if (typeof drawMobile === 'function') drawMobile(); prune(st); if ((crumbT += dt) > 0.25) { crumbT = 0; renderCrumbs2(); }
   if (D.mmG) { D.mmG.clearRect(0, 0, 700, 46); drawMinimap(D.mmG, st, { x: 0, y: 0, w: 700, h: 46 }); }
   requestAnimationFrame(frame);
@@ -719,7 +783,7 @@ function renderCrumbs() {
 const swR = $('#swRows'), swM = $('#swMode');
 swR.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...swR.children].forEach((x) => x.classList.toggle('on', x === b)); st.rowsKind = b.dataset.r; st.rowA.forEach((t, i) => t.to(st.rowsKind === 'pairs' && i > 2 ? 0 : 1, true)); };
 swM.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; stopStory(); setMode(+b.dataset.m); };
-function setMode(m) { [...swM.children].forEach((x) => x.classList.toggle('on', +x.dataset.m === m)); st.mode.to(m); if (!m) { st.clusterFocus = -1; st.zoomC.to(0); } }
+function setMode(m) { [...swM.children].forEach((x) => x.classList.toggle('on', +x.dataset.m === m)); st.mode.to(m ? 1 : 0); $('#desk').classList.toggle('cardsView', m === 2); $('#desk').classList.toggle('inDeck', m !== 0); renderLegend(m === 1); if (m === 2) { drawWorkDeck(true); renderCaps(); } if (m === 1) setDeckCycle(st, st.deckCy); }
 const tg = (id, key, onv = 1, offv = 0) => { const b = $(id); b.onclick = () => { b.classList.toggle('on'); st[key].to(b.classList.contains('on') ? onv : offv); }; };
 tg('#tgPlan', 'plan'); tg('#tgCmp', 'compare'); { const b = $('#tgFc'); b.onclick = () => { b.classList.toggle('on'); st.fc.to(b.classList.contains('on') ? 0.55 : 0); }; }
 
@@ -731,7 +795,15 @@ const LEG = [
   ['links', 'Teal · AI, forecast', (g) => { g.strokeStyle = rgba(INK.verd, 0.95); g.setLineDash([2, 3]); g.beginPath(); g.moveTo(1, 11); g.quadraticCurveTo(13, -4, 25, 11); g.stroke(); g.setLineDash([]); }],
   ['ring', 'Pulse · open now', (g) => { g.strokeStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(13, 7, 5, 0, 6.283); g.stroke(); g.fillStyle = rgba(INK.ember, 1); g.beginPath(); g.arc(13, 7, 2, 0, 6.283); g.fill(); }],
 ];
-(() => { const ul = $('#legend'); LEG.forEach(([k, t, f]) => { const li = el('li'), c = el('canvas'); c.width = 52; c.height = 28; const g = c.getContext('2d'); g.scale(2, 2); g.lineWidth = 1.3; f(g); li.appendChild(c); li.appendChild(el('span', '', t)); ul.appendChild(li); }); })();
+const LEGD = [
+  ['Lit bar · task done', (g) => { g.fillStyle = rgba(INK.amber, 0.95); g.fillRect(2, 4, 22, 6); }],
+  ['Dashed · missed', (g) => { g.strokeStyle = rgba(INK.ember, 0.8); g.setLineDash([2.5, 2.5]); g.strokeRect(2.5, 4.5, 21, 5); g.setLineDash([]); }],
+  ['Pulse · open now', (g) => { g.strokeStyle = rgba(INK.ember, 0.95); g.strokeRect(2.5, 4.5, 21, 5); g.fillStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(13, 7, 1.6, 0, 6.283); g.fill(); }],
+  ['Glow line · card sealed', (g) => { g.fillStyle = rgba(GLINT, 0.95); g.fillRect(3, 6, 20, 1.6); }],
+  ['Teal · AI, forecast', (g) => { g.strokeStyle = rgba(INK.verd, 0.95); g.lineWidth = 1.3; g.strokeRect(2.5, 3.5, 21, 7); }],
+];
+function renderLegend(deck) { const ul = $('#legend'); ul.innerHTML = ''; (deck ? LEGD : LEG.map((l) => [l[1], l[2]])).forEach(([t, f]) => { const li = el('li'), c = el('canvas'); c.width = 52; c.height = 28; const g = c.getContext('2d'); g.scale(2, 2); g.lineWidth = 1.3; f(g); li.appendChild(c); li.appendChild(el('span', '', t)); ul.appendChild(li); }); }
+renderLegend(false);
 
 // -- minimap scrub
 D.mmG = fit(D.mmCv, 700, 46); { const r = D.mmCv.getBoundingClientRect(); }
@@ -749,21 +821,20 @@ D.cv.addEventListener('pointerdown', (e) => { const p = pos(e); drag = { x: p.x,
 D.cv.addEventListener('pointermove', (e) => {
   const p = pos(e); st.hover = p;
   if (drag && st.mode.t < 0.5) { const dx = p.x - drag.x; if (Math.abs(dx) > 3) { drag.moved = true; stopStory(); } if (drag.moved) { const dd = -(dx / TR.w) * (drag.t1 - drag.t0), hi = WEEKS * 7 + FC_WEEKS * 7, a = clamp(drag.t0 + dd, 0, hi - (drag.t1 - drag.t0)); st.t0.to(a, true); st.t1.to(a + drag.t1 - drag.t0, true); } }
-  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); st.hoverTask = h && h.kind === 'task' ? h.id : null; D.cv.style.cursor = h ? 'pointer' : 'default'; showTip(h, p); } else { D.cv.style.cursor = drag && drag.moved ? 'grabbing' : 'crosshair'; hideTip(); }
+  if (st.mode.t > 0.5) { const h = deckHit(st, p.x, p.y); st.hoverCard = h && h.kind === 'card' ? h.c : -1; st.hoverCy = h && h.kind === 'cycle' ? h.cy : -1; if (!st.cLinks.length && !stp.cur) st.hoverTask = h && h.pip ? h.pip.id : null; D.cv.style.cursor = h ? 'pointer' : 'default'; showTip(h, p); } else { D.cv.style.cursor = drag && drag.moved ? 'grabbing' : 'crosshair'; hideTip(); }
 });
-D.cv.addEventListener('pointerleave', () => { st.hover = null; st.hoverTask = null; hideTip(); });
+D.cv.addEventListener('pointerleave', () => { st.hover = null; st.hoverCard = -1; st.hoverCy = -1; if (!stp.cur) st.hoverTask = null; hideTip(); });
 D.cv.addEventListener('pointerup', (e) => {
   const p = pos(e), moved = drag && drag.moved; drag = null; if (moved) return;
-  if (st.mode.t > 0.5) { const h = constHit(st, p.x, p.y); if (h && h.kind === 'cluster') { st.clusterFocus = st.clusterFocus === h.i ? -1 : h.i; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0); st.cEmph.forEach((t, i) => t.to(st.clusterFocus < 0 || i === st.clusterFocus ? 1 : 0.35)); } else if (!h) { st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); }
-    else if (h && h.kind === 'task') st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.8 }); }
+  if (st.mode.t > 0.5) { const h = deckHit(st, p.x, p.y); if (h && h.kind === 'cycle') { stopStory(); setDeckCycle(st, h.cy); } else if (h && h.kind === 'card') { stopStory(); openInspector(h.c); } }
   else if (st.hoverRow >= 0) { st.focusRoom = st.focusRoom === st.hoverRow ? -1 : st.hoverRow; st.rowA.forEach((t, i) => t.to(st.focusRoom < 0 || i === st.focusRoom ? 1 : 0.28)); }
 });
 const tip = $('#tip');
 function showTip(h, p) {
-  if (!h) return hideTip(); let html;
-  if (h.kind === 'task') { const t = TASKS[h.id], nv = st._nv && st._nv[h.id]; html = `<b>${t.name}</b><span class="s">${ROOMS[t.ri].name} · ${t.f}× per cycle</span><div class="r"><span>Done</span><span>${nv ? pct(nv.rate.v) : '–'}%</span></div><div class="r"><span>Effort</span><span>${'●'.repeat(t.effort)}${'○'.repeat(3 - t.effort)}</span></div>`; }
-  else { const ro = st._ro && st._ro[h.i]; html = `<b>${ROOMS[h.i].name}</b><span class="s">${CONST[h.i].tasks.length} routines</span><div class="r"><span>Completion</span><span>${ro ? pct(ro.rate.v) : '–'}%</span></div><div class="r"><span>Order</span><span>${ro ? pct(ro.order.v) : '–'}</span></div><div class="r"><span>Click</span><span>zoom in</span></div>`; }
-  tip.innerHTML = html; tip.style.left = Math.min(p.x + 16, DW - 600) + 'px'; tip.style.top = Math.max(60, p.y - 20) + 'px'; tip.classList.add('on');
+  if (!h || h.kind !== 'card') return hideTip(); const c = CARDS[h.c]; const rate = cardRate(c);
+  const rows = c.tasks.map((x) => `<div class="r"><span>${x.done ? '✓' : c.finished ? '○' : '·'} ${x.t.name}</span><span>${ROOMS[x.t.ri].name.slice(0, 7)}</span></div>`).join('');
+  tip.innerHTML = `<b>Card ${cardLabel(c)}</b><span class="s">${SEGS[c.seg]} · week ${Math.floor((c.c % 39) / 3) + 1}${rate != null ? ' · ' + Math.round(rate * 100) + '%' : c.c === NOW_CARD ? ' · today' : ''}</span>${rows}<div class="r" style="color:var(--amber)"><span>Click to open the card</span></div>`;
+  tip.style.left = Math.min(p.x + 16, DW - 640) + 'px'; tip.style.top = Math.min(Math.max(60, p.y - 20), 560) + 'px'; tip.classList.add('on');
 }
 const hideTip = () => tip.classList.remove('on');
 
@@ -806,16 +877,16 @@ function tour() {
     [() => { zoomTo(120, HOLIDAYS.find((h) => h.name === 'Thanksgiving' && h.day < NOW_DAY).day); }, 'A season. Around Thanksgiving, the whole household sags.', 5200],
     [() => zoomTo(40, NOW_DAY - 14), 'A month. Each ripple is a day; broken lines are routines in doubt.', 4800],
     [() => zoomTo(14, NOW_DAY - 4), 'A week. Three two-day cards; the pulse marks today.', 4800],
-    [() => { zoomTo(1092 + 56, (WEEKS * 7 + FC_WEEKS * 7) / 2); setMode(1); st.cEmph.forEach((t) => t.to(1)); }, 'Or as a system: rooms are orbits, tasks are bodies, order is how steady they hold.', 5600],
-    [() => { st.clusterFocus = 0; st.zoomC.to(1); st.cEmph.forEach((t, i) => t.to(i === 0 ? 1 : 0.35)); }, 'Down to a single room, then a single task.', 4800],
-    [() => { stp.tour = false; st.clusterFocus = -1; st.zoomC.to(0); st.cEmph.forEach((t) => t.to(1)); setMode(0); playInsight(INSIGHTS[0]); }, '', 0],
+    [() => { setMode(1); setDeckCycle(st, CUR_CY - 1); st.cEmph.forEach((t) => t.to(1)); }, 'Or as a wall of cards. One column per week; every lit bar is a task you did.', 5600],
+    [() => { openInspector(NOW_CARD); }, 'Open any card: the printed one, and your photo of it, side by side.', 5200],
+    [() => { closeInspector(); stp.tour = false; setMode(0); playInsight(INSIGHTS[0]); }, '', 0],
   ];
   let i = 0; const next = () => { if (!stp.tour) return; const [fn, cap, ms] = seq[i++]; fn(); const c = $('#cap'); c.style.opacity = 0; setTimeout(() => { c.textContent = cap; c.style.opacity = cap ? 1 : 0; }, 250); if (ms) stp.timer = setTimeout(next, ms); }; next();
 }
 $('#tourBtn').onclick = tour;
 
 // -- needs attention: today's open items; completing one sends a physical ripple through the picture
-const ATT = CURRENT.tasks.filter((x) => x.open).map((x) => ({ t: x.t, done: false }));
+const ATT = CURRENT.tasks.map((x) => ({ t: x.t, x, done: false }));
 function renderAttn() {
   const ul = $('#attn'); ul.innerHTML = ''; $('#attnCount').textContent = ATT.filter((a) => !a.done).length + ' open · card ' + String((NOW_CARD % 39) + 1).padStart(2, '0') + '/39';
   ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''); const c = el('canvas'); const g = fit(c, 20, 20); g.lineWidth = 1.4; g.strokeStyle = rgba(a.done ? INK.amber : INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 6, 0, 6.283); g.stroke(); if (a.done) { g.beginPath(); g.moveTo(6.5, 10); g.lineTo(9, 12.5); g.lineTo(13.5, 7); g.stroke(); } else { g.fillStyle = rgba(INK.ember, 0.9); g.beginPath(); g.arc(10, 10, 2, 0, 6.283); g.fill(); }
@@ -823,9 +894,9 @@ function renderAttn() {
   if (typeof renderMobAttn === 'function') renderMobAttn();
 }
 function completeTask(a) {
-  a.done = !a.done; renderAttn(); if (!a.done) return;
-  if (st.mode.t > 0.5) { const n = (st._nodes || []).find((n) => n.id === a.t.id); const cl = (st._cl || []).find((c) => c.i === a.t.ri); const o = n || cl; if (o) st.ripples.push({ x: o.x, y: o.y, t0: CLK.t, s: 1 }); }
-  else { const x = TR.x + TR.w * 0.78, y = (st._geo ? st._geo.base(a.t.ri) : TR.y + 300); st.ripples.push({ x: 0, y: 0, t0: -9, s: 0 }); st.pulseAt = { t0: CLK.t, x, y }; }
+  a.done = !a.done; a.x.done = a.done; a.x.open = !a.done; CURRENT.done = CURRENT.tasks.filter((q) => q.done).length; renderAttn();
+  if (!a.done) return; const p = pipAt(st, a.x);
+  if (p) st.ripples.push({ x: p.x, y: p.y, t0: CLK.t, s: 1 }); if (typeof P !== 'undefined' && P.st._dk) { const q = pipAt(P.st, a.x); if (q) P.st.ripples.push({ x: q.x, y: q.y, t0: CLK.t, s: 1 }); }
 }
 // -- ask
 const askIn = $('#ask'), ans = $('#answer');
@@ -841,97 +912,212 @@ let crumbT = 0; const _frame = frame;
 
 let lastLv = ''; function renderCrumbs2() { const lv = levelOf(st); if (lv !== lastLv) { lastLv = lv; renderCrumbs(); } }
 
-// ================================================================ MOBILE: a focused portal onto the same living system
-const P = { st: makeState('phone'), ss: makeState('sheet'), W: 390, HH: 250, span: 7 * 12, open: null, stepI: 0, timer: null };
+// ================================================================ CARDS: set tasks → deal the deck → capture. And the card itself, printed and photographed.
+const freqLabel = (f) => (f >= 36 ? 'Every card' : f >= 24 ? '2× a week' : f >= 12 ? 'Weekly' : f >= 6 ? '2× a month' : f >= 3 ? 'Monthly' : 'Quarterly');
+const PLAN = ROOMS.map((r, ri) => ({ ri, name: r.name, tasks: TASKS.filter((t) => t.ri === ri).map((t) => ({ name: t.name, f: t.f, effort: t.effort })) }));
+const planTotal = () => PLAN.reduce((a, r) => a + r.tasks.reduce((b, t) => b + t.f, 0), 0);
+const seedRnd = (n) => { const s = Math.sin(n * 91.7 + 3.3) * 43758.5453; return s - Math.floor(s); };
+
+// ---- the printed card, and its photograph
+function drawPaper(g, W, H, card, o = {}) {
+  g.save(); const k = W / 260; g.scale(k, k); const w = 260, h = 390;
+  g.fillStyle = o.photo ? '#e8dfca' : '#efe6d4'; g.beginPath(); g.roundRect(0, 0, w, h, 10); g.fill();
+  const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(120,100,70,0.18)'); g.fillStyle = gr; g.fill();
+  g.fillStyle = '#16140f'; g.beginPath(); g.arc(w / 2, 22, 6.5, 0, 6.283); g.fill();          // punched hole for the clamp
+  g.strokeStyle = 'rgba(40,34,24,0.28)'; g.setLineDash([2, 3]); g.lineWidth = 1; g.beginPath(); g.moveTo(16, 58); g.lineTo(w - 16, 58); g.stroke(); g.setLineDash([]);
+  g.fillStyle = 'rgba(40,34,24,0.4)'; g.font = `500 7px ${FONT.mono}`; g.textAlign = 'center'; g.letterSpacing = '1.6px'; g.fillText('CLAMP HERE', w / 2, 46); g.letterSpacing = '0px';
+  g.fillStyle = '#1b1a17'; g.textAlign = 'left'; g.font = `400 30px ${FONT.disp}`; g.fillText(cardLabel(card), 22, 92);
+  g.font = `600 10px ${FONT.mono}`; g.letterSpacing = '2px'; g.fillStyle = '#6e5a3a'; g.fillText(SEGS[card.seg].toUpperCase().replace('–', ' · '), 22, 110); g.letterSpacing = '0px';
+  const n = card.tasks.length, y0 = 138, step = Math.min(46, (h - y0 - 36) / Math.max(n, 1)); o.boxes = [];
+  card.tasks.forEach((x, i) => {
+    const y = y0 + i * step; g.strokeStyle = '#1b1a17'; g.lineWidth = 1.4; g.strokeRect(22, y - 11, 16, 16);
+    g.fillStyle = '#1b1a17'; g.font = `500 13px ${FONT.ui}`; g.fillText(x.t.name, 48, y + 1); g.fillStyle = '#7d6c4f'; g.font = `500 7.5px ${FONT.mono}`; g.letterSpacing = '1.2px'; g.fillText(ROOMS[x.t.ri].name.toUpperCase(), 48, y + 13); g.letterSpacing = '0px';
+    g.strokeStyle = 'rgba(40,34,24,0.12)'; g.lineWidth = 1; g.beginPath(); g.moveTo(22, y + 20); g.lineTo(w - 22, y + 20); g.stroke();
+    o.boxes.push({ x: 22 * k, y: (y - 11) * k, w: 16 * k, h: 16 * k });
+    const ticked = o.ticks ? o.ticks.get(x) : x.done;
+    if (ticked) { g.strokeStyle = o.photo ? '#1a2a52' : '#1b1a17'; g.lineWidth = 2.1; g.lineCap = 'round'; g.lineJoin = 'round'; const j = (a) => (seedRnd(x.t.id * 7 + a) - 0.5) * 2.4; g.beginPath(); g.moveTo(24 + j(1), y - 2 + j(2)); g.lineTo(29 + j(3), y + 4 + j(4)); g.lineTo(42 + j(5), y - 15 + j(6)); g.stroke(); }
+  });
+  g.fillStyle = 'rgba(40,34,24,0.38)'; g.font = `500 7px ${FONT.mono}`; g.letterSpacing = '1.4px'; g.fillText(`ORRERY · CYCLE ${Math.floor(card.c / 39) + 1}`, 22, h - 16); g.letterSpacing = '0px';
+  g.restore(); return o.boxes;
+}
+const photoTicks = (card) => { const m = new Map(); card.tasks.forEach((x, i) => m.set(x, i === 0 || i === 1 || i === 3)); return m; };    // what the pen did today
+function drawPhoto(g, W, H, card, t, det, ph) {
+  g.save(); g.fillStyle = '#0b0a09'; g.fillRect(0, 0, W, H); const bg = g.createRadialGradient(W * 0.5, H * 0.45, 20, W * 0.5, H * 0.5, W * 0.7); bg.addColorStop(0, '#3a2f22'); bg.addColorStop(1, '#0c0a08'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.globalAlpha = 0.06; for (let i = 0; i < 70; i++) { g.fillStyle = i % 2 ? '#fff' : '#000'; g.fillRect(0, seedRnd(i) * H, W, 1); } g.globalAlpha = 1;
+  const ch = H * 0.9, cw = ch * 2 / 3, cx = W / 2, cy = H / 2; g.translate(cx, cy); g.rotate(-0.05 + Math.sin(t * 0.6) * 0.004); g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 30; g.shadowOffsetY = 12; g.translate(-cw / 2, -ch / 2);
+  const boxes = drawPaper(g, cw, ch, card, { photo: true, ticks: photoTicks(card) }); g.shadowBlur = 0; g.shadowOffsetY = 0;
+  // detection: a scan line passes over the card and each checkbox is read as it goes
+  const sc = clamp((t - ph.t0) / 1.8, 0, 1), sy = sc * ch;
+  g.save(); g.beginPath(); g.rect(0, 0, cw, ch); g.clip(); const sg = g.createLinearGradient(0, sy - 30, 0, sy + 2); sg.addColorStop(0, rgba(INK.verd, 0)); sg.addColorStop(1, rgba(INK.verd, 0.35)); g.fillStyle = sg; g.fillRect(0, sy - 30, cw, 32); g.fillStyle = rgba(INK.verd, 0.95); g.fillRect(0, sy, cw, 1.4); g.restore();
+  boxes.forEach((b, i) => { if (sy < b.y + b.h) return; const d = det[i], age = clamp((sy - b.y) / 60, 0, 1), col = d.amb ? INK.amber : INK.verd; g.strokeStyle = rgba(col, 0.95 * age); g.lineWidth = 1.5; const pad = 4 + (1 - age) * 8; g.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2); g.fillStyle = rgba(col, age); g.font = `600 ${Math.max(9, cw * 0.04)}px ${FONT.mono}`; g.textAlign = 'left'; g.fillText(`${d.v === 'unsure' ? '?' : d.v ? '✓' : '○'} ${Math.round(d.conf * 100)}%`, b.x + b.w + 140 * (cw / 260), b.y + b.h * 0.8); });
+  // viewfinder corners
+  g.restore(); g.save(); g.strokeStyle = rgba(INK.ivory, 0.85); g.lineWidth = 1.5; const m = 14, L = 22; [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, a, b]) => { g.beginPath(); g.moveTo(x, y + b * L); g.lineTo(x, y); g.lineTo(x + a * L, y); g.stroke(); }); g.restore();
+}
+function setTaskDone(x, v) { x.done = v; x.open = !v; if (v) x.hour = 18; const c = CARDS[CARD_OF.get(x)]; if (c) c.done = c.tasks.filter((q) => q.done).length; const a = ATT.find((q) => q.x === x); if (a) a.done = v; }
+const CARD_OF = new Map(); CARDS.forEach((c) => c.tasks.forEach((x) => CARD_OF.set(x, c.c)));
+function pipAt(st, x) { const c = CARD_OF.get(x), k = CARDS[c].tasks.indexOf(x), p = st._dk && st._dk.pips[c * 8 + k]; return p ? { x: p.x + p.w / 2, y: p.y + p.h / 2 } : null; }
+
+// ---- inspector (desktop): the card, its photo, and what was read
+const INSP = { open: false, c: NOW_CARD, t0: 0, dec: [], edit: false };
+const insp = el('div', 'insp'); insp.id = 'insp'; $('#desk').appendChild(insp);
+insp.innerHTML = `<div class="veil"></div><div class="mod"><div class="mh"><div><span class="lab" id="iK">Card</span><h3 id="iT"></h3></div><button class="x" id="iX">Close ✕</button></div>
+<div class="mb"><div class="col1"><div class="lab">The printed card</div><canvas id="iPaper"></canvas><div class="row"><button class="btn" id="iEdit">Edit tasks</button><button class="btn" id="iPrint">Print sheet</button></div><div class="note" id="iNote"></div></div>
+<div class="col2"><div class="lab">Your photo → what Orrery read</div><canvas id="iPhoto"></canvas><ul class="dets" id="iDets"></ul><div class="row"><button class="btn pri" id="iOk">Confirm &amp; log</button><button class="btn" id="iRe">Retake</button><span class="note" id="iMsg"></span></div></div></div></div>`;
+const iPaper = $('#iPaper'), iPhoto = $('#iPhoto'); let iPg = null, iPh = null;
+function detFor(c) { const card = CARDS[c], tk = photoTicks(card); return card.tasks.map((x, i) => { const amb = c === NOW_CARD && i === 2; return amb ? { amb: true, v: 'unsure', conf: 0.62 } : { v: tk.get(x), conf: 0.93 + seedRnd(i * 3 + c) * 0.06 }; }); }
+function inspDetections() { return detFor(INSP.c); }
+function openInspector(c, photo) {
+  INSP.open = true; INSP.c = c; INSP.t0 = CLK.t; INSP.edit = false; INSP.dec = inspDetections(); const card = CARDS[c], live = c === NOW_CARD;
+  insp.classList.add('open'); $('#iK').textContent = `Card ${cardLabel(card)} · ${SEGS[card.seg]} · Week ${Math.floor((c % 39) / 3) + 1}`; $('#iT').textContent = live ? 'Today’s card' : card.finished ? `Finished · ${card.done} of ${card.planned} done` : 'Coming up';
+  iPg = fit(iPaper, 260, 390); iPh = fit(iPhoto, 560, 330); iPaper.style.width = '260px'; iPaper.style.height = '390px'; iPhoto.style.width = '560px'; iPhoto.style.height = '330px';
+  $('#iOk').style.display = $('#iRe').style.display = $('#iDets').style.display = live ? '' : 'none'; $('#iMsg').textContent = live ? '' : '';
+  $('#iNote').innerHTML = live ? 'Hang it, tick it with a pen. Edit before printing — the card is yours.' : 'Past cards are locked once their week is over, so you never chase old ones.'; $('#iEdit').style.display = live || !card.finished ? '' : 'none';
+  if (!live) $('.col2 .lab', insp).textContent = card.finished ? 'Logged from your photo' : 'Not yet photographed';
+  renderDets();
+}
+function renderDets() {
+  const ul = $('#iDets'), card = CARDS[INSP.c]; ul.innerHTML = '';
+  card.tasks.forEach((x, i) => { const d = INSP.dec[i], li = el('li', d.amb && d.v === 'unsure' ? 'amb' : ''); const val = d.v === 'unsure' ? '?' : d.v ? '✓' : '○';
+    li.innerHTML = `<span class="s ${d.v === true ? 'ok' : ''}">${val}</span><span class="n">${x.t.name}</span><span class="r">${ROOMS[x.t.ri].name}</span><span class="c">${d.amb && d.v === 'unsure' ? '<button data-v="1">Done</button><button data-v="0">Not done</button>' : Math.round(d.conf * 100) + '%'}</span>`; li.querySelectorAll('button').forEach((b) => (b.onclick = () => { d.v = b.dataset.v === '1'; d.amb = false; d.conf = 1; renderDets(); })); ul.appendChild(li); });
+  const open = INSP.dec.filter((d) => d.v === 'unsure').length; $('#iOk').disabled = open > 0; $('#iOk').style.opacity = open ? 0.45 : 1; $('#iMsg').textContent = open ? 'One mark is unclear — tell it which.' : '';
+}
+function closeInspector() { INSP.open = false; insp.classList.remove('open'); }
+$('#iX').onclick = closeInspector; $('.veil', insp).onclick = closeInspector;
+$('#iRe').onclick = () => { INSP.t0 = CLK.t; INSP.dec = inspDetections(); renderDets(); };
+$('#iOk').onclick = () => { const card = CARDS[INSP.c]; card.tasks.forEach((x, i) => { const v = INSP.dec[i].v === true; if (v && !x.done) { setTaskDone(x, true); const p = pipAt(st, x); if (p) st.ripples.push({ x: p.x, y: p.y, t0: CLK.t + i * 0.12, s: 1 }); } }); renderAttn(); closeInspector(); toast(`Logged ${card.tasks.filter((x) => x.done).length} of ${card.planned}. The deck just lit up.`); if (st.mode.t < 0.5) setMode(1); };
+$('#iEdit').onclick = () => { INSP.edit = !INSP.edit; $('#iEdit').textContent = INSP.edit ? 'Done editing' : 'Edit tasks'; renderEdit(); };
+$('#iPrint').onclick = () => toast('In the full app: 2 cards per letter sheet, landscape, with clamp space on top.');
+function renderEdit() { const card = CARDS[INSP.c], note = $('#iNote'); if (!INSP.edit) { note.innerHTML = 'Hang it, tick it with a pen. Edit before printing — the card is yours.'; return; }
+  note.innerHTML = '<div class="edit">' + card.tasks.map((x, i) => `<div><span>${x.t.name}</span><button data-r="${i}" title="Remove">✕</button></div>`).join('') + `<div class="add"><select id="iAdd"><option value="">+ Add a task…</option>${TASKS.filter((t) => !card.tasks.some((x) => x.t === t)).map((t) => `<option value="${t.id}">${ROOMS[t.ri].name} · ${t.name}</option>`).join('')}</select></div><small>${card.tasks.length} of 3–5 · a 6th only if truly needed</small></div>`;
+  note.querySelectorAll('[data-r]').forEach((b) => (b.onclick = () => { if (card.tasks.length <= 3) return toast('A card keeps at least 3 tasks.'); card.tasks.splice(+b.dataset.r, 1); card.planned = card.tasks.length; INSP.dec = inspDetections(); renderDets(); renderEdit(); renderAttn(); }));
+  $('#iAdd').onchange = (e) => { if (!e.target.value) return; if (card.tasks.length >= 6) return toast('Six is the ceiling.'); const x = { t: TASKS[+e.target.value], done: false, open: true, hour: 0 }; card.tasks.push(x); CARD_OF.set(x, card.c); card.planned = card.tasks.length; INSP.dec = inspDetections(); renderDets(); renderEdit(); renderAttn(); }; }
+function drawInspector() { if (!INSP.open || !iPg) return; const card = CARDS[INSP.c]; iPg.clearRect(0, 0, 260, 390); drawPaper(iPg, 260, 390, card, {});
+  if (INSP.c === NOW_CARD) { const det = INSP.dec; drawPhoto(iPh, 560, 330, card, CLK.t, det, { t0: INSP.t0 }); } else { iPh.clearRect(0, 0, 560, 330); iPh.fillStyle = '#0b0a09'; iPh.fillRect(0, 0, 560, 330); drawPhoto(iPh, 560, 330, card, CLK.t, card.tasks.map((x) => ({ v: x.done, conf: 0.97 })), { t0: INSP.t0 }); } }
+// ---- toast
+const toastEl = el('div', 'toast'); $('#desk').appendChild(toastEl); let toastT; function toast(m) { toastEl.textContent = m; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), 3600); }
+
+// ---- the Cards workspace
+const work = $('#work');
+work.innerHTML = `<div class="wh"><h2>Your cards</h2><p>You do this once a quarter. After that the paper does the work — you tick, photograph, and Orrery keeps the books.</p></div>
+<div class="steps3">
+<section class="st"><div class="sn"><i>1</i><b>Set tasks</b></div><p class="sd">Break each room into small jobs — one shelf, one sink — and say how often.</p><div class="plist" id="wPlan"></div><div class="chat" id="wChat"></div></section>
+<section class="st"><div class="sn"><i>2</i><b>Deal the deck</b></div><p class="sd">Orrery spreads every job across 39 cards — 3 to 5 each — so no two days are a pile-up.</p><canvas id="wDeck"></canvas><div class="stats" id="wStats"></div><div class="row"><button class="btn" id="wRev">Review cards</button><button class="btn" id="wPrn">Print sheets</button></div></section>
+<section class="st"><div class="sn"><i>3</i><b>Capture</b></div><p class="sd">Photograph the card at day’s end, or just say what you did. Past cards lock after their week.</p><button class="shoot" id="wShoot"><span class="cr"><i></i><i></i><i></i><i></i></span><b>Photograph today’s card</b><small>Card <span id="wCardN"></span> · reads checkmarks, asks only when unsure</small></button><div class="say"><div class="lab">Or tell it</div><div class="askrow"><input id="wSay" placeholder="“did the toilets and wiped the stove top”" autocomplete="off"></div><div id="wSayOut"></div></div><div class="lab" style="margin-top:14px">Recently captured</div><ul class="caps" id="wCaps"></ul></section></div>`;
+function renderPlan() {
+  const box = $('#wPlan'); box.innerHTML = ''; PLAN.forEach((r) => { const g = el('div', 'pg'); g.innerHTML = `<div class="ph"><b>${r.name}</b><span class="num">${r.tasks.length}</span></div>` + r.tasks.map((t) => `<div class="pt${t.fresh ? ' fresh' : ''}"><span>${t.name}</span><em>${freqLabel(t.f)}</em><i>${'●'.repeat(t.effort)}<u>${'●'.repeat(3 - t.effort)}</u></i></div>`).join(''); box.appendChild(g); });
+  renderDealStats();
+}
+function renderDealStats() { const tot = planTotal(); $('#wStats').innerHTML = `<div><b>${tot}</b><span>placements</span></div><div><b>39</b><span>cards</span></div><div><b>${(tot / 39).toFixed(1)}</b><span>per card</span></div><div><b class="${tot > 195 ? 'bad' : ''}">${tot > 195 ? 'Over' : 'OK'}</b><span>195 budget</span></div>`; }
+const CHAT = [['Kitchen is one big job. Want to break it by shelf?', ['Break kitchen by shelf', 'Add a plants routine']]];
+function renderChat(extra) { const c = $('#wChat'); c.innerHTML = '<div class="lab">Plan with AI</div>'; (extra || [{ me: false, t: CHAT[0][0] }]).forEach((m) => c.appendChild(el('div', m.me ? 'me' : 'ai', m.t))); const chips = el('div', 'chips'); (extra && extra.chips ? extra.chips : CHAT[0][1]).forEach((q) => { const b = el('button', '', q); b.onclick = () => planAsk(q); chips.appendChild(b); }); c.appendChild(chips); }
+let planMsgs = [{ me: false, t: CHAT[0][0] }];
+function planAsk(q) { planMsgs.push({ me: true, t: q }); renderChat(Object.assign(planMsgs.slice(), { chips: [] })); setTimeout(() => { if (/shelf/i.test(q)) { const k = PLAN[0]; if (!k.tasks.some((t) => t.name === 'Wipe one shelf')) k.tasks.push({ name: 'Wipe one shelf', f: 7, effort: 1, fresh: true }); planMsgs.push({ me: false, t: 'Added “Wipe one shelf” to the kitchen, about every other week — one shelf per visit. It fits: no card goes over 5.' }); } else { const k = PLAN[7]; if (!k.tasks.some((t) => t.name === 'Mist the ferns')) k.tasks.push({ name: 'Mist the ferns', f: 13, effort: 1, fresh: true }); planMsgs.push({ me: false, t: 'Added “Mist the ferns”, weekly. Plants stay a short job.' }); } renderChat(Object.assign(planMsgs.slice(), { chips: ['Break bathrooms by sink', 'Show me the deal'] })); renderPlan(); drawWorkDeck(true); }, 700); }
+function drawWorkDeck(replay) { const cv = $('#wDeck'), W = 320, H = 150; if (!cv._g) cv._g = fit(cv, W, H); if (replay) cv._t0 = CLK.t; cv._draw = true; }
+function paintWorkDeck() { const cv = $('#wDeck'), g = cv._g; if (!g) return; const W = 320, H = 150, rv = CLK.t - (cv._t0 ?? -9); g.clearRect(0, 0, W, H); const cw = W / 13, ch = (H - 10) / 3, extra = planTotal() - 193; for (let i = 0; i < 39; i++) { const c = CARDS[i], x = Math.floor(i / 3) * cw, y = (i % 3) * ch, n = c.tasks.length + (extra > 0 && i % Math.max(1, Math.floor(39 / extra)) === 0 ? 1 : 0), d = clamp((rv - i * 0.025) / 0.4, 0, 1); g.globalAlpha = d; const yy = y + (1 - d) * -10; g.fillStyle = 'rgba(239,230,212,0.04)'; g.strokeStyle = rgba(INK.ivory, 0.14); g.beginPath(); g.roundRect(x + 1.5, yy + 1.5, cw - 3, ch - 3, 2); g.fill(); g.stroke(); for (let k = 0; k < n; k++) { g.fillStyle = n > 5 ? rgba(INK.ember, 0.95) : rgba(tone(0.5 + n * 0.09, 0, 0), 0.9); g.fillRect(x + 4, yy + 4 + k * ((ch - 8) / 5.6), cw - 8, Math.max(2, (ch - 8) / 5.6 - 2)); } g.globalAlpha = 1; } }
+$('#wRev').onclick = () => openInspector(NOW_CARD); $('#wPrn').onclick = () => toast('In the full app: 2 cards per letter sheet, landscape, with clamp space on top.');
+$('#wShoot').onclick = () => openInspector(NOW_CARD); $('#wCardN').textContent = cardLabel(CARDS[NOW_CARD]);
+function renderCaps() { const ul = $('#wCaps'); ul.innerHTML = ''; for (let k = 1; k <= 3; k++) { const c = CARDS[NOW_CARD - k]; if (!c) continue; const li = el('li', '', `<span class="num">${cardLabel(c)}</span><span>${SEGS[c.seg]}</span><em>${c.done}/${c.planned} read</em>`); li.onclick = () => openInspector(c.c); ul.appendChild(li); } }
+$('#wSay').addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; const q = e.target.value.toLowerCase(), hit = ATT.filter((a) => !a.done && a.t.name.toLowerCase().split(/\s+/).some((w) => w.length > 3 && q.includes(w.replace(/s$/, '')))); const out = $('#wSayOut'); if (!hit.length) { out.innerHTML = '<span class="mut">I couldn’t match that to anything open on today’s card.</span>'; return; } hit.forEach((a, i) => setTimeout(() => completeTask(a), i * 200)); out.innerHTML = 'Marked: ' + hit.map((a) => `<b>${a.t.name}</b>`).join(', '); e.target.value = ''; });
+renderPlan(); renderChat(); drawWorkDeck(true); renderCaps();
+
+// ================================================================ MOBILE: today's card in your hand, the cycle as a wall above it
+const P = { st: makeState('phone'), ss: makeState('sheet'), W: 390, HH: 224, open: null, stepI: 0, timer: null, cap: { t0: 0, dec: [] } };
 const ph = $('#phone');
 ph.innerHTML = `
 <div class="sb"><span>9:41</span><span>●●● ▮</span></div><div class="island"></div>
 <div class="m-head"><div class="mark"><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1"><circle cx="11" cy="11" r="9.5" opacity=".35"/><ellipse cx="11" cy="11" rx="9.5" ry="3.8" transform="rotate(-24 11 11)" opacity=".8"/><circle cx="11" cy="11" r="2" fill="#e3a24a" stroke="none"/></svg>Orrery</div><div class="when" id="mWhen"></div><canvas id="mCore"></canvas></div>
 <div class="m-say"><h2 id="mSay"></h2><p id="mSub"></p></div>
-<div class="m-hero" id="mHero"><canvas id="mHeroC"></canvas><span class="hint">Tap a room · swipe to move through time</span></div>
-<div class="m-time"><canvas id="mTime"></canvas><div class="row"><span class="rng" id="mRng"></span><div class="ch" id="mCh"><button data-s="28">4 wk</button><button data-s="84" class="on">12 wk</button><button data-s="365">Year</button><button data-s="1148">All</button></div></div></div>
+<div class="m-hero" id="mHero"><canvas id="mHeroC"></canvas></div>
 <div class="m-low" id="mLow">
+  <div class="m-card" id="mCard"><i class="hole"></i><div class="ch"><b id="mCardN"></b><span id="mCardS"></span></div><ul class="m-today" id="mToday"></ul>
+    <div class="acts"><button class="btn v" id="mShoot">◉ Photograph</button><button class="btn" id="mEdit">Edit card</button><button class="btn" id="mSay2">Tell it</button></div></div>
   <div class="m-ai"><div class="lab"><span class="lab" style="margin:0;color:var(--verd)">Observed</span><span class="num" id="mConf" style="font-size:10px;color:var(--muted)"></span></div><h3 id="mAiT"></h3><p id="mAiB"></p><div class="btns"><button class="btn v" id="mWhy">Show me why →</button><button class="btn" id="mNext">Next</button></div></div>
-  <div class="m-sec"><div class="lab"><span>Today · Mon–Tue</span><span class="num" id="mTodayN"></span></div><ul class="m-today" id="mToday"></ul></div>
 </div>
 <div class="m-bar"><button class="m-pill" id="mAsk"><i></i>Ask about what you see</button><button class="m-ex" id="mEx" aria-label="Explore the landscape"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#efe6d4" stroke-width="1.2" stroke-linecap="round"><path d="M2 16 L7 9 L11 13 L15 5 L20 14"/><path d="M2 19.5H20" opacity=".4"/></svg></button></div>
 <div class="m-sheet" id="mSheet"><div class="veil" id="mVeil"></div><div class="pan"><div class="grab"></div><div class="sh"><span class="lab" id="mShT"></span><button id="mClose">Close</button></div><canvas class="t" id="mSheetC"></canvas><div class="sb2" id="mSb"></div></div></div>`;
-const mHeroC = $('#mHeroC'), mTimeC = $('#mTime'), mSheetC = $('#mSheetC'), mCoreC = $('#mCore');
-const M = { hg: null, tg: null, sg: null, cg: null, sh: 300 };
+const mHeroC = $('#mHeroC'), mSheetC = $('#mSheetC'), mCoreC = $('#mCore');
+const M = { hg: null, sg: null, cg: null, sh: 300 };
 function sizePhone() {
-  const w = Math.round(ph.clientWidth || 390), h = ph.clientHeight || 844; P.W = w; P.HH = clamp(Math.round(h * 0.285), 200, 280);
-  M.hg = fit(mHeroC, w, P.HH); mHeroC.style.height = P.HH + 'px'; M.tg = fit(mTimeC, w - 44, 44); M.sg = fit(mSheetC, w, M.sh); mSheetC.style.height = M.sh + 'px'; M.cg = fit(mCoreC, 46, 46);
+  const w = Math.round(ph.clientWidth || 390), h = ph.clientHeight || 844; P.W = w; P.HH = clamp(Math.round(h * 0.27), 200, 250);
+  M.hg = fit(mHeroC, w, P.HH); mHeroC.style.height = P.HH + 'px'; M.sg = fit(mSheetC, w, M.sh); mSheetC.style.height = M.sh + 'px'; M.cg = fit(mCoreC, 46, 46);
 }
 const _ls = layoutStage; layoutStage = function () { _ls(); sizePhone(); }; // eslint-disable-line
 sizePhone();
+P.st.mode.to(1, true); P.st.deckT0 = 0;
 
-// ---- say: one sentence for the state of the system
-(() => {
-  const dow = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }); $('#mWhen').textContent = dow;
-  const worst = INSIGHTS[0]; const word = HEAD.health >= 80 ? 'Strong' : HEAD.health >= 68 ? 'Steady' : 'Strained';
-  $('#mSay').innerHTML = `${word}, with <em>one thing</em> slipping.`; $('#mSub').textContent = `Health ${HEAD.health} · ${pct(HEAD.completion)}% done · ${HEAD.streak}-card run`;
-})();
-// ---- observation card cycles through the insights
+(() => { $('#mWhen').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }); const word = HEAD.health >= 80 ? 'Strong' : HEAD.health >= 68 ? 'Steady' : 'Strained'; $('#mSay').innerHTML = `${word}, with <em>one thing</em> slipping.`; $('#mSub').textContent = `Health ${HEAD.health} · ${pct(HEAD.completion)}% done · ${HEAD.streak}-card run`; })();
 let mi = 0;
 function renderMAi() { const f = INSIGHTS[mi % INSIGHTS.length]; $('#mAiT').textContent = f.title; $('#mAiB').textContent = f.body; $('#mConf').textContent = pct(f.conf) + '% confident'; }
 $('#mNext').onclick = () => { mi++; renderMAi(); }; renderMAi();
-// ---- today
+
+// ---- today's card, as paper
 function renderMobAttn() {
-  const ul = $('#mToday'); if (!ul) return; ul.innerHTML = ''; $('#mTodayN').textContent = ATT.filter((a) => !a.done).length + ' open';
-  ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''), c = el('canvas'), g = fit(c, 26, 26); g.lineWidth = 1.5; g.strokeStyle = rgba(a.done ? INK.amber : INK.ember, 0.95); g.beginPath(); g.arc(13, 13, 8, 0, 6.283); g.stroke(); if (a.done) { g.fillStyle = rgba(INK.amber, 0.18); g.fill(); g.beginPath(); g.moveTo(9, 13); g.lineTo(12, 16); g.lineTo(17.5, 9.5); g.stroke(); } else { g.fillStyle = rgba(INK.ember, 0.95); g.beginPath(); g.arc(13, 13, 2.4, 0, 6.283); g.fill(); }
-    li.appendChild(c); li.appendChild(el('span', 't', a.t.name)); li.appendChild(el('span', 'r', ROOMS[a.t.ri].name));
-    li.onclick = () => { const was = a.done; completeTask(a); if (!was) { const n = (P.st._nodes || []).find((n) => n.id === a.t.id) || (P.st._cl || []).find((c) => c.i === a.t.ri); if (n) { P.st.ripples.push({ x: n.x, y: n.y, t0: CLK.t, s: 1 }); P.st.hoverTask = null; } if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) { /* no haptics */ } } };
-    ul.appendChild(li); });
+  const ul = $('#mToday'); if (!ul) return; ul.innerHTML = ''; $('#mCardN').textContent = cardLabel(CURRENT); $('#mCardS').textContent = `${SEGS[CURRENT.seg]} · ${CURRENT.tasks.filter((x) => x.done).length}/${CURRENT.tasks.length} done`;
+  ATT.forEach((a) => { const li = el('li', a.done ? 'done' : ''); li.innerHTML = `<span class="bx">${a.done ? '<svg viewBox="0 0 20 20"><path d="M3 11 L8 16 L18 3"/></svg>' : ''}</span><span class="t">${a.t.name}</span><span class="r">${ROOMS[a.t.ri].name}</span>`;
+    li.onclick = () => { completeTask(a); if (a.done && navigator.vibrate) try { navigator.vibrate(8); } catch (e) { /* no haptics */ } }; ul.appendChild(li); });
 }
 renderMobAttn();
 
-// ---- time: the window slides; the hero constellation is always "this window"
-function setWin(span, centre) { const hi = WEEKS * 7 + FC_WEEKS * 7, end = clamp((centre ?? (P.st.t0.t + P.st.t1.t) / 2) + span / 2, span, hi); P.span = span; P.st.t0.to(end - span); P.st.t1.to(end); }
-P.st.mode.to(1, true); P.st.rowA.forEach((t) => t.to(1, true)); P.st.t0.to(NOW_DAY - 84, true); P.st.t1.to(NOW_DAY + 0.5, true);
-$('#mCh').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...$('#mCh').children].forEach((x) => x.classList.toggle('on', x === b)); const s = +b.dataset.s; setWin(Math.min(s, NOW_DAY), s >= 1148 ? NOW_DAY / 2 : NOW_DAY - s / 2 + 0.5 + (s < 100 ? 0 : 0)); };
-let tdrag = false;
-const tDay = (e) => { const r = mTimeC.getBoundingClientRect(); return clamp((e.clientX - r.left) / r.width, 0, 1) * (WEEKS * 7 + FC_WEEKS * 7); };
-mTimeC.addEventListener('pointerdown', (e) => { tdrag = true; mTimeC.setPointerCapture(e.pointerId); setWin(P.span, Math.min(tDay(e), NOW_DAY - P.span / 2 + P.span / 2)); });
-mTimeC.addEventListener('pointermove', (e) => { if (tdrag) setWin(P.span, tDay(e)); }); mTimeC.addEventListener('pointerup', () => (tdrag = false));
-// swipe on the hero steps through time by a quarter window
+// ---- the wall: tap a cycle tile to switch cycles, swipe sideways to move between cycles, tap a card to open it
 let sw = null; const hero = $('#mHero');
-hero.addEventListener('pointerdown', (e) => { sw = { x: e.clientX, y: e.clientY, c: (P.st.t0.t + P.st.t1.t) / 2, moved: false }; });
-hero.addEventListener('pointermove', (e) => { if (!sw) return; const dx = e.clientX - sw.x; if (Math.abs(dx) > 10) { sw.moved = true; setWin(P.span, sw.c - (dx / P.W) * P.span * 1.2); } });
-hero.addEventListener('pointerup', (e) => { const s = sw; sw = null; if (!s || s.moved) return; const r = mHeroC.getBoundingClientRect(), p = { x: e.clientX - r.left, y: e.clientY - r.top }, h = constHit(P.st, p.x, p.y);
-  if (h && h.kind === 'cluster') { P.st.clusterFocus = P.st.clusterFocus === h.i ? -1 : h.i; P.st.zoomC.to(P.st.clusterFocus >= 0 ? 1 : 0); P.st.cEmph.forEach((t, i) => t.to(P.st.clusterFocus < 0 || i === P.st.clusterFocus ? 1 : 0.3)); }
-  else if (h && h.kind === 'task') { P.st.hoverTask = P.st.hoverTask === h.id ? null : h.id; P.st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.8 }); }
-  else { P.st.clusterFocus = -1; P.st.zoomC.to(0); P.st.cEmph.forEach((t) => t.to(1)); P.st.hoverTask = null; } });
+hero.addEventListener('pointerdown', (e) => { sw = { x: e.clientX, moved: false }; });
+hero.addEventListener('pointermove', (e) => { if (!sw || sw.moved) return; const dx = e.clientX - sw.x; if (Math.abs(dx) > 40) { sw.moved = true; setDeckCycle(P.st, P.st.deckCy + (dx < 0 ? 1 : -1)); } });
+hero.addEventListener('pointerup', (e) => { const s = sw; sw = null; if (!s || s.moved) return; const r = mHeroC.getBoundingClientRect(), h = deckHit(P.st, e.clientX - r.left, e.clientY - r.top);
+  if (h && h.kind === 'cycle') setDeckCycle(P.st, h.cy); else if (h && h.kind === 'card') { P.st.ripples.push({ x: h.x, y: h.y, t0: CLK.t, s: 0.7 }); openSheet('card', null, h.c); } });
 
-// ---- sheet: why / ask / explore, all drawn on the same terrain
+// ---- sheets
 const sheet = $('#mSheet'), sb = $('#mSb');
-function openSheet(kind, ins) {
+function openSheet(kind, ins, c) {
   P.open = kind; sheet.classList.add('open'); clearTimeout(P.timer); sb.innerHTML = ''; const ss = P.ss;
   ss.mode.to(0, true); ss.rowsKind = 'rooms'; ss.t0.to(NOW_DAY - 7 * 52, true); ss.t1.to(NOW_DAY + 7 * 6, true); ss.rowA.forEach((t) => t.to(1, true)); ss.plan.to(0, true); ss.fc.to(0.55, true); ss.band.s.to(0, true); ss.links = []; ss.callouts = []; ss.cLinks = [];
+  mSheetC.style.display = kind === 'why' || kind === 'ask' || kind === 'explore' ? '' : 'none';
   if (kind === 'why') { P.ins = ins; $('#mShT').textContent = ins.tag + ' · ' + pct(ins.conf) + '% confident'; sb.innerHTML = '<div class="dots" id="mDots"></div><div class="cap2" id="mCap"></div><div class="nav"><button class="btn" id="mPrev">← Back</button><button class="btn v" id="mNx">Next →</button></div>'; $('#mPrev').onclick = () => stepM(P.stepI - 1); $('#mNx').onclick = () => stepM(P.stepI + 1); stepM(0); }
   else if (kind === 'ask') { $('#mShT').textContent = 'Ask'; sb.innerHTML = '<input id="mQ" placeholder="Ask about what you’re looking at" autocomplete="off"><div class="chips" id="mChips"></div><div id="mAns"></div>'; ['Why is Friday dropping?', 'What happens at holidays?', 'What’s linked?', 'What do I keep missing?'].forEach((q) => { const b = el('button', '', q); b.onclick = () => askM(q); $('#mChips').appendChild(b); }); $('#mQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') askM(e.target.value); }); }
-  else { $('#mShT').textContent = 'The whole landscape'; sb.innerHTML = '<div class="cap2" style="font-size:17px;min-height:0">Height is completion, colour is momentum. Drag along the bar to move through three years.</div><div class="chips" id="mRows"><button class="on">Rooms</button><button>Day pairs</button></div>'; $('#mRows').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...$('#mRows').children].forEach((x) => x.classList.toggle('on', x === b)); ss.rowsKind = b.textContent === 'Rooms' ? 'rooms' : 'pairs'; ss.rowA.forEach((t, i) => t.to(ss.rowsKind === 'pairs' && i > 2 ? 0 : 1)); }; }
+  else if (kind === 'capture') captureSheet();
+  else if (kind === 'card') cardSheet(c ?? NOW_CARD);
+  else if (kind === 'say') saySheet();
+  else { $('#mShT').textContent = 'The whole landscape'; sb.innerHTML = '<div class="cap2" style="font-size:17px;min-height:0">Height is completion, colour is momentum. Rooms stack; time runs left to right across three years.</div><div class="chips" id="mRows"><button class="on">Rooms</button><button>Day pairs</button></div>'; $('#mRows').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; [...$('#mRows').children].forEach((x) => x.classList.toggle('on', x === b)); ss.rowsKind = b.textContent === 'Rooms' ? 'rooms' : 'pairs'; ss.rowA.forEach((t, i) => t.to(ss.rowsKind === 'pairs' && i > 2 ? 0 : 1)); }; }
 }
 function stepM(i) {
   const steps = P.ins.steps; if (i < 0) i = 0; if (i >= steps.length) { closeSheet(); return; } P.stepI = i; const s = steps[i], ss = P.ss;
-  const sm = { ...s, mode: 0 }; applyStep(ss, sm); const cap = $('#mCap'); cap.style.opacity = 0; setTimeout(() => { cap.textContent = s.cap; cap.style.opacity = 1; }, 200);
+  const sm = s.mode ? { ...s, mode: 0, win: [NOW_DAY - 7 * 26, NOW_DAY + 14], rows: 'pairs', emph: s.segs || [0.3, 0.3, 1] } : s; applyStep(ss, { ...sm, deckCy: null, task: null, cLinks: [] }); const cap = $('#mCap'); cap.style.opacity = 0; setTimeout(() => { cap.textContent = s.cap; cap.style.opacity = 1; }, 200);
   $('#mDots').innerHTML = steps.map((_, k) => `<i class="${k <= i ? 'on' : ''}"></i>`).join(''); $('#mNx').textContent = i === steps.length - 1 ? 'Done' : 'Next →';
   clearTimeout(P.timer); P.timer = setTimeout(() => { if (P.open === 'why') stepM(i + 1); }, 7500);
 }
-function askM(q) { const a = answerFor(q), ans = $('#mAns'); ans.innerHTML = '<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">Reading your data</span><div class="shim" style="width:90%"></div><div class="shim" style="width:64%"></div>'; setTimeout(() => { const ins = INSIGHTS.find((x) => x.id === a.id); ans.innerHTML = `<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">${ins.tag} · shown above</span>${a.text}<div style="margin-top:12px"><button class="btn v" id="mGo">Walk me through it →</button></div>`; $('#mGo').onclick = () => openSheet('why', ins); const ss = P.ss; applyStep(ss, { ...ins.steps[Math.min(1, ins.steps.length - 1)], mode: 0 }); }, 800); }
+function askM(q) { const a = answerFor(q), ans = $('#mAns'); ans.innerHTML = '<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">Reading your data</span><div class="shim" style="width:90%"></div><div class="shim" style="width:64%"></div>'; setTimeout(() => { const ins = INSIGHTS.find((x) => x.id === a.id); ans.innerHTML = `<span class="lead" style="color:var(--verd);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:6px">${ins.tag} · shown above</span>${a.text}<div style="margin-top:12px"><button class="btn v" id="mGo">Walk me through it →</button></div>`; $('#mGo').onclick = () => openSheet('why', ins); const first = ins.steps.find((x) => !x.mode) || ins.steps[0]; applyStep(P.ss, { ...first, mode: 0, deckCy: null, task: null, cLinks: [] }); }, 800); }
 function closeSheet() { P.open = null; sheet.classList.remove('open'); clearTimeout(P.timer); }
+
+// capture: viewfinder → read → confirm what it was unsure of
+function captureSheet() {
+  const card = CURRENT; P.cap.t0 = CLK.t; P.cap.dec = detFor(NOW_CARD); $('#mShT').textContent = `Photograph · card ${cardLabel(card)}`; sb.innerHTML = '<canvas id="mPhotoC"></canvas><ul class="dets" id="mDets"></ul><div class="nav" style="margin-top:12px"><button class="btn v" id="mConfirm">Confirm &amp; log</button><button class="btn" id="mRetake">Retake</button></div><p class="note" id="mCapMsg"></p>';
+  const pc = $('#mPhotoC'); P.cap.g = fit(pc, P.W - 44, 250); pc.style.width = '100%'; pc.style.height = '250px'; P.cap.w = P.W - 44; renderCapDets();
+  $('#mRetake').onclick = () => { P.cap.t0 = CLK.t; P.cap.dec = detFor(NOW_CARD); renderCapDets(); };
+  $('#mConfirm').onclick = () => { card.tasks.forEach((x, i) => { if (P.cap.dec[i].v === true && !x.done) setTaskDone(x, true); }); ATT.forEach((a) => { if (a.x.done) a.done = true; }); renderAttn(); closeSheet(); setTimeout(() => card.tasks.forEach((x, i) => { if (x.done) { const p = pipAt(P.st, x); if (p) P.st.ripples.push({ x: p.x, y: p.y, t0: CLK.t + i * 0.12, s: 1 }); } }), 400); };
+}
+function renderCapDets() { const ul = $('#mDets'); ul.innerHTML = ''; CURRENT.tasks.forEach((x, i) => { const d = P.cap.dec[i], li = el('li', d.amb && d.v === 'unsure' ? 'amb' : ''); li.innerHTML = `<span class="s ${d.v === true ? 'ok' : ''}">${d.v === 'unsure' ? '?' : d.v ? '✓' : '○'}</span><span class="n">${x.t.name}</span><span class="c">${d.v === 'unsure' ? '<button data-v="1">Done</button><button data-v="0">Not</button>' : Math.round(d.conf * 100) + '%'}</span>`; li.querySelectorAll('button').forEach((b) => (b.onclick = () => { d.v = b.dataset.v === '1'; d.amb = false; d.conf = 1; renderCapDets(); })); ul.appendChild(li); });
+  const open = P.cap.dec.some((d) => d.v === 'unsure'); $('#mConfirm').disabled = open; $('#mConfirm').style.opacity = open ? 0.45 : 1; $('#mCapMsg').textContent = open ? 'One mark is unclear — tell it which.' : 'Looks right. This lights the wall.'; }
+// edit a card: the printed card, and its tasks
+function cardSheet(c) {
+  const card = CARDS[c], live = c === NOW_CARD; $('#mShT').textContent = `Card ${cardLabel(card)} · ${SEGS[card.seg]}`;
+  const draw = () => { sb.innerHTML = `<div class="paperwrap"><canvas id="mPaper"></canvas></div><p class="note">${live ? 'Edit before you print — 3 to 5 tasks, 6 only if you must.' : card.finished ? `Finished · ${card.done} of ${card.planned}. Locked once its week ends.` : 'Coming up.'}</p>${live || !card.finished ? '<div class="edit">' + card.tasks.map((x, i) => `<div><span>${x.t.name}</span><button data-r="${i}">✕</button></div>`).join('') + `<select id="mAdd"><option value="">+ Add a task…</option>${TASKS.filter((t) => !card.tasks.some((x) => x.t === t)).map((t) => `<option value="${t.id}">${ROOMS[t.ri].name} · ${t.name}</option>`).join('')}</select></div>` : ''}`;
+    const pc = $('#mPaper'), g = fit(pc, 156, 234); pc.style.width = '156px'; pc.style.height = '234px'; g.scale(0.6, 0.6); drawPaper(g, 260, 390, card, {});
+    sb.querySelectorAll('[data-r]').forEach((b) => (b.onclick = () => { if (card.tasks.length <= 3) return; card.tasks.splice(+b.dataset.r, 1); card.planned = card.tasks.length; if (live) { ATT.length = 0; card.tasks.forEach((x) => ATT.push({ t: x.t, x, done: x.done })); renderAttn(); } draw(); }));
+    const add = $('#mAdd'); if (add) add.onchange = (e) => { if (!e.target.value || card.tasks.length >= 6) return; const x = { t: TASKS[+e.target.value], done: false, open: true, hour: 0 }; card.tasks.push(x); CARD_OF.set(x, card.c); card.planned = card.tasks.length; if (live) { ATT.push({ t: x.t, x, done: false }); renderAttn(); } draw(); }; };
+  draw();
+}
+function saySheet() { $('#mShT').textContent = 'Tell it'; sb.innerHTML = '<input id="mSayIn" placeholder="“did the toilets and wiped the stove top”" autocomplete="off"><div class="chips" id="mSayCh"></div><div id="mSayOut" style="margin-top:10px;font-size:14px"></div>';
+  const run = (q) => { q = q.toLowerCase(); const hit = ATT.filter((a) => !a.done && a.t.name.toLowerCase().split(/\s+/).some((w) => w.length > 3 && q.includes(w.replace(/s$/, '')))); $('#mSayOut').innerHTML = hit.length ? 'Marked: ' + hit.map((a) => `<b>${a.t.name}</b>`).join(', ') : '<span style="color:var(--muted)">Nothing open on today’s card matches that.</span>'; hit.forEach((a, i) => setTimeout(() => completeTask(a), 250 + i * 200)); };
+  $('#mSayIn').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(e.target.value); }); ['I did the toilets and the stove top', 'Vacuumed the bedrooms'].forEach((q) => { const b = el('button', '', q); b.onclick = () => run(q); $('#mSayCh').appendChild(b); }); }
 $('#mWhy').onclick = () => openSheet('why', INSIGHTS[mi % INSIGHTS.length]); $('#mAsk').onclick = () => openSheet('ask'); $('#mEx').onclick = () => openSheet('explore'); $('#mClose').onclick = closeSheet; $('#mVeil').onclick = closeSheet;
+$('#mShoot').onclick = () => openSheet('capture'); $('#mEdit').onclick = () => openSheet('card', null, NOW_CARD); $('#mSay2').onclick = () => openSheet('say');
 
 // ---- draw
 function drawMobile() {
   if (!M.hg) return; const st = P.st, g = M.hg;
   stepState(st, CLK.dt); prune(st); P.ss.mode.to(0); stepState(P.ss, CLK.dt); prune(P.ss);
-  const R = { x: 0, y: 2, w: P.W, h: P.HH - 28 };
-  g.clearRect(0, 0, P.W, P.HH); drawConst(g, st, R, { alpha: 1 });
-  // time strip
-  const tg = M.tg, w = P.W - 44; tg.clearRect(0, 0, w, 44); drawMinimap(tg, st, { x: 0, y: 4, w, h: 36 });
-  const a = new Date(dateAt(Math.max(0, st.t0.v))), b = new Date(dateAt(Math.min(WEEKS * 7 - 1, st.t1.v))), f = (d) => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' }); $('#mRng').textContent = `${f(a)} – ${f(b)}`;
-  // sheet terrain
-  if (P.open) { const sg = M.sg, ss = P.ss; sg.clearRect(0, 0, P.W, M.sh); sg.fillStyle = INK.obsidian; sg.fillRect(0, 0, P.W, M.sh); const rr = { x: 62, y: 52, w: P.W - 80, h: M.sh - 88 }; drawTerrain(sg, ss, rr, {}); drawTerrainOverlay(sg, ss, rr, {}); }
+  g.clearRect(0, 0, P.W, P.HH); drawDeck(g, st, { x: 34, y: 18, w: P.W - 44, h: P.HH - 22 }, { alpha: 1 });
+  if (P.open === 'why' || P.open === 'ask' || P.open === 'explore') { const sg = M.sg, ss = P.ss; sg.clearRect(0, 0, P.W, M.sh); sg.fillStyle = INK.obsidian; sg.fillRect(0, 0, P.W, M.sh); const rr = { x: 62, y: 52, w: P.W - 80, h: M.sh - 88 }; drawTerrain(sg, ss, rr, {}); drawTerrainOverlay(sg, ss, rr, {}); }
+  if (P.open === 'capture' && P.cap.g) { const pg = P.cap.g; drawPhoto(pg, P.cap.w, 250, CURRENT, CLK.t, P.cap.dec, { t0: P.cap.t0 }); }
   drawCore(M.cg, CLK.t, 46);
 }
 

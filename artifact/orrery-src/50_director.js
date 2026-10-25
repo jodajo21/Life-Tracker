@@ -33,6 +33,7 @@ function stepsFor(id) {
   if (id === 'fri') return [
     { cap: 'Three rhythms, one week. Mon–Tue and Wed–Thu hold steady…', win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [1, 1, 1], band: [D0 - 7 * 78 + 7 * 2, D0 - 7 * 78 + 7 * 28, 'Earlier'], },
     { cap: `…but Fri–Sat has slid ${Math.abs(Math.round(I.fri.change * 100))}% — from ${pct(I.fri.r1)}% to ${pct(I.fri.r2)}%.`, win: [D0 - 7 * 78, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], band: [D0 - 7 * 26, D0, 'Last 2 cycles'], callouts: [{ day: D0 - 7 * 8, row: 2, side: -1, color: 'ember', text: `Fri–Sat ${pct(I.fri.r2)}%`, sub: `was ${pct(I.fri.r1)}% two years ago` }] },
+    { cap: 'The same story on the cards. Every lit bar is a task done — the bottom row, Fri–Sat, is where they go hollow.', mode: 1, segs: [0.3, 0.3, 1], emph: ROOMS.map(() => 1), win: [D0 - 7 * 26, D0 + 14], deckCy: CUR_CY - 1 },
     { cap: `Rooms break it down: ${I.fri.top.map((d) => d.name).join(' and ')} account for most of the loss.`, win: [D0 - 7 * 40, D0 + 14], rows: 'rooms', emph: ROOMS.map((r, i) => (I.fri.top.some((d) => d.i === i) ? 1 : 0.18)), band: [D0 - 7 * 26, D0, 'Fri–Sat only'], callouts: I.fri.top.map((d, k) => ({ day: D0 - 7 * (10 + k * 5), row: d.i, side: k ? 1 : -1, color: 'ember', text: d.name, sub: `−${Math.round(d.drop * 100)} pts on Fri–Sat` })) },
     { cap: `Weeks with a Thursday planning session finish Fri–Sat at ${pct(I.plan.yes)}%. Without: ${pct(I.plan.no)}%.`, win: [D0 - 7 * 52, D0 + 14], rows: 'pairs', emph: [0.25, 0.25, 1], plan: 1, band: [D0 - 7 * 52, D0, 'Planning marks, below'], links: planLinks(), },
     { cap: 'So the next move is small: protect Thursday afternoon. Forecast shows the effect.', win: [D0 - 7 * 26, D0 + 56], rows: 'pairs', emph: [0.4, 0.4, 1], plan: 1, fc: 1, band: [D0, D0 + 56, 'Next 8 weeks'] },
@@ -44,12 +45,12 @@ function stepsFor(id) {
     { cap: `Next one is ${I.hol.nextIn} days out — the forecast already shows it. A lighter card that week would hold the line.`, win: [NOW_DAY - 21, NOW_DAY + 56], rows: 'rooms', emph: ROOMS.map(() => 1), fc: 1, band: [I.hol.next.day - 9, I.hol.next.day + 6, 'Expected dip'] },
   ];
   if (id === 'pair') return [
-    { cap: `${ROOMS[I.pair.a].name} and ${ROOMS[I.pair.b].name} rise and fall together.`, mode: 1, win: [D0 - 7 * 70, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1) }] },
-    { cap: 'When one is done, the other usually is. Plan them as a single block.', mode: 1, win: [D0 - 7 * 26, D0], emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.3)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: clamp(I.pair.r * 1.4, 0.3, 1), dash: true }], focus: -1 },
+    { cap: `${ROOMS[I.pair.a].name} and ${ROOMS[I.pair.b].name} rise and fall together. Teal outlines mark both.`, mode: 1, emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.25)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: 1 }], deckCy: CUR_CY - 1 },
+    { cap: 'When a card has one hollow, it usually has the other. Plan them as a single block.', mode: 1, emph: ROOMS.map((r, i) => (i === I.pair.a || i === I.pair.b ? 1 : 0.25)), cLinks: [{ a: I.pair.a, b: I.pair.b, s: 1 }], deckCy: CUR_CY },
   ];
   if (id === 'tasks') return [
-    { cap: 'Every task, orbiting its room. Hollow bodies are what keeps getting missed.', mode: 1, win: [D0 - 91, D0], emph: ROOMS.map(() => 1) },
-    ...I.tasks.worst.slice(0, 1).map((x) => ({ cap: `“${x.t.name}” — done ${pct(x.r)}% of the time this quarter.`, mode: 1, win: [D0 - 91, D0], emph: ROOMS.map((r, i) => (i === x.t.ri ? 1 : 0.22)), focus: x.t.ri })),
+    { cap: 'Every task on every card of the cycle. Hollow bars are what keeps getting missed.', mode: 1, emph: ROOMS.map(() => 1), deckCy: CUR_CY - 1 },
+    { cap: `“${I.tasks.worst[0].t.name}” — done ${pct(I.tasks.worst[0].r)}% of the time this quarter. Teal marks every place it appears.`, mode: 1, emph: ROOMS.map((r, i) => (i === I.tasks.worst[0].t.ri ? 1 : 0.3)), task: I.tasks.worst[0].t.id, deckCy: CUR_CY - 1 },
   ];
   return [];
 }
@@ -61,7 +62,7 @@ function planLinks() {
 const INSIGHTS = [
   { id: 'fri', tag: 'Pattern', title: `Friday–Saturday is slipping`, short: 'Fri–Sat completion', body: `Mon–Tue and Wed–Thu hold; Fri–Sat has lost ${Math.abs(Math.round(INS.fri.change * 100))}% over two years — mostly ${INS.fri.top.map((d) => d.name.toLowerCase()).join(' and ')}.`, conf: 0.86, hue: 'ember', get steps() { return stepsFor('fri'); } },
   { id: 'hol', tag: 'Seasonal', title: `Routines dip ${Math.abs(INS.hol.onset)} days before Thanksgiving`, short: 'Holiday dip', body: `Every year, household routines slip ${Math.abs(INS.hol.onset)} days ahead and return ${INS.hol.rec} days after. The next one is ${INS.hol.nextIn} days away.`, conf: 0.9, hue: 'copper', get steps() { return stepsFor('hol'); } },
-  { id: 'plan', tag: 'Cause', title: 'Thursday planning protects the weekend', short: 'Planning effect', body: `Fri–Sat finishes at ${pct(INS.plan.yes)}% after a planning session, ${pct(INS.plan.no)}% without one.`, conf: 0.78, hue: 'verd', get steps() { return stepsFor('fri').slice(3).concat([]); } },
+  { id: 'plan', tag: 'Cause', title: 'Thursday planning protects the weekend', short: 'Planning effect', body: `Fri–Sat finishes at ${pct(INS.plan.yes)}% after a planning session, ${pct(INS.plan.no)}% without one.`, conf: 0.78, hue: 'verd', get steps() { return stepsFor('fri').slice(4); } },
   { id: 'pair', tag: 'Link', title: `${ROOMS[INS.pair.a].name} & ${ROOMS[INS.pair.b].name} move together`, short: 'Coupled rooms', body: `Their weekly completion rises and falls in step (r = ${INS.pair.r.toFixed(2)}). Two tasks, one habit.`, conf: 0.7, hue: 'verd', get steps() { return stepsFor('pair'); } },
   { id: 'tasks', tag: 'Friction', title: `“${INS.tasks.worst[0].t.name}” keeps getting missed`, short: 'Stubborn task', body: `${pct(INS.tasks.worst[0].r)}% this quarter — the one routine that resists you most.`, conf: 0.8, hue: 'ember', get steps() { return stepsFor('tasks'); } },
 ];
@@ -73,15 +74,19 @@ function applyStep(st, s) {
   if (s.win) { st.t0.to(s.win[0]); st.t1.to(s.win[1]); }
   if (s.rows && s.rows !== st.rowsKind) { st.rowsKind = s.rows; }
   st.mode.to(s.mode || 0); st.plan.to(s.plan || 0); st.fc.to(s.fc ?? 0.55);
-  const em = s.emph || ROOMS.map(() => 1); em.forEach((v, i) => { st.rowA[i] && st.rowA[i].to(v); st.cEmph[i] && st.cEmph[i].to(v); });
-  for (let i = em.length; i < 8; i++) { st.rowA[i].to(s.rows === 'pairs' ? 0 : 1); }
+  const em = s.emph || ROOMS.map(() => 1), pairs = (s.rows || st.rowsKind) === 'pairs';
+  if (pairs) { st.rowA.forEach((t, i) => t.to(i < 3 ? em[i] ?? 1 : 0)); st.cEmph.forEach((t) => t.to(1)); }
+  else { st.rowA.forEach((t, i) => t.to(em[i] ?? 1)); st.cEmph.forEach((t, i) => t.to(em[i] ?? 1)); }
+  const sg = s.segs || (pairs && s.emph ? em : [1, 1, 1]); st.segA.forEach((t, i) => t.to(sg[i] ?? 1));
+  if (s.deckCy != null) setDeckCycle(st, s.deckCy); else if (s.mode) setDeckCycle(st, CUR_CY);
+  st.hoverTask = s.task ?? null;
   if (s.band) { st.band.a.to(s.band[0]); st.band.b.to(s.band[1]); st.band.s.to(1); st.band.label = s.band[2] || ''; } else st.band.s.to(0);
   (s.links || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.links.push(o); });
   (s.callouts || []).forEach((c) => { const o = { ...c, a: new Tw(0, 3) }; o.a.to(1); st.callouts.push(o); });
   (s.cLinks || []).forEach((l) => { const o = { ...l, p: new Tw(0, 2.5) }; o.p.to(1); st.cLinks.push(o); });
-  st.marks = []; st.clusterFocus = s.focus ?? -1; st.zoomC.to(st.clusterFocus >= 0 ? 1 : 0);
+  st.marks = [];
 }
-function resetView(st) { applyStep(st, { win: [NOW_DAY - 7 * 52, NOW_DAY + 7 * 6], rows: st.rowsKind, emph: ROOMS.map(() => 1), mode: st.mode.t }); st.band.s.to(0); }
+function resetView(st) { applyStep(st, { win: [NOW_DAY - 7 * 52, NOW_DAY + 7 * 6], rows: st.rowsKind, emph: ROOMS.map(() => 1), mode: st.mode.t, deckCy: st.deckCy }); st.band.s.to(0); }
 const prune = (st) => { st.links = st.links.filter((l) => l.p.t > 0 || l.p.v > 0.02); st.callouts = st.callouts.filter((c) => c.a.t > 0 || c.a.v > 0.02); st.cLinks = st.cLinks.filter((l) => l.p.t > 0 || l.p.v > 0.02); };
 
 // ---- Ask: answers are composed from the same computed facts the picture uses

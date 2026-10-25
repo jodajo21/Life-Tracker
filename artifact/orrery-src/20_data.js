@@ -88,7 +88,7 @@ function prob(t, card) {
   return clamp(p, 0.04, 0.985);
 }
 for (const card of CARDS) {
-  const past = card.day + 1 < NOW_DAY;
+  const past = card.c < NOW_CARD;
   for (const x of card.tasks) {
     if (!past) { x.done = false; x.open = true; continue; }
     x.done = R() < prob(x.t, card);
