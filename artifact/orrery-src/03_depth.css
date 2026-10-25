@@ -14,9 +14,9 @@
 #scene::after { content: ''; position: absolute; inset: 0; opacity: 0.07; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .8 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
 
 /* ---------- glass panels ---------- */
-.panel, .chatbox, .plan, .deckbar, .rate, .bubble.ai, .cb.bot, .prop, .landwrap, .st-land { position: relative; background: var(--glass); border: 0; box-shadow: var(--lift); }
-.panel, .chatbox, .plan, .deckbar { border-radius: 24px; } .rate, .prop { border-radius: 18px; } .landwrap, .st-land { border-radius: 18px; background: linear-gradient(180deg, rgb(var(--base-rgb) / 0.35), rgb(var(--base-rgb) / 0.7)); }
-.panel::before, .chatbox::before, .plan::before, .deckbar::before, .rate::before, .landwrap::before, .st-land::before, dialog.sheet::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--rim); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; pointer-events: none; z-index: 2; }
+.panel, .chatbox, .plan, .deckbar, .pc, .rate, .bubble.ai, .cb.bot, .prop, .landwrap, .st-land { position: relative; background: var(--glass); border: 0; box-shadow: var(--lift); }
+.panel, .chatbox, .plan, .deckbar { border-radius: 24px; } .pc { border-radius: 22px; } .rate, .prop { border-radius: 18px; } .landwrap, .st-land { border-radius: 18px; background: linear-gradient(180deg, rgb(var(--base-rgb) / 0.35), rgb(var(--base-rgb) / 0.7)); }
+.panel::before, .chatbox::before, .plan::before, .deckbar::before, .pc::before, .rate::before, .landwrap::before, .st-land::before, dialog.sheet::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--rim); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude; pointer-events: none; z-index: 2; }
 .panel.fit { box-shadow: var(--lift), inset 0 2px 0 rgb(var(--fit-rgb) / 0.85); } .panel.home, .notespanel { box-shadow: var(--lift), inset 0 2px 0 rgb(var(--accent-rgb) / 0.9); } .panel { border-top: 0 !important; }
 .obs { background: linear-gradient(160deg, rgb(var(--ai-rgb) / 0.20), rgb(var(--ai-rgb) / 0.04) 55%), var(--glass); box-shadow: var(--lift), 0 0 40px -18px rgb(var(--ai-rgb) / 0.55); }
 .setup { background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.16), rgb(var(--accent-rgb) / 0.03) 55%), var(--glass); box-shadow: var(--lift), 0 0 44px -16px rgb(var(--accent-rgb) / 0.5); }
@@ -36,7 +36,6 @@ button.ai { background: linear-gradient(180deg, rgb(var(--ai-rgb) / 0.22), rgb(v
 .seg { background: rgb(var(--base-rgb) / 0.55); box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.4), 0 1px 0 rgb(255 255 255 / 0.05); border-radius: 14px; } .seg button { border-radius: 11px; } .seg button.on { background: linear-gradient(180deg, #fff, rgb(var(--ink-rgb) / 0.82)); color: var(--bg); box-shadow: 0 6px 14px -6px rgb(0 0 0 / 0.7), inset 0 -2px 0 rgb(0 0 0 / 0.1); }
 input, select, textarea { background: rgb(var(--base-rgb) / 0.55); border: 1px solid var(--line2); box-shadow: inset 0 2px 8px rgb(0 0 0 / 0.38); border-radius: 14px; } input:focus, select:focus, textarea:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / 0.22), inset 0 2px 8px rgb(0 0 0 / 0.38); }
 input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
-.pc input, .pc input:focus { box-shadow: none; border-radius: 0; } .pc input:focus { outline: 2px solid var(--accent-deep); }
 .spaces button.on, .send, .bubble.user, .cb.me, .step.done i, .ready.ok i { background: var(--accent-fill); color: var(--on-accent); } .step.on { background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.2), rgb(var(--accent-rgb) / 0.05)), rgb(var(--base-rgb) / 0.4); border-color: rgb(var(--accent-rgb) / 0.7); box-shadow: 0 0 26px -10px rgb(var(--accent-rgb) / 0.7); }
 .send { box-shadow: var(--accent-glow); } .bubble.user, .cb.me { box-shadow: 0 10px 22px -12px rgb(var(--accent-rgb) / 0.7); }
 .qsc.on { border-color: var(--amber); background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.22), rgb(var(--accent-rgb) / 0.06)), rgb(var(--base-rgb) / 0.4); box-shadow: 0 0 22px -10px rgb(var(--accent-rgb) / 0.8); }
@@ -60,7 +59,6 @@ input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
 .pp.fut, .pp.pre { background: rgb(255 255 255 / 0.03); }
 .paper { background: linear-gradient(180deg, #fff 0%, var(--paper) 22%); border-radius: 14px; box-shadow: 0 34px 56px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.45) inset, 0 0 70px -24px rgb(var(--accent-rgb) / 0.35); }
 .paper.sealed { box-shadow: 0 0 0 2px var(--amber), 0 0 54px rgb(var(--accent-rgb) / 0.5), 0 34px 56px -26px rgb(0 0 0 / 0.9); } .paper .hole { background: var(--bg); }
-.pc { background: linear-gradient(180deg, #fff 0%, var(--paper) 24%); border-radius: 14px; box-shadow: 0 28px 44px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.4) inset; }
 .pi input:checked + .bx { background: linear-gradient(180deg, var(--amber2), var(--amber)); box-shadow: 0 0 14px rgb(var(--accent-rgb) / 0.6); }
 .fd i { background: rgb(var(--base-rgb) / 0.6); box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.5); } .fd.on i { background: linear-gradient(180deg, var(--steel), rgb(var(--fit-rgb) / 0.6)); box-shadow: 0 0 14px rgb(var(--fit-rgb) / 0.5); border-color: transparent; }
 .rate b { text-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.25); } .rate { background: var(--glass-raised); }
@@ -98,3 +96,9 @@ dialog::backdrop { background: radial-gradient(90% 70% at 50% 100%, rgb(var(--ac
 /* ---------- fallbacks ---------- */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { #top, #tabbar, dialog.sheet, .toast, .walltip, #pvbar { background: var(--surface); } }
 @media (prefers-reduced-transparency: reduce) { #top, #tabbar, dialog.sheet, .toast, .walltip, #pvbar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } .panel, .chatbox, .plan, .deckbar, .rate { background: var(--surface); } #scene::after { display: none; } }
+
+/* ---------- review cards: unreviewed are quiet glass; reviewed ones light up, so the deck reads as a progress wall ---------- */
+.pc { background: linear-gradient(160deg, rgb(var(--glass-rgb) / 0.11), rgb(var(--glass-rgb) / 0.03) 60%), rgb(var(--base-rgb) / 0.55); }
+.pc.reviewed { box-shadow: var(--lift), 0 0 0 1px rgb(var(--accent-rgb) / 0.35), 0 0 36px -12px rgb(var(--accent-rgb) / 0.55); background: linear-gradient(160deg, rgb(var(--accent-rgb) / 0.14), rgb(var(--glass-rgb) / 0.03) 60%), rgb(var(--base-rgb) / 0.55); }
+.pc.reviewed::before { background: linear-gradient(150deg, rgb(var(--accent-rgb) / 0.95), rgb(var(--accent-rgb) / 0.22) 45%, rgb(var(--accent-rgb) / 0.5)); }
+.pc.reviewed .pc-n { border-color: rgb(var(--accent-rgb) / 0.7); color: var(--ink); }
