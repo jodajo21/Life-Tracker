@@ -44,7 +44,7 @@ input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
 .bar { position: relative; height: 10px; border-radius: 999px; background: rgb(var(--base-rgb) / 0.62); box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.6), 0 1px 0 rgb(255 255 255 / 0.05); } .bar.big { height: 14px; }
 .bar::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 11px, rgb(var(--base-rgb) / 0.5) 11px 12px); }
 .bar i { border-radius: inherit; background: linear-gradient(90deg, var(--done-a), var(--done-b)); box-shadow: 0 0 14px rgb(var(--accent-rgb) / 0.65); } .fit .bar i { background: linear-gradient(90deg, rgb(var(--fit-rgb) / 0.65), var(--steel)); box-shadow: 0 0 14px rgb(var(--fit-rgb) / 0.55); }
-.paper .bar { background: rgb(var(--pdr) / 0.22); box-shadow: none; } .paper .bar::after { background: none; } .paper .bar i { background: var(--pd); box-shadow: none; }
+.paper .bar::after { background: none; } .paper .bar { box-shadow: none; } .paper .bar i { box-shadow: none; }
 .loadline .bar { height: 6px; } .momentum i.on { box-shadow: 0 0 10px rgb(var(--accent-rgb) / 0.75); } .fit .momentum i.on { box-shadow: 0 0 10px rgb(var(--fit-rgb) / 0.6); }
 .dots6 li.now i { box-shadow: 0 0 12px var(--amber); } .dots-n i.on { box-shadow: 0 0 10px var(--verd); }
 
@@ -57,8 +57,8 @@ input::placeholder, textarea::placeholder { color: rgb(var(--ink-rgb) / 0.4); }
 .cd.now { border-color: rgb(var(--accent-rgb) / 0.85); box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.3), 0 0 24px -4px rgb(var(--accent-rgb) / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.1); }
 .pp.done { box-shadow: 0 0 9px rgb(var(--accent-rgb) / 0.6); } .cd.sealed::after { box-shadow: 0 0 12px var(--amber); }
 .pp.fut, .pp.pre { background: rgb(255 255 255 / 0.03); }
-.paper { box-shadow: 0 34px 56px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.45) inset, 0 0 70px -24px rgb(var(--pbr) / 0.55); }
-.paper.sealed { box-shadow: 0 0 0 2px var(--pd), 0 0 54px rgb(var(--pdr) / 0.55), 0 34px 56px -26px rgb(0 0 0 / 0.9); }
+.paper { box-shadow: 0 34px 56px -26px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(255 255 255 / 0.28) inset, 0 0 70px -24px rgb(var(--pbr) / 0.5); }
+.paper.sealed { box-shadow: 0 0 0 2px var(--swash), 0 0 54px rgb(var(--pbr) / 0.55), 0 34px 56px -26px rgb(0 0 0 / 0.9); }
 /* checked boxes take the slot colour (see 02_screens) */
 .fd i { background: rgb(var(--base-rgb) / 0.6); box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.5); } .fd.on i { background: linear-gradient(180deg, var(--steel), rgb(var(--fit-rgb) / 0.6)); box-shadow: 0 0 14px rgb(var(--fit-rgb) / 0.5); border-color: transparent; }
 .rate b { text-shadow: 0 0 24px rgb(var(--accent-rgb) / 0.25); } .rate { background: var(--glass-raised); }
