@@ -1,0 +1,18 @@
+{
+  "name": "orrery-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "python3 ../artifact/orrery-src/build.py --standalone public",
+    "db:migrate:local": "wrangler d1 migrations apply orrery --local",
+    "test": "node test/e2e.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261023.1",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.0.0"
+  }
+}

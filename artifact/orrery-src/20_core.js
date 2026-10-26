@@ -143,7 +143,7 @@ const db = claudeRt ? await claudeRt.use('db').catch(() => null) : null;
 const sample = claudeRt ? await claudeRt.use('sample').catch(() => null) : null;
 const downloads = claudeRt ? await claudeRt.use('downloads').catch(() => null) : null;
 const limits = sample ? await sample.limits().catch(() => ({})) : {};
-const R = { entries: [], cats: [], chores: [], chats: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], notes: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
+const R = { entries: [], cats: [], chores: [], chats: [], rooms: [], taskcats: [], decks: [], sets: [], shields: [], sugg: [], notes: [], inbox: [], settings: { fitness_weekly_target: 3 }, ready: {}, err: '' };
 let S = R, PREVIEW = false;   // S is what the screens read: your real data, or an in-memory sample while previewing (nothing is written in preview)
 let current = 'today', chatHistory = [], chatBusy = false;
 
@@ -153,7 +153,7 @@ const col = (n) => db.collection(n);
 const sum = (rs) => rs.reduce((a, r) => a + r.xp, 0);
 
 let rafId = 0, lastLocalDeckEdit = 0;
-const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); migrateRooms(); refreshBadge(); if (shouldRerender()) go(current, { keep: true }); }); };
+const schedule = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(() => { migrateLegacy(); migrateRooms(); processInbox(); refreshBadge(); if (shouldRerender()) go(current, { keep: true }); }); };
 const editing = () => { const a = document.activeElement; return a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.closest('#view') && a.type !== 'checkbox'; };
 function listen(name, key) { return col(name).onSnapshot((snap) => { R[key] = snap.docs.map((d) => ({ id: d.id, ...d.data() })); R.ready[key] = true; schedule(); }, (e) => { R.err = e.message || e.code; schedule(); }); }
 
@@ -206,7 +206,7 @@ function awardRewards({ goal, date, seed, newCat }) {
   return r;
 }
 async function addEntry(e) {
-  const rewards = awardRewards(e), ref = col('entries').doc();
+  const rewards = awardRewards(e), ref = e.id ? col('entries').doc(e.id) : col('entries').doc();
   const doc = { goal: e.goal, date: e.date, activity: e.activity, cat: e.cat || '', details: e.details || {}, raw: e.raw || '', source: e.source, rewards, xp: sum(rewards), created: new Date().toISOString() };
   S.entries = [...S.entries, { id: ref.id, ...doc }];
   await queue(() => ref.set(doc));
@@ -283,7 +283,10 @@ async function logText(text, source, dateHint) {
   if (!sample) throw new Error('Claude isn’t available in this view, so I can’t read the note.');
   const t = dateHint || today();
   const catList = S.cats.map((c) => `[${c.id}] ${c.goal}: ${c.name}${(c.aliases || []).length ? ` (aka ${c.aliases.join(', ')})` : ''}`).join('\n') || '(none yet)';
-  const out = await sample.json(`You turn a person's casual spoken/typed notes into structured log entries for a personal goals tracker.
+  const out = await sample.json(logPrompt(text, t, catList), { modelTier: 'quick', cache: false });
+  return applyParsed(out, text, source, t);
+}
+const logPrompt = (text, t, catList) => `You turn a person's casual spoken/typed notes into structured log entries for a personal goals tracker.
 Goals: "fitness" (workouts, runs, stretching, sports) and "home" (cleaning, chores, household tasks).
 Today is ${t} (${parse(t).toLocaleDateString('en-US', { weekday: 'long' })}). Resolve "yesterday", "this morning", weekdays etc. to a YYYY-MM-DD date; default to today.
 One entry per distinct activity (e.g. "bench and squats" = two entries). Put numbers in details: sets, reps, weight (lb), duration_min, distance_mi, notes, room.
@@ -294,9 +297,12 @@ ${catList}
 Note: ${JSON.stringify(text)}
 
 Reply with only JSON: {"entries":[{"goal":"fitness|home","date":"YYYY-MM-DD","activity":"Bench Press","best_match_id":null,"match_confidence":0,"details":{}}],"clarification":null}
-Set "clarification" to a short question only if the note was too unclear to log.`, { modelTier: 'quick', cache: false });
+Set "clarification" to a short question only if the note was too unclear to log.`;
 
+// turn what Claude understood into saved entries. idBase makes the entry ids stable, so a note processed twice overwrites itself.
+async function applyParsed(out, text, source, t, idBase) {
   const saved = [], pending = [];
+  let n = 0;
   for (const e of out.entries || []) {
     if (!GOALS.includes(e.goal) || !e.activity) continue;
     const conf = Number(e.match_confidence) || 0, match = S.cats.find((c) => c.id === e.best_match_id && c.goal === e.goal);
@@ -317,11 +323,26 @@ Set "clarification" to a short question only if the note was too unclear to log.
     }
     const date = /^\d{4}-\d\d-\d\d$/.test(e.date) ? e.date : t;
     if (e.goal === 'home') { const hit = openCardItemFor(cat, date); if (hit) { const rw = await toggleItems(hit.set.id, hit.card.code, { check: [hit.item.id] }); saved.push({ goal: 'home', activity: hit.item.name, rewards: rw, onCard: true }); continue; } }   // said it, and it is on this week's card: tick the card
-    saved.push(await addEntry({ goal: e.goal, date, activity: cat.name, cat: cat.id, details: e.details || {}, raw: text, source, newCat: created ? cat.name : '' }));
+    saved.push(await addEntry({ id: idBase ? `${idBase}_${n++}` : undefined, goal: e.goal, date, activity: cat.name, cat: cat.id, details: e.details || {}, raw: text, source, newCat: created ? cat.name : '' }));
   }
   return { saved, pending, clarification: out.clarification || null };
 }
 
+// notes that arrived while the app was closed (a Siri Shortcut posts them to the inbox, already understood): log them now
+let inboxBusy = false;
+async function processInbox() {
+  if (PREVIEW || inboxBusy || !allReady()) return;
+  const items = R.inbox.filter((x) => x.status === 'pending'); if (!items.length) return;
+  inboxBusy = true;
+  try {
+    const said = [];
+    for (const it of items) {
+      try { const r = await applyParsed(it.parsed || { entries: [] }, it.text || '', 'siri', it.date || today(), `siri_${it.id}`); said.push(...r.saved.map((s) => s.activity)); } catch (e) { console.error(e); continue; }
+      await queue(() => col('inbox').doc(it.id).delete()); R.inbox = R.inbox.filter((x) => x.id !== it.id);
+    }
+    if (said.length) { toast(`Logged from Siri: ${said.join(', ')}`); go(current, { keep: true }); }
+  } finally { inboxBusy = false; }
+}
 // ---------------------------------------------------------------- Claude: photo of a card
 async function resizeToBlob(file, max = 1600) {
   const bmp = await createImageBitmap(file), s = Math.min(1, max / Math.max(bmp.width, bmp.height));
